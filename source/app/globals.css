@@ -56,3 +56,21 @@ main.auth-page{max-width:none;padding:0;margin:0;min-height:100dvh;display:grid;
  .mobile-nav>button{padding:0 7px;min-width:0;flex:1}
  .mobile-nav .mobile-label{font-size:calc(12px * var(--text-scale))}
 }
+
+/* Make the active sharing scope visible without adding another profile avatar. */
+.household-context{padding-top:18px}
+.household-context>button{display:flex;align-items:center;gap:8px;max-width:100%;min-height:35px;padding:0;text-align:left;color:#57774e}
+.household-context>button>svg{flex-shrink:0}
+.household-context>button>span{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0}
+.household-context b{font-size:calc(13px * var(--text-scale));font-weight:600;overflow-wrap:anywhere}
+.household-context small{font-size:calc(12px * var(--text-scale));color:#738866;overflow-wrap:anywhere}
+.household-context+.list-controls{padding-top:10px}
+.active-household{display:flex;align-items:flex-start;gap:13px;padding:16px;background:#edf3e5;border-radius:11px;margin-bottom:20px;color:#476e3e}
+.active-household>svg{flex-shrink:0;margin-top:3px}
+.active-household small{font-size:calc(12px * var(--text-scale));color:#6f865f}
+.active-household h3{font-size:calc(18px * var(--text-scale));margin:4px 0 7px;overflow-wrap:anywhere}
+.active-household p{font-size:calc(13px * var(--text-scale));line-height:1.5;overflow-wrap:anywhere}
+.members-heading{font-size:calc(14px * var(--text-scale));margin:23px 0 12px}
+.shared-list-note{display:flex;gap:8px;align-items:flex-start;margin:0}
+.shared-list-note>svg{flex-shrink:0;margin-top:2px}
+@media(max-width:650px){.household-context{padding-top:8px}.household-context>button{min-height:37px}.household-context+.list-controls{padding-top:4px}.active-household{padding:15px}.active-household h3{font-size:calc(17px * var(--text-scale))}}

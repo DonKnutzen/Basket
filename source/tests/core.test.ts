@@ -10,6 +10,7 @@ import {getBasketUser} from '../lib/basket-user';
 import {budgetSpent,monthOptions} from '../lib/budgets';
 import {parseReceipt,difference} from '../lib/receipt-parser';
 import {toCents,inferCategory} from '../lib/types';
+import {householdSharing} from '../lib/household-display';
 const globals=globalThis as any;let sql:DatabaseSync;
 class Statement{values:any[]=[];constructor(public query:string){}bind(...v:any[]){this.values=v;return this}async first(){return sql.prepare(this.query).get(...this.values)||null}async all(){return {results:sql.prepare(this.query).all(...this.values),success:true}}async run(){return {success:true,meta:{changes:Number(sql.prepare(this.query).run(...this.values).changes)}}}}
 function user(id:string|null){globals.__user=id?{userId:id,email:id+'@example.test',fullName:id}:null}
@@ -22,6 +23,43 @@ test('households are isolated and cannot modify each other’s lists',async()=>{
 test('item additions are idempotent and checks persist',async()=>{const d=(await get()).body;const item={id:'item-1',listId:d.lists[0].id,name:'Milk',quantity:'2 L',category:'Dairy & eggs'};await post('addItem',item);await post('addItem',item);assert.equal((await get()).body.items.length,1);await post('updateItem',{id:item.id,checked:true});assert.equal((await get()).body.items[0].checked,1);await post('clearChecked',{listId:item.listId});assert.equal((await get()).body.items.length,0)});
 test('at least one shopping list is preserved',async()=>{const a=(await get()).body;assert.equal((await post('deleteList',{id:a.lists[0].id})).status,400);const b=await post('addList',{name:'Dinner'});assert.ok(b.body.id);await post('deleteList',{id:b.body.id});assert.equal((await get()).body.lists.length,1)});
 test('invitation joins and shares data, retaining the previous household',async()=>{const a=(await get()).body,invite=(await post('invite')).body;assert.equal(invite.code.length,24);user('sam');await get();assert.equal((await post('join',{code:invite.code})).status,200);const b=(await get()).body;assert.equal(b.household.id,a.household.id);assert.equal(b.homes.length,2);assert.equal((await post('invite')).status,403);await post('addItem',{id:'sam-egg',listId:a.lists[0].id,name:'Eggs'});user('alex');assert.equal((await get()).body.items[0].name,'Eggs')});
+test('two email accounts see their household membership and can both create and edit shared lists',async()=>{
+ const owner=emailToken('owner');globals.__tokens.get('test-token-owner').user_metadata.display_name='Alex';
+ const ownerHome=(await get(owner)).body;
+ const ownerList=await post('addList',{name:'Shared dinner'},'https://donknutzen.github.io',owner);
+ const invite=(await post('invite',{},'https://donknutzen.github.io',owner)).body;
+ const partner=emailToken('partner');globals.__tokens.get('test-token-partner').user_metadata.display_name='Sam';
+ const personal=(await get(partner)).body;
+ const personalList=(await post('addList',{name:'Previous personal household'},'https://donknutzen.github.io',partner)).body.id;
+ assert.equal((await post('join',{code:invite.code},'https://donknutzen.github.io',partner)).status,200);
+ const joined=(await get(partner)).body;
+ assert.equal(joined.household.id,ownerHome.household.id);
+ assert.equal(joined.members.length,2);
+ assert.equal(householdSharing(joined).label,'Shared with Alex');
+ assert.equal(householdSharing((await get(owner)).body).label,'Shared with Sam');
+ assert.ok(joined.lists.some((l:any)=>l.id===ownerList.body.id));
+ assert.ok(!joined.lists.some((l:any)=>l.id===personalList));
+ const shared=(await post('addList',{name:'Created by Sam'},'https://donknutzen.github.io',partner)).body;
+ assert.equal((await post('addItem',{id:'shared-milk',listId:shared.id,name:'Milk'},'https://donknutzen.github.io',partner)).status,200);
+ const ownerView=(await get(owner)).body;
+ assert.ok(ownerView.lists.some((l:any)=>l.id===shared.id));
+ assert.equal(ownerView.items.find((i:any)=>i.id==='shared-milk').listId,shared.id);
+ await post('updateItem',{id:'shared-milk',checked:true},'https://donknutzen.github.io',owner);
+ assert.equal((await get(partner)).body.items.find((i:any)=>i.id==='shared-milk').checked,1);
+ await post('switchHome',{id:personal.household.id},'https://donknutzen.github.io',partner);
+ const switched=(await get(partner)).body;
+ assert.equal(switched.household.id,personal.household.id);
+ assert.equal(householdSharing(switched).shared,false);
+ assert.ok(switched.lists.some((l:any)=>l.id===personalList));
+ assert.ok(!switched.lists.some((l:any)=>l.id===shared.id));
+ const outsider=emailToken('outsider');await get(outsider);
+ assert.equal((await post('addItem',{id:'forbidden',listId:shared.id,name:'No access'},'https://donknutzen.github.io',outsider)).status,404);
+});
+test('household sharing labels use the active household members without repeating the signed-in user',()=>{
+ const user={id:'me',name:'Alex'};
+ assert.deepEqual(householdSharing({user,members:[{userId:'me',displayName:'Alex'}]}),{shared:false,label:'Only you · Invite your partner'});
+ assert.equal(householdSharing({user,members:[{userId:'me',displayName:'Alex'},{userId:'sam',displayName:'Sam'},{userId:'jo',displayName:'Jo'}]}).label,'Shared with Sam and Jo');
+});
 test('receipt save stores line quantities, learns aliases and avoids duplicates',async()=>{await get();const d=draft();assert.equal((await post('saveReceipt',{draft:d})).status,200);await post('saveReceipt',{draft:d});const a=(await get()).body;assert.equal(a.receipts.length,1);assert.equal(a.lines[0].quantity,2);assert.equal(a.lines[0].amountCents,1098);assert.equal(a.products[0].packSize,'2 L');assert.equal(a.aliases[0].label,'milk 2l');assert.equal(a.aliases[0].store,'no frills')});
 test('invalid arithmetic, dates and foreign photos cannot be saved',async()=>{await get();const d=draft();assert.equal((await post('saveReceipt',{draft:{...d,total:'20.00'}})).status,400);assert.equal((await post('saveReceipt',{draft:{...d,date:'2026-02-30'}})).status,400);assert.equal((await post('saveReceipt',{draft:{...d,imageKey:'foreign-home/image'}})).status,403);assert.equal((await get()).body.receipts.length,0)});
 test('different pack sizes stay separate and receipt deletion removes prices',async()=>{await get();const d=draft();await post('saveReceipt',{draft:d});await post('saveReceipt',{draft:{...d,id:'r2',lines:[{...d.lines[0],packSize:'1 L'}]}});assert.equal((await get()).body.products.length,2);await post('deleteReceipt',{id:d.id});assert.equal((await get()).body.lines.length,1)});

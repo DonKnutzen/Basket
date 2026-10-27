@@ -12,7 +12,7 @@ Vinext / React, Cloudflare D1 (`DB`) and R2 (`BUCKET`). Supabase email/password 
 
 ## Development
 
-Install dependencies through the Sites dependency helper. `pnpm test` runs 24 receipt-parser, authentication, household, receipt-photo access, CORS and shared-budget tests against SQLite with mocked identity and bindings. `pnpm build` prepares OCR assets and builds the Worker. Apply Drizzle migrations to the local preview database before authenticated local API testing. Deploy through the Sites workflow.
+Install dependencies through the Sites dependency helper. `pnpm test` runs 26 receipt-parser, authentication, household, receipt-photo access, CORS and shared-budget tests against SQLite with mocked identity and bindings. `pnpm build` prepares OCR assets and builds the Worker. Apply Drizzle migrations to the local preview database before authenticated local API testing. Deploy through the Sites workflow.
 
 Changes refresh every 3 seconds while visible. An internet connection is required; this version is an installable mobile web app, not a native App Store package. Demo data is explicitly labeled and never stored in a signed-in household.
 

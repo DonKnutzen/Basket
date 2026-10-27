@@ -15,3 +15,10 @@ The existing API remains at https://basket-together.airychime12.chatgpt.site and
 A signed-out visitor can open the sign-in screen without first contacting the household API. A signed-in household still requires a working connection to that API. On-device OCR requires review before saving. Prices reflect saved receipts, not live store prices.
 
 Preserve Supabase redirects for https://donknutzen.github.io/Basket/account-complete.html and the existing backend callback. Confirmation-mail delivery and a real registration/recovery round trip still need end-to-end verification.
+
+## Shared households and lists
+
+The active household and the other members are shown on every app screen. All lists belong to the active household and are automatically visible and editable by its members; there is no separate per-list sharing toggle. Use **Shared list** to create another list in a shared household. The creation dialog states who it is shared with. A one-person household shows **Only you** and an invitation entry point. Joining another household keeps the previous household; use the switcher at the top of household settings to choose which one is active.
+
+Local API tests verify two separately authenticated email users joining the same household, creating lists from either account, seeing and checking the same items, and switching back without exposing data to unrelated households.
+
