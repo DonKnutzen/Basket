@@ -12,7 +12,7 @@ Vinext / React, Cloudflare D1 (`DB`) and R2 (`BUCKET`). Supabase email/password 
 
 ## Development
 
-Install dependencies through the Sites dependency helper. `pnpm test` runs 28 receipt-parser, authentication, household, receipt-photo access, CORS and shared-budget tests against SQLite with mocked identity and bindings. `pnpm build` prepares OCR assets and builds the Worker. Apply Drizzle migrations to the local preview database before authenticated local API testing. Deploy through the Sites workflow.
+Install dependencies through the Sites dependency helper. `pnpm test` runs 30 receipt-parser, authentication, household, receipt-photo access, CORS and shared-budget tests against SQLite with mocked identity and bindings. `pnpm build` prepares OCR assets and builds the Worker. Apply Drizzle migrations to the local preview database before authenticated local API testing. Deploy through the Sites workflow.
 
 Changes refresh every 3 seconds while visible. An internet connection is required; this version is an installable mobile web app, not a native App Store package. Demo data is explicitly labeled and never stored in a signed-in household.
 
@@ -57,3 +57,7 @@ The source audit confirmed two existing Supabase projects: Language Suite uses `
 Take receipt photo beneath the shopping list opens the rear-camera capture input and starts on-device OCR after selection. The browser controls whether a camera or file picker is offered. Review and confirm all recognized items and totals before saving. In the review, choose a list and correct each On the list / Additional purchase / Not sure classification. Exact normalized names are suggestions, not a claim that a mismatched receipt abbreviation was unplanned. Open list items are never scored, cleared or labeled forgotten.
 
 Saved receipts retain the chosen list name and additional purchases as a snapshot, shared with the household. First recorded purchases are based on the household price book when the receipt is saved; they do not claim a product has never been bought before. Versioned metadata uses the existing receipts.raw_text column, retaining OCR text without a schema migration. Legacy receipts have no retroactive comparison.
+
+## Product icons
+
+Product icons use small local SVG illustrations, whole-word and phrase matching for English product descriptions, and shared household corrections. Specific phrases distinguish almond milk from almonds, cream cheese from cream, while preparation words such as pickled or marinated keep the same underlying ginger icon. No external image API or paid AI service is needed. In the item editor, choose Item icon to remember a normalized item-name mapping across the household’s lists and price book, or Automatic to remove the correction. This is deterministic recognition plus explicit remembered corrections, not automatic machine learning. Unknown items fall back to their category, then the basket. The item_icons table is a schema-only, additive migration.

@@ -109,3 +109,37 @@ test('receipt comparison cannot reference another household and legacy receipts 
  sql.prepare('UPDATE receipts SET raw_text=? WHERE id=?').run('Original OCR text','receipt-1');
  assert.equal((await get()).body.receipts[0].shopping,undefined);
 });
+
+test('food icons recognize meaningful words in descriptions, plural forms and food phrases',async()=>{
+ const {foodIcon}=await import('../lib/food-icons');
+ const cases={
+ 'Good Oranges':'orange','Please buy a bag of good oranges for breakfast':'orange',
+ 'Ginger':'ginger','organic fresh ginger root 100g':'ginger','marinated Ginger':'ginger','A jar of pickled ginger please':'ginger',
+ 'Back cottage cheese':'cheese','mature cheddar cheese':'cheese','Parmigiano Reggiano':'cheese','Pancetta':'meat','smoked bacon cubes':'meat',
+ 'Almonds':'almond','roasted unsalted almonds 250g':'almond','Tamari':'sauce','Tamari Sauce':'sauce','We need gluten free tamari sauce for dinner':'sauce',
+ 'almond milk':'milk','almond flour':'grain','cream cheese':'cheese','ginger beer':'drink','eggplant':'vegetable','tea towels':'soap','organic chickpeas':'bean'
+ } as const;
+ for(const [name,expected]of Object.entries(cases))assert.equal(foodIcon(name),expected,name);
+ assert.equal(foodIcon('Cheesecake brandless mystery'),'basket','substrings inside unrelated words do not count');
+ assert.equal(foodIcon('Something unfamiliar',[],'Pantry'),'package');
+});
+test('icon corrections are shared, survive removing and readding an item, and remain household scoped',async()=>{
+ const {foodIcon}=await import('../lib/food-icons');
+ const owner=(await get()).body,listId=owner.lists[0].id;
+ await post('addItem',{id:'mystery',listId,name:'Mystery snack',quantity:'1'});
+ assert.equal((await post('updateItem',{id:'mystery',icon:'almond'})).status,200);
+ await post('updateItem',{id:'mystery',checked:true});await post('clearChecked',{listId});
+ await post('addItem',{id:'again',listId,name:'MYSTERY SNACK',quantity:'2'});
+ const prefs=(await get()).body.iconPreferences;
+ assert.deepEqual(prefs,[{name:'mystery snack',icon:'almond' as const}]);
+ assert.equal(foodIcon('Mystery snack',prefs),'almond');
+ const invite=(await post('invite')).body;user('sam');await get();
+ assert.deepEqual((await get()).body.iconPreferences,[]);
+ assert.equal((await post('updateItem',{id:'again',icon:'meat'})).status,404);
+ await post('join',{code:invite.code});
+ assert.deepEqual((await get()).body.iconPreferences,prefs);
+ assert.equal((await post('updateItem',{id:'again',icon:'unsupported',name:'Do not change'})).status,400);
+ assert.equal((await get()).body.items.find((i:any)=>i.id==='again').name,'MYSTERY SNACK');
+ await post('updateItem',{id:'again',icon:'auto'});
+ assert.deepEqual((await get()).body.iconPreferences,[]);
+});
