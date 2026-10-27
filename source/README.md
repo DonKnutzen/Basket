@@ -12,7 +12,7 @@ Vinext / React, Cloudflare D1 (`DB`) and R2 (`BUCKET`). Supabase email/password 
 
 ## Development
 
-Install dependencies through the Sites dependency helper. `pnpm test` runs 26 receipt-parser, authentication, household, receipt-photo access, CORS and shared-budget tests against SQLite with mocked identity and bindings. `pnpm build` prepares OCR assets and builds the Worker. Apply Drizzle migrations to the local preview database before authenticated local API testing. Deploy through the Sites workflow.
+Install dependencies through the Sites dependency helper. `pnpm test` runs 28 receipt-parser, authentication, household, receipt-photo access, CORS and shared-budget tests against SQLite with mocked identity and bindings. `pnpm build` prepares OCR assets and builds the Worker. Apply Drizzle migrations to the local preview database before authenticated local API testing. Deploy through the Sites workflow.
 
 Changes refresh every 3 seconds while visible. An internet connection is required; this version is an installable mobile web app, not a native App Store package. Demo data is explicitly labeled and never stored in a signed-in household.
 
@@ -51,3 +51,9 @@ The Pages build is self-contained except for pinned Tesseract.js OCR worker/core
 Registration settings are now read at `/api/account-config`, with `/api/auth/config` retained as a compatibility alias. The primary email callback is `/account-complete` on the Worker site and `account-complete.html` within the Pages directory. Allow both `https://basket-together.airychime12.chatgpt.site/account-complete` and `https://donknutzen.github.io/Basket/account-complete.html` in Supabase's redirect allowlist before a complete email-confirmation/reset round trip can be verified.
 
 The source audit confirmed two existing Supabase projects: Language Suite uses `ufuwxtshfoqiddvyptgn` with email autoconfirm currently enabled, while Pokémon and Basket use `wrmlkpuhyqxkehbvzoxx` with email confirmation enabled. The connected management account is not authorized to administer the language project. No accounts, progress, keys or project settings were migrated or removed, and no additional project or paid resource was created. Consolidation into one project remains blocked on access to the language project's auth/data administration and a preservation plan for existing users.
+
+## Receipt camera and purchase notes
+
+Take receipt photo beneath the shopping list opens the rear-camera capture input and starts on-device OCR after selection. The browser controls whether a camera or file picker is offered. Review and confirm all recognized items and totals before saving. In the review, choose a list and correct each On the list / Additional purchase / Not sure classification. Exact normalized names are suggestions, not a claim that a mismatched receipt abbreviation was unplanned. Open list items are never scored, cleared or labeled forgotten.
+
+Saved receipts retain the chosen list name and additional purchases as a snapshot, shared with the household. First recorded purchases are based on the household price book when the receipt is saved; they do not claim a product has never been bought before. Versioned metadata uses the existing receipts.raw_text column, retaining OCR text without a schema migration. Legacy receipts have no retroactive comparison.

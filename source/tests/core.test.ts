@@ -82,3 +82,30 @@ test('receipt photos reject requests without a valid email or explicit ChatGPT i
 test('GitHub Pages can preflight authenticated calls; unrelated origins are rejected',async()=>{const req=new Request('https://basket.test/api/basket',{method:'OPTIONS',headers:{Origin:'https://donknutzen.github.io','Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'authorization, content-type, x-basket-identity'}});const r=await OPTIONS(req);assert.equal(r.status,204);assert.equal(r.headers.get('Access-Control-Allow-Origin'),'https://donknutzen.github.io');assert.match(r.headers.get('Access-Control-Allow-Headers')||'',/Authorization/);assert.equal(r.headers.get('Access-Control-Allow-Credentials'),null);assert.equal(preflight(new Request('https://basket.test/api/basket',{method:'OPTIONS',headers:{Origin:'https://evil.test'}})).status,403)});
 test('Pages-origin mutations still require authenticated household membership',async()=>{user(null);const req=new Request('https://basket.test/api/basket',{method:'POST',headers:{Origin:'https://donknutzen.github.io','Content-Type':'application/json'},body:JSON.stringify({action:'renameHome',name:'Untrusted'})});const r=await POST(req);assert.equal(r.status,401);assert.equal(r.headers.get('Access-Control-Allow-Origin'),'https://donknutzen.github.io');user('alex');await get();const saved=await post('saveBudget',{month:'2026-10',currency:'CAD',category:'Overall',amount:'600'},'https://donknutzen.github.io');assert.equal(saved.status,200)});
 test('account configuration endpoint exposes only safe sign-up flags with Pages CORS',async()=>{const original=globalThis.fetch;globalThis.fetch=async()=>Response.json({disable_signup:false,external:{email:true},mailer_autoconfirm:false,private_field:'must not be exposed'});try{const r=await CONFIG_GET(new Request('https://basket.test/api/account-config',{headers:{Origin:'https://donknutzen.github.io'}}));assert.equal(r.status,200);assert.equal(r.headers.get('Access-Control-Allow-Origin'),'https://donknutzen.github.io');assert.deepEqual(await r.json(),{available:true,signupEnabled:true,emailConfirmationRequired:true})}finally{globalThis.fetch=original}});
+
+test('receipt notes retain additional and first purchases without scoring or clearing long-lived list items',async()=>{
+ const home=(await get()).body,listId=home.lists[0].id;
+ await post('addItem',{id:'long-lived',listId,name:'Rare tea',quantity:'1'});
+ await post('addItem',{id:'milk',listId,name:'Milk',quantity:'2'});
+ const first={...draft(),listId,lines:[{...draft().lines[0],purchaseType:'extra'}]};
+ assert.equal((await post('saveReceipt',{draft:first})).status,200);
+ let saved=(await get()).body;
+ assert.deepEqual(saved.receipts[0].shopping,{listName:'Weekly groceries',extraItems:['Milk'],firstPurchases:['Milk']});
+ assert.ok(!('rawText' in saved.receipts[0]));
+ assert.ok(saved.items.every((item:any)=>item.checked===0));
+ await post('clearChecked',{listId});
+ await post('saveReceipt',{draft:{...draft(),id:'receipt-2',listId,lines:[{...draft().lines[0],purchaseType:'planned'}]}});
+ saved=(await get()).body;
+ const second=saved.receipts.find((r:any)=>r.id==='receipt-2');
+ assert.deepEqual(second.shopping,{listName:'Weekly groceries',extraItems:[],firstPurchases:[]});
+ assert.ok(saved.items.some((item:any)=>item.name==='Rare tea'));
+ const invite=(await post('invite')).body;user('sam');await get();await post('join',{code:invite.code});
+ assert.deepEqual((await get()).body.receipts.find((r:any)=>r.id==='receipt-1').shopping.extraItems,['Milk']);
+});
+test('receipt comparison cannot reference another household and legacy receipts stay readable',async()=>{
+ const owner=(await get()).body;user('sam');await get();
+ assert.equal((await post('saveReceipt',{draft:{...draft(),listId:owner.lists[0].id}})).status,404);
+ user('alex');await post('saveReceipt',{draft:draft()});
+ sql.prepare('UPDATE receipts SET raw_text=? WHERE id=?').run('Original OCR text','receipt-1');
+ assert.equal((await get()).body.receipts[0].shopping,undefined);
+});

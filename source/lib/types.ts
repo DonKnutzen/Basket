@@ -8,9 +8,10 @@ export function newId(){if(typeof crypto.randomUUID==='function')return crypto.r
 export type Item={id:string;listId:string;name:string;quantity:string;category:string;checked:number;addedBy:string};
 export type Product={id:string;name:string;normalized:string;category:string;packSize:string};
 export type PriceLine={id:string;receiptId:string;productId:string;label:string;quantity:number;amountCents:number;category:string;packSize:string;store:string;date:string;currency:string;productName:string};
-export type Receipt={id:string;store:string;date:string;totalCents:number;taxCents:number;currency:string;imageKey?:string;createdBy:string};
+export type ReceiptShopping={listName?:string;extraItems:string[];firstPurchases:string[]};
+export type Receipt={shopping?:ReceiptShopping;id:string;store:string;date:string;totalCents:number;taxCents:number;currency:string;imageKey?:string;createdBy:string};
 export type BasketData={user:{id:string;name:string;email?:string;provider?:'email'|'chatgpt'};canImportChatGPT?:boolean;household:{id:string;name:string;ownerId:string};homes:{id:string;name:string}[];members:{userId:string;displayName:string}[];lists:{id:string;name:string}[];items:Item[];budgets:Budget[];products:Product[];receipts:Receipt[];lines:PriceLine[];aliases:{store:string;label:string;productId:string}[]};
-export type DraftLine={id:string;label:string;name:string;quantity:string;amount:string;category:string;packSize:string;matched?:boolean};
-export type ReceiptDraft={id:string;store:string;date:string;total:string;tax:string;currency:string;lines:DraftLine[];rawText:string;image?:Blob;preview?:string};
+export type DraftLine={id:string;label:string;name:string;quantity:string;amount:string;category:string;packSize:string;matched?:boolean;purchaseType?:'planned'|'extra'|'unknown'};
+export type ReceiptDraft={listId?:string;id:string;store:string;date:string;total:string;tax:string;currency:string;lines:DraftLine[];rawText:string;image?:Blob;preview?:string};
 
 export type Budget={id:string;month:string;currency:string;category:string;amountCents:number;updatedBy:string;updatedAt:number};
