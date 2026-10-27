@@ -1,0 +1,7 @@
+'use client';
+import {appPath} from '../../lib/hosting';
+import {useEffect,useState} from 'react';
+import {ShoppingBasket,LoaderCircle,ArrowRight,Mail} from 'lucide-react';
+import {browserAuth,setIdentityPreference} from '../../lib/supabase-browser';
+import AuthScreen from '../auth-screen';
+export default function AuthComplete(){const [state,setState]=useState('loading'),[error,setError]=useState('');useEffect(()=>{let live=true;const {data}=browserAuth().auth.onAuthStateChange(event=>{if(live&&event==='PASSWORD_RECOVERY')setState('password')});browserAuth().auth.getSession().then(({data,error})=>{if(!live)return;if(error){setError('The link could not finish signing you in. If you confirmed your email, you can sign in with your password.');setState('signin');return}if(data.session){setIdentityPreference('email');setState(previous=>previous==='password'?'password':'complete')}else setState('signin')});return()=>{live=false;data.subscription.unsubscribe()}},[]);if(state==='password'||state==='signin')return <><AuthScreen initialMode={state==='password'?'password':'signin'} success={()=>{window.location.href=appPath()}}/>{error&&<div className="toast" role="status"><Mail size={16}/>{error}</div>}</>;return <div className="loading"><ShoppingBasket size={43}/><h1>basket<span>.</span></h1>{state==='loading'?<><LoaderCircle className="spin" size={20}/><p>Finishing your sign-in…</p></>:<><h2>You’re all set.</h2><p>Your email is confirmed.</p><a className="primary" href={appPath()}>Open your household <ArrowRight size={16}/></a></>}</div>}

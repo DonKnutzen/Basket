@@ -1,0 +1,16 @@
+import {createRequire} from 'node:module';
+import {dirname,resolve,join} from 'node:path';
+import {readFile,writeFile,mkdir,copyFile} from 'node:fs/promises';
+const req=createRequire(import.meta.url),esbuild=req(req.resolve('esbuild',{paths:[dirname(req.resolve('vite'))]}));
+const base='/Basket/',backend='https://basket-together.airychime12.chatgpt.site';
+const outArg=process.argv.indexOf('--out');
+const out=resolve(outArg>=0?process.argv[outArg+1]:'docs');await mkdir(out,{recursive:true});
+const build=await esbuild.build({entryPoints:['frontend/main.tsx'],bundle:true,write:false,platform:'browser',format:'esm',target:'es2022',minify:true,legalComments:'eof',define:{'process.env.NODE_ENV':'"production"','import.meta.env.BASE_URL':JSON.stringify(base),'import.meta.env.VITE_BASKET_API_URL':JSON.stringify(backend)},tsconfig:'tsconfig.json'});
+const script=build.outputFiles[0].text.replace(/<\/script/gi,'<\\/script');const css=(await readFile('app/globals.css','utf8')).replace(/^@import\s+['"]tailwindcss['"];\s*/,'');
+const html=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#285640"><meta name="description" content="Shared shopping lists, receipt scanning, prices and household budgets."><meta name="apple-mobile-web-app-capable" content="yes"><title>Basket — Shop together.</title><link rel="icon" href="./favicon.svg"><link rel="apple-touch-icon" href="./icon-192.png"><link rel="manifest" href="./manifest.webmanifest"><style>${css}</style></head><body><div id="root"></div><noscript>Basket needs JavaScript to sign in and sync your household.</noscript><script type="module">${script}</script></body></html>`;
+await writeFile(join(out,'index.html'),html);await writeFile(join(out,'account-complete.html'),html);
+for(const f of ['favicon.svg','icon-192.png','icon-512.png'])await copyFile(join('public',f),join(out,f));
+const manifest=JSON.parse(await readFile('public/manifest.webmanifest','utf8'));manifest.start_url=base;manifest.scope=base;for(const icon of manifest.icons)icon.src=base+icon.src.replace(/^\//,'');await writeFile(join(out,'manifest.webmanifest'),JSON.stringify(manifest));
+await writeFile(join(out,'sw.js'),"self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));\n// Network-only. Private account data and receipts are not cached.\n");
+await writeFile(join(out,'.nojekyll'),'');
+console.log(JSON.stringify({directory:out,base,backend,bytes:Buffer.byteLength(html)}));

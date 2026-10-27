@@ -1,0 +1,16 @@
+export const CATEGORIES=['Produce','Dairy & eggs','Meat & fish','Bakery','Pantry','Frozen','Drinks','Household','Other'];
+export function normalize(s:string){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim()}
+export function inferCategory(name:string){const n=name.toLowerCase();if(/frozen|ice cream/.test(n))return 'Frozen';if(/milk|cheese|yog[hu]?urt|egg|butter|cream/.test(n))return 'Dairy & eggs';if(/apple|banana|avocado|tomato|lettuce|carrot|onion|potato|lemon|lime|berry|berries|spinach|cucumber|pepper|broccoli|garlic|mushroom|orange|grape|fruit/.test(n))return 'Produce';if(/chicken|beef|pork|salmon|fish|steak|bacon|turkey|meat/.test(n))return 'Meat & fish';if(/bread|bagel|croissant|bun|baguette/.test(n))return 'Bakery';if(/coffee|tea|juice|water|soda|beer|wine/.test(n))return 'Drinks';if(/soap|paper|detergent|cleaner|shampoo|toothpaste|sponge|trash/.test(n))return 'Household';if(/pasta|rice|flour|sugar|oil|salt|cereal|oat|honey|sauce|beans|lentil|chocolate/.test(n))return 'Pantry';return 'Other'}
+export function localDate(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+export function money(cents:number,currency='CAD'){return new Intl.NumberFormat('en-CA',{style:'currency',currency}).format(cents/100)}
+export function toCents(s:string){const v=s.trim().replace(',','.');return /^-?\d+(?:\.\d{1,2})?$/.test(v)?Math.round(Number(v)*100):NaN}
+export function newId(){if(typeof crypto.randomUUID==='function')return crypto.randomUUID();const b=crypto.getRandomValues(new Uint8Array(16));b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;const h=Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`}
+export type Item={id:string;listId:string;name:string;quantity:string;category:string;checked:number;addedBy:string};
+export type Product={id:string;name:string;normalized:string;category:string;packSize:string};
+export type PriceLine={id:string;receiptId:string;productId:string;label:string;quantity:number;amountCents:number;category:string;packSize:string;store:string;date:string;currency:string;productName:string};
+export type Receipt={id:string;store:string;date:string;totalCents:number;taxCents:number;currency:string;imageKey?:string;createdBy:string};
+export type BasketData={user:{id:string;name:string;email?:string;provider?:'email'|'chatgpt'};canImportChatGPT?:boolean;household:{id:string;name:string;ownerId:string};homes:{id:string;name:string}[];members:{userId:string;displayName:string}[];lists:{id:string;name:string}[];items:Item[];budgets:Budget[];products:Product[];receipts:Receipt[];lines:PriceLine[];aliases:{store:string;label:string;productId:string}[]};
+export type DraftLine={id:string;label:string;name:string;quantity:string;amount:string;category:string;packSize:string;matched?:boolean};
+export type ReceiptDraft={id:string;store:string;date:string;total:string;tax:string;currency:string;lines:DraftLine[];rawText:string;image?:Blob;preview?:string};
+
+export type Budget={id:string;month:string;currency:string;category:string;amountCents:number;updatedBy:string;updatedAt:number};

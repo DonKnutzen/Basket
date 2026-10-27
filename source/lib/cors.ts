@@ -1,0 +1,4 @@
+const FRONTEND_ORIGINS=new Set(['https://donknutzen.github.io']);
+export function isAllowedOrigin(request:Request){const origin=request.headers.get('origin');return !origin||origin===new URL(request.url).origin||FRONTEND_ORIGINS.has(origin)}
+export function withCors(response:Response,request:Request){const origin=request.headers.get('origin');if(origin&&isAllowedOrigin(request)){response.headers.set('Access-Control-Allow-Origin',origin);response.headers.set('Vary','Origin')}return response}
+export function preflight(request:Request){if(!isAllowedOrigin(request))return new Response(null,{status:403});return withCors(new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type, X-Basket-Identity','Access-Control-Max-Age':'600'}}),request)}

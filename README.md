@@ -1,21 +1,17 @@
 # Basket
 
-English mobile-first shared shopping lists, receipts, product prices and household budgets.
+App: https://donknutzen.github.io/Basket/
 
-**Open the app: https://donknutzen.github.io/Basket/**
+Independent GitHub Pages frontend with shared shopping lists, receipt scanning, product-price history and household budgets. Mobile lists open directly to list controls and item entry. Profile settings offer three locally saved text sizes. Account forms require at least six characters for a new password.
 
-This is Basket’s independent GitHub Pages repository. It is separate from A1-Language-Suite and Pokemon-Guide.
+## Source and updates
 
-## Hosting
+Authored application code is in `source/`. From that directory, install dependencies with `pnpm install --frozen-lockfile` and run `pnpm run build:pages --out ..`. Commit the updated root `index.html` and `account-complete.html` along with source changes. GitHub Pages publishes `main` from `/ (root)`.
 
-GitHub Pages serves the static frontend from the root of `main`. `index.html` contains the compiled frontend; `account-complete.html` handles account email links. No private credentials or household records are included.
+## Backend and accounts
 
-The existing Basket API remains at https://basket-together.airychime12.chatgpt.site. It verifies Supabase accounts and household membership. GitHub Pages cannot execute the backend or store private receipt photos. Basket reuses the existing Supabase project and creates no third project.
+The existing API remains at https://basket-together.airychime12.chatgpt.site and verifies Supabase identity plus household membership. Source also contains that Worker and its migrations. GitHub Pages hosts the frontend only. No third Supabase project is created. No private account credentials, household records or receipt photos are in this repository.
 
-## Account email callbacks
+A signed-out visitor can open the sign-in screen without first contacting the household API. A signed-in household still requires a working connection to that API. On-device OCR requires review before saving. Prices reflect saved receipts, not live store prices.
 
-Preserve existing Supabase redirects and allow https://donknutzen.github.io/Basket/account-complete.html for confirmation and password recovery. Email delivery and redirects still need a complete end-to-end verification.
-
-## Receipts
-
-On-device OCR loads free pinned Tesseract assets on demand. Users review recognized items before saving. Receipt prices are historical purchases, not live supermarket prices.
+Preserve Supabase redirects for https://donknutzen.github.io/Basket/account-complete.html and the existing backend callback. Confirmation-mail delivery and a real registration/recovery round trip still need end-to-end verification.
