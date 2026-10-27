@@ -117,11 +117,28 @@ test('food icons recognize meaningful words in descriptions, plural forms and fo
  'Ginger':'ginger','organic fresh ginger root 100g':'ginger','marinated Ginger':'ginger','A jar of pickled ginger please':'ginger',
  'Back cottage cheese':'cheese','mature cheddar cheese':'cheese','Parmigiano Reggiano':'cheese','Pancetta':'meat','smoked bacon cubes':'meat',
  'Almonds':'almond','roasted unsalted almonds 250g':'almond','Tamari':'sauce','Tamari Sauce':'sauce','We need gluten free tamari sauce for dinner':'sauce',
- 'almond milk':'milk','almond flour':'grain','cream cheese':'cheese','ginger beer':'drink','eggplant':'vegetable','tea towels':'soap','organic chickpeas':'bean'
+ 'almond milk':'milk','almond flour':'grain','cream cheese':'cheese','ginger beer':'drink','eggplant':'vegetable','tea towels':'soap','organic chickpeas':'bean',
+ 'Nudeln':'pasta','Vollkornnudeln 500g':'pasta','rice noodles':'pasta','Spaghetti':'pasta','Reis':'rice','basmati rice':'rice',
+ 'Äpfel':'apple','frische Möhren':'carrot','Käse':'cheese','Hafermilch':'milk','Hähnchen':'meat','Lachs':'fish','Tonkabohnen':'bean'
  } as const;
  for(const [name,expected]of Object.entries(cases))assert.equal(foodIcon(name),expected,name);
  assert.equal(foodIcon('Cheesecake brandless mystery'),'basket','substrings inside unrelated words do not count');
  assert.equal(foodIcon('Something unfamiliar',[],'Pantry'),'package');
+});
+
+test('shopping groups keep fruit and vegetables first and use remembered icons for order and colour',async()=>{
+ const {shoppingGroup,foodGroupClass,sortShoppingItems}=await import('../lib/food-presentation');
+ const names=['Nudeln','Pancetta','Äpfel','Reis','Tomaten','Milk','Lachs','Bananen','Gurke'];
+ const items=names.map((name,i)=>({id:String(i),listId:'l',name,quantity:'1',category:'Other',checked:0,addedBy:'Don'}));
+ const sorted=sortShoppingItems(items);
+ assert.deepEqual(sorted.map(i=>shoppingGroup(i.name)),['Fruit','Fruit','Vegetables','Vegetables','Meat','Fish & seafood','Dairy & eggs','Pantry','Pantry']);
+ assert.deepEqual(items.map(i=>i.name),names,'sorting must not mutate household data');
+ assert.equal(foodGroupClass('Pancetta'),foodGroupClass('Hähnchen'));
+ assert.notEqual(foodGroupClass('Pancetta'),foodGroupClass('Reis'));
+ assert.equal(shoppingGroup('Frozen broccoli',[],'Frozen'),'Frozen');
+ const prefs=[{name:'mystery',icon:'meat' as const}];
+ assert.equal(shoppingGroup('Mystery',prefs),'Meat');
+ assert.equal(foodGroupClass('Mystery',prefs),foodGroupClass('Pancetta'));
 });
 test('icon corrections are shared, survive removing and readding an item, and remain household scoped',async()=>{
  const {foodIcon}=await import('../lib/food-icons');
@@ -142,4 +159,30 @@ test('icon corrections are shared, survive removing and readding an item, and re
  assert.equal((await get()).body.items.find((i:any)=>i.id==='again').name,'MYSTERY SNACK');
  await post('updateItem',{id:'again',icon:'auto'});
  assert.deepEqual((await get()).body.iconPreferences,[]);
+});
+
+test('new pasta and rice icon choices are remembered after removing and readding products',async()=>{
+ const listId=(await get()).body.lists[0].id;
+ for(const icon of ['pasta','rice']){
+  const name='Special '+icon;
+  await post('addItem',{id:icon,listId,name,quantity:'1'});
+  assert.equal((await post('updateItem',{id:icon,icon})).status,200);
+  await post('deleteItem',{id:icon});
+  await post('addItem',{id:icon+'-again',listId,name,quantity:'1'});
+  assert.ok((await get()).body.iconPreferences.some((p:any)=>p.name===name.toLowerCase()&&p.icon===icon));
+ }
+});
+
+test('every selectable food icon renders a compact coloured illustration',async()=>{
+ const React=await import('react');
+ const {createRequire}=await import('node:module');
+ const {renderToStaticMarkup}=createRequire(import.meta.url)('react-dom/server');
+ const {Food}=await import('../app/art');
+ const {FOOD_ICONS}=await import('../lib/food-icons');
+ for(const [icon]of FOOD_ICONS){
+  const markup=renderToStaticMarkup(React.createElement(Food,{name:'',icon}));
+  assert.match(markup,/width="48"/,icon);
+  assert.match(markup,/fill="#[0-9a-fA-F]{6}"/,icon);
+  assert.doesNotMatch(markup,/lucide/,icon);
+ }
 });
