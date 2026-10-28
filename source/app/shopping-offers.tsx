@@ -2,6 +2,8 @@
 import React,{useEffect,useState} from 'react';
 import {locale,tr} from '../lib/i18n';
 import {GermanFlyerImport,GermanFlyerMatches} from './flyer-import';
+import {fetchRewePartialData,berlinDay,type RewePartialData} from '../lib/rewe-official-weekly';
+import {fetchAldiWeeklyData,type AldiWeeklyData} from '../lib/aldi-nord-weekly';
 import {isCopyOnlyOfferLinkContext} from '../lib/offer-link-navigation';
 import {
  DEFAULT_OFFER_REGION,OFFER_PROVINCES,GERMAN_OFFER_CITIES,officialGermanFlyers,checkOffers,providerAvailable,restoreOfferRegion,storeChoices,isStoreOfferConnected,
@@ -35,6 +37,32 @@ function OfferSourceLink({url,children,className,title}:{url:string;children:Rea
  return <a href={url} className={className} title={title} target="_blank" rel="noopener noreferrer">{children}</a>;
 }
 
+function GermanAutomaticSourceStatus({stores}:{stores:readonly string[]}){
+ const [rewe,setRewe]=useState<RewePartialData|null>(null);
+ const [aldi,setAldi]=useState<AldiWeeklyData|null>(null);
+ const storeKey=[...stores].sort().join(',');
+ useEffect(()=>{
+  let active=true;
+  if(!stores.length||stores.includes('rewe'))void fetchRewePartialData().then(d=>{if(active)setRewe(d)});
+  else setRewe(null);
+  if(!stores.length||stores.includes('aldi'))void fetchAldiWeeklyData().then(d=>{if(active)setAldi(d)});
+  else setAldi(null);
+  return()=>{active=false};
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[storeKey]);
+ const today=berlinDay();
+ const reweCurrent=!!rewe&&rewe.status==='partial'&&rewe.validFrom<=today&&rewe.validUntil>=today;
+ const aldiCurrent=!!aldi&&aldi.status==='partial'&&aldi.checkedAt<=today&&
+  aldi.offers.some(x=>x.validFrom<=today&&x.validUntil>=today);
+ return <div className="offer-de-feed-status">
+  {(!stores.length||stores.includes('rewe'))&&<small>REWE Kiel: {reweCurrent
+   ?tr('Current partial flyer matches')+' · '+rewe!.validUntil
+   :tr('No verified current flyer data')}</small>}
+  {(!stores.length||stores.includes('aldi'))&&<small>ALDI Nord: {aldiCurrent
+   ?tr('Current partial flyer matches')+' · '+aldi!.checkedAt
+   :tr('No verified current flyer data')}</small>}
+ </div>;
+}
 export function useOfferRegion(){
  const [region,setRegion]=useState<OfferRegion>(DEFAULT_OFFER_REGION);
  const [ready,setReady]=useState(false);
@@ -51,7 +79,7 @@ export function OfferSettings({region,onChange}:{region:OfferRegion;onChange:Rea
    <p>{tr('Only check offers for products on your shopping list. Select your region and preferred stores.')}</p>
    <div className="offer-region-fields">
     <label>{tr('Country')}<select value={region.country} onChange={e=>onChange({
-      country:e.target.value==='DE'?'DE':'CA',province:e.target.value==='DE'?'':'NS',postalCode:'',stores:[],...(e.target.value==='DE'?{city:'Kiel'}:{}),
+      country:e.target.value==='DE'?'DE':'CA',province:e.target.value==='DE'?'':'NS',postalCode:'',stores:e.target.value==='DE'?['rewe','aldi']:[],...(e.target.value==='DE'?{city:'Kiel'}:{}),
     })}><option value="CA">{tr('Canada')}</option><option value="DE">{tr('Germany')}</option></select></label>
     {region.country==='CA'&&<label>{tr('Province')}<select value={region.province}
      onChange={e=>onChange(x=>({...x,province:e.target.value,stores:[]}))}>
@@ -71,13 +99,14 @@ export function OfferSettings({region,onChange}:{region:OfferRegion;onChange:Rea
     </button>;
    })}</div>
    <p className="offer-source-note">
-    {region.country==='DE'?tr('REWE Kiel (Holtenauer Str. 69–71): Basket automatically checks a small, incomplete selection of weekly flyer prices when an accessible source exists. It does not guarantee the same brand, size or store stock. Other German stores are not connected.')
+    {region.country==='DE'?tr('REWE Kiel and ALDI Nord are selected by default. ALDI Nord's limited official-page offer data is refreshed daily; REWE's currently linked week can expire unless a newly authorized flyer source is supplied. Prices are incomplete and must be checked for product and pack size.')
       : eligible&&region.province==='NS'
       ? tr('Nova Scotia: weekly flyer reference prices for 19 common staples from Aubaine.ca. A price may not be a discount, and pack size and branch may differ. Source: aubaine.ca.')
       : eligible
       ? tr('Offer checks use a third-party data source. Deals must include dates and a recent observation; availability can differ by branch.')
       : tr('No verified automated offer feed is connected for this region or store selection. Receipt price history still works normally.')}
    </p>
+   {region.country==='DE'&&<GermanAutomaticSourceStatus stores={region.stores}/>}
    {region.country==='DE'&&<details className="flyer-optional-import"><summary>{tr('Optional: import your own flyer')}</summary><GermanFlyerImport/></details>}
   </div>
  </details>;
@@ -107,7 +136,7 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
    {!showGermanFlyers
     ? <button type="button" className="offer-check" onClick={()=>setShowGermanFlyers(true)}>🏷️ {tr('Check official flyers')}</button>
     : <>
-      <small>{tr('REWE Kiel flyer prices are checked automatically when available; only a few unambiguous product categories may match. If no result appears, check the retailer’s flyer: other stores do not have a live feed.')}</small>
+      <small>{tr('REWE and ALDI Nord grocery categories are checked automatically where current source data is available. Missing matches do not mean no sale, and brand and package sizes can differ.')}</small>
       <div className="offer-de-links">{links.map(l=><OfferSourceLink key={l.id} url={l.url}>{l.name}</OfferSourceLink>)}</div>
      </>}
   </div>;
