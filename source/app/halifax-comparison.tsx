@@ -42,7 +42,7 @@ export function HalifaxListComparison({region,items}:{region:GroceryRegion;items
         setData(existing.value as Plan);return;
       }
       const response=await basketFetch('/api/shopper-prices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({city:'halifax',lines,stores:selected})});
-      const payload=await response.json().catch(()=>({error:'invalid_response'}));
+      const payload=await response.json().catch(()=>({error:'invalid_response'})) as Record<string,unknown>;
       if(!response.ok)throw Error(payload?.error==='source_rate_limited'
         ? tr('Price service rate limit reached. Please try later.')
         : payload?.error==='sign_in_required'?tr('Sign in to compare prices.')
