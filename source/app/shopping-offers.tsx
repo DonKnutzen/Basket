@@ -2,7 +2,7 @@
 import React,{useEffect,useState} from 'react';
 import {locale,tr} from '../lib/i18n';
 import {
- DEFAULT_OFFER_REGION,OFFER_PROVINCES,checkOffers,providerAvailable,restoreOfferRegion,storeChoices,
+ DEFAULT_OFFER_REGION,OFFER_PROVINCES,checkOffers,providerAvailable,restoreOfferRegion,storeChoices,isStoreOfferConnected,
  type Deal,type OfferRegion,
 } from '../lib/current-offers';
 
@@ -32,14 +32,16 @@ export function OfferSettings({region,onChange}:{region:OfferRegion;onChange:Rea
    </div>
    <p className="offer-settings-caption">{tr('Preferred stores')} · {tr('No selection means all supported stores.')}</p>
    <div className="offer-store-chips">{stores.map(s=>{
-    const selected=region.stores.includes(s.id);
+    const selected=region.stores.includes(s.id),supported=isStoreOfferConnected(region,s.id);
     return <button key={s.id} type="button" aria-pressed={selected} className={selected?'active':''}
       onClick={()=>onChange(x=>({...x,stores:selected?x.stores.filter(id=>id!==s.id):[...x.stores,s.id]}))}>
-      {s.name}
+      {s.name}{supported?' ✓':''}
     </button>;
    })}</div>
    <p className="offer-source-note">
-    {eligible
+    {eligible&&region.province==='NS'
+      ? tr('Nova Scotia: weekly flyer reference prices for 19 common staples from Aubaine.ca. A price may not be a discount, and pack size and branch may differ. Source: aubaine.ca.')
+      : eligible
       ? tr('Offer checks use a third-party data source. Deals must include dates and a recent observation; availability can differ by branch.')
       : tr('No verified automated offer feed is connected for this region or store selection. Receipt price history still works normally.')}
    </p>
@@ -68,19 +70,19 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
  return <div className="offer-in-tile" aria-live="polite">
   {state==='idle'&&<button type="button" className="offer-check" onClick={lookup}>🏷️ {tr('Check offers')}</button>}
   {state==='checking'&&<small>{tr('Checking current offers…')}</small>}
-  {state==='none'&&<><small>{tr('No verified active offers found')}</small><button type="button" className="offer-again" onClick={lookup}>{tr('Check again')}</button></>}
+  {state==='none'&&<><small>{region.province==='NS'?tr('No current matching weekly flyer price in this source'):tr('No verified active offers found')}</small><button type="button" className="offer-again" onClick={lookup}>{tr('Check again')}</button></>}
   {state==='error'&&<><small>{tr('Offer source unavailable')}</small><button type="button" className="offer-again" onClick={lookup}>{tr('Try again')}</button></>}
   {state==='done'&&<>
-   <strong>🏷️ {tr('Current offers')} ({deals.length})</strong>
+   <strong>🏷️ {deals.some(d=>d.provider==='aubaine')?tr('Weekly flyer reference prices'):tr('Current offers')} ({deals.length})</strong>
    {deals.slice(0,3).map(d=><a key={d.id} className="offer-hit" href={d.sourceUrl} target="_blank" rel="noopener noreferrer"
      title={tr('View offer source')}>
      <span><b>{d.store}</b><small>{d.name}{d.packSize?' · '+d.packSize:''}</small></span>
      <span className="offer-money"><b>{localMoney(d.priceCents,d.currency)}</b>
       {d.regularCents!==undefined&&<small className="offer-was">{localMoney(d.regularCents,d.currency)}</small>}</span>
-     <small className="offer-period">{tr('Valid until')} {date(d.validUntil)} · {tr('Checked')} {date(d.observedAt)}{d.loyalty?' · '+tr('Membership required'):''}</small>
+     <small className="offer-period">{tr('Valid')} {date(d.validFrom)} – {date(d.validUntil)}{d.observedAt?' · '+tr('Checked')+' '+date(d.observedAt):''}{d.loyalty?' · '+tr('Membership required'):''}</small>
    </a>)}
    {deals.length>3&&<small>{tr('More matching offers exist.')}</small>}
-   <small>{tr('Source: Bidou · Verify price and product at the retailer.')}</small>
+   <small>{deals.some(d=>d.provider==='aubaine') ? tr('Source: aubaine.ca · Weekly flyer reference price, not guaranteed discount. Product, size and branch may differ. Verify before buying.') : tr('Source: Bidou · Verify price and product at the retailer.')}</small>
   </>}
  </div>;
 }
