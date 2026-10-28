@@ -77,7 +77,7 @@ test('integration adapter issues only two documented API GETs and no requests fo
 test('never silently matches a lettuce or potato product for milk or apples',async()=>{
   const onlyLettuce:FetchLike=async()=>({ok:true,json:async()=>({ok:true,data:{results:[{id:'lettuce',name:'Laitue romaine'}]}})});
   assert.equal(await fetchQuebecPrices('Milk',qc,onlyLettuce,now),null);
-  const chocolate:FetchLike=async()=>({ok:true,json:async()=>({ok:true,data:{results:[{id:'candy',name:'Boîte de chocolats au lait'}]}})});
+  const chocolate:FetchLike=async()=>({ok:true,json:async()=>({ok:true,data:{results:[{id:'candy',name:'Boîte de chocolats au lait'},{id:'flavoured',name:'Lait 2% au chocolat'}]}})});
   assert.equal(await fetchQuebecPrices('Milk',qc,chocolate,now),null);
   const potato:FetchLike=async()=>({ok:true,json:async()=>({ok:true,data:{results:[{id:'potato',name:'Pomme de terre blanche'}]}})});
   assert.equal(await fetchQuebecPrices('Apple',qc,potato,now),null);
