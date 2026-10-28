@@ -1,3 +1,4 @@
+import {groupFlyerText} from '../lib/flyer-text-view';
 import {flyerFileError,MAX_FLYER_PDF,MAX_FLYER_IMAGE} from '../lib/flyer-reader';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
@@ -68,4 +69,29 @@ test('a 16 MB REWE PDF is allowed; PDF up to 25 MB, photos up to 12 MB',()=>{
  assert.match(flyerFileError(image(MAX_FLYER_IMAGE+1))||'',/12 MB/);
  assert.match(flyerFileError({name:'angebot.zip',type:'application/zip',size:100})||'',/Only PDF/);
  assert.match(flyerFileError({name:'leer.pdf',type:'application/pdf',size:0})||'',/non-empty/);
+});
+
+test('OCR reading view groups pages, filters prices and supports product search',()=>{
+ const text=[
+  '[[BASKET_FLYER_PAGE_1]]',
+  'REWE Holtenauer Str. 69-71',
+  'Kerrygold Butter 250 g',
+  'Knaller 1,59 €',
+  '[[BASKET_FLYER_PAGE_2]]',
+  'ALDI Nord',
+  'Kartoffeln 2 kg 1.79',
+  'Zubereitung ohne Preis'
+ ].join('\n');
+ const prices=groupFlyerText(text);
+ assert.equal(prices.length,2);
+ assert.equal(prices[0].page,1);
+ assert.deepEqual(prices[0].lines,['Knaller 1,59 €']);
+ assert.deepEqual(prices[1].lines,['Kartoffeln 2 kg 1.79']);
+ const search=groupFlyerText(text,'Butter');
+ assert.deepEqual(search.map(x=>x.lines),[['Kerrygold Butter 250 g'],[]]);
+ const all=groupFlyerText(text,'',false);
+ assert.equal(all[0].total,3);
+ assert.equal(all[0].lines.length,3);
+ assert.equal(all[1].lines.length,3);
+ assert.equal(groupFlyerText('[[BASKET_FLYER_PAGE_4]]\n0,49 €')[0].page,4);
 });
