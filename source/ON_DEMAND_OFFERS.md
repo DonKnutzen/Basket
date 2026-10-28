@@ -39,3 +39,14 @@ No merchant permission request is required to continue developing the frontend, 
 `cd source && pnpm install --frozen-lockfile && pnpm test && pnpm exec tsc --noEmit && pnpm run build:pages --out ..`
 
 The project test suite includes coverage of one-item/two-request limits, no call for unsupported regions, store filters, promotion validation, stale/expired source rejection, translation of common product terms, and source URL safety. The compiled GitHub Pages assets are generated on the feature branch only; **production remains on main** until a real source is validated.
+
+## Germany: Kiel selection and official weekly-flyer fallback (28 October 2026)
+
+Germany now has a visible **Region: Kiel (Schleswig-Holstein)** selector. Older German selections default to Kiel. The retailer chips link to REWE, EDEKA, Lidl, ALDI Nord, PENNY and Kaufland. After the shopper taps **Check official flyers** on an item, Basket shows official website links only. No item name, household data or session data is sent to any retailer.
+
+- REWE and EDEKA links use specific example Kiel market pages; shoppers must confirm their store.
+- Lidl, ALDI Nord, PENNY and Kaufland links open the official offer pages, where the exact branch may need selection.
+- **No licensed, automated Germany weekly-offer feed is connected.** Basket does not invent or display German deal prices. The Germany provider remains unavailable and the Canada integration is unchanged.
+- Open Prices (ODbL) offers historical public price observations, including discounted sightings, but a sighting does not demonstrate a currently valid weekly offer. A separate observation feature would require Kiel coverage and CORS validation.
+- Allelebensmittel.de assistant shopping tools are expressly not a general-purpose data API; request explicit reuse permission before powering an app feed.
+
