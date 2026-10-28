@@ -90,7 +90,7 @@ function cents(v:unknown):number|null{
  return Number.isFinite(n)&&n>0&&n<100000?Math.round(n*100):null;
 }
 function localDay(now:Date,province:string){
- return new Intl.DateTimeFormat('sv-SE',{timeZone:province==='QC'?'America/Montreal':'America/Toronto',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
+ return new Intl.DateTimeFormat('sv-SE',{timeZone:province==='NS'?'America/Halifax':province==='QC'?'America/Montreal':'America/Toronto',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
 }
 function supportedName(store:unknown,region:OfferRegion){
  const s=normalize(text(store));const ids=supportedStores(region);
