@@ -2,7 +2,7 @@
 import React, {useEffect, useState} from 'react';
 import {tr,locale} from '../lib/i18n';
 import {
-  DEFAULT_GROCERY_REGION, GROCERY_STORES, PROVINCES,
+  DEFAULT_GROCERY_REGION, GROCERY_STORES, PROVINCES, halifaxProviderStores,
   availableProviderStores, getObservedPrices, localStores, normalizePostal,
   readGroceryRegion, type GroceryRegion, type ProductPriceResult,
 } from '../lib/regional-prices';
@@ -30,19 +30,25 @@ export function RegionalPricesSettings({region,update}:{
   useEffect(()=>{setPostal(region.postalCode);setError('')},[region.country,region.postalCode]);
   const stores=localStores(region);
   const enabled=availableProviderStores(region);
+  const halifaxEnabled=halifaxProviderStores(region);
   return <details className="regional-price-settings">
-    <summary>{tr('Local price comparison')} <span>{region.country}{region.province ? ' · '+region.province : ''}{region.postalCode ? ' · '+region.postalCode : ''}</span></summary>
+    <summary>{tr('Local price comparison')} <span>{region.city?({halifax:'Halifax',dartmouth:'Dartmouth',kiel:'Kiel'} as Record<string,string>)[region.city]:region.province||region.country}</span></summary>
     <div className="regional-price-settings-body">
       <p>{tr('Choose your region and favourite stores. Settings stay on this device.')}</p>
       <div className="regional-price-fields">
         <label>{tr('Country')}
-          <select value={region.country} onChange={e=>update({country:e.target.value==='DE'?'DE':'CA',province:e.target.value==='DE'?'':'NS',postalCode:'',preferredStores:[]})}>
+          <select value={region.country} onChange={e=>update({country:e.target.value==='DE'?'DE':'CA',province:e.target.value==='DE'?'':'NS',city:e.target.value==='DE'?'kiel':'halifax',postalCode:'',preferredStores:[]})}>
             <option value="CA">{tr('Canada')}</option><option value="DE">{tr('Germany')}</option>
           </select>
         </label>
         {region.country==='CA' && <label>{tr('Province')}
-          <select value={region.province} onChange={e=>update(prev=>({...prev,province:e.target.value,preferredStores:[]}))}>
+          <select value={region.province} onChange={e=>update(prev=>({...prev,province:e.target.value,city:e.target.value==='NS'?'halifax':'',preferredStores:[]}))}>
             {PROVINCES.map(p=><option key={p} value={p}>{p}</option>)}
+          </select>
+        </label>}
+        {(region.country==='DE'||region.province==='NS')&&<label>{tr('City')}
+          <select value={region.city} onChange={e=>update(prev=>({...prev,city:(e.target.value as GroceryRegion['city']),preferredStores:[]}))}>
+            {region.country==='DE'?<option value="kiel">Kiel</option>:<><option value="halifax">Halifax</option><option value="dartmouth">Dartmouth</option></>}
           </select>
         </label>}
         <form onSubmit={e=>{
@@ -53,7 +59,7 @@ export function RegionalPricesSettings({region,update}:{
         }}>
           <label>{tr('Postal code')}
             <input maxLength={9} autoComplete="postal-code" value={postal}
-              onChange={e=>setPostal(e.target.value)} placeholder={region.country==='DE'?'10115':'B3V 1A1'} />
+              onChange={e=>setPostal(e.target.value)} placeholder={region.country==='DE'?'24103':'B3V 1A1'} />
           </label>
           <button type="submit">{tr('Save')}</button>
         </form>
@@ -62,16 +68,18 @@ export function RegionalPricesSettings({region,update}:{
       <div className="regional-price-storechoices">
         <span>{tr('Preferred stores')} <small>{tr('(none selected = all available stores)')}</small></span>
         <div>{stores.map(store=>{
-          const isConnected=region.country==='CA'&&region.province==='QC'&&store.provider==='epiceries-ca';
+          const isConnected=(region.country==='CA'&&region.province==='QC'&&store.provider==='epiceries-ca') || (region.province==='NS'&&halifaxEnabled.some(s=>s.id===store.id));
           const selected=region.preferredStores.includes(store.id);
-          return <button type="button" key={store.id} aria-pressed={selected} title={isConnected?tr('Quebec-wide observed prices'):tr('Price feed not connected')}
+          return <button type="button" key={store.id} aria-pressed={selected} title={isConnected?tr('Regional price comparison available'):tr('Price feed not connected')}
             className={selected?'selected':''} onClick={()=>update(current=>({
               ...current,preferredStores:selected?current.preferredStores.filter(id=>id!==store.id):[...current.preferredStores,store.id],
             }))}>{store.name}{isConnected?' · ✓':''}</button>;
         })}</div>
       </div>
       <p className="regional-price-source">
-        {enabled.length ? tr('Quebec: prices observed weekly across chains, not exact branch or pickup prices. No verified offer expiry dates.') :
+        {region.country==='CA'&&region.province==='NS' ? tr('Halifax / Dartmouth: compare your list on demand using dated Halifax chain averages. No individual-branch prices.') :
+          enabled.length ? tr('Quebec: prices observed weekly across chains, not exact branch or pickup prices. No verified offer expiry dates.') :
+          region.country==='DE'?tr('Kiel: public community price observations may be sparse. No verified live retailer feed is connected yet.'):
           tr('No permitted live price feed is connected for this region or store selection yet.')}
       </p>
       {enabled.length>0 && <p className="regional-price-source">{tr('Source: épiceries.ca · Indicative prices · Updated by the provider weekly · Regional availability is not guaranteed.')}</p>}
