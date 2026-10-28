@@ -132,12 +132,12 @@ export async function lookupActiveOffers(productName:string,region:OfferRegion,f
   // On-demand query for one requested product, not a retailer catalogue crawl.
   const search=new URL('https://bidou.store/api/v1/products');
   search.searchParams.set('q',query);search.searchParams.set('province',region.province);search.searchParams.set('limit','8');
-  const sr=await fetcher(search.toString(),{signal:ctrl.signal});if(!sr.ok)return [];
+  const sr=await fetcher(search.toString(),{signal:ctrl.signal});if(!sr.ok)throw new Error('Offer provider unavailable: HTTP '+('status' in sr ? (sr as Response).status : 'error'));
   const candidates=list(await sr.json()).map(obj).filter(x=>matches(query,text(field(x,'name','nom','product_name','titre'))));
   const product=candidates[0],upc=text(field(product||{},'upc','code','barcode','code_barres'));
   if(!/^\d{4,14}$/.test(upc))return [];
   const pr=await fetcher('https://bidou.store/api/v1/prices/'+encodeURIComponent(upc)+'?province='+region.province,{signal:ctrl.signal});
-  if(!pr.ok)return [];
+  if(!pr.ok)throw new Error('Offer provider unavailable: price lookup failed');
   const body=await pr.json();const result=list(body);
   const nested=obj(body);
   const offers=result.length?result:list(field(nested,'data','product','result'));
