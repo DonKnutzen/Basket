@@ -1,0 +1,3509 @@
+[
+  {
+    "de": "Äpfel",
+    "en": "Apples",
+    "icon": "apple",
+    "group": "Fruit",
+    "aliases": [
+      "Apfel"
+    ]
+  },
+  {
+    "de": "Birnen",
+    "en": "Pears",
+    "icon": "apple",
+    "group": "Fruit",
+    "aliases": [
+      "Birne"
+    ]
+  },
+  {
+    "de": "Bananen",
+    "en": "Bananas",
+    "icon": "banana",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Orangen",
+    "en": "Oranges",
+    "icon": "orange",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Mandarinen",
+    "en": "Mandarins",
+    "icon": "orange",
+    "group": "Fruit",
+    "aliases": [
+      "Mandarine"
+    ]
+  },
+  {
+    "de": "Zitronen",
+    "en": "Lemons",
+    "icon": "lemon",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Limetten",
+    "en": "Limes",
+    "icon": "lemon",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Grapefruits",
+    "en": "Grapefruits",
+    "icon": "fruit",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Trauben",
+    "en": "Grapes",
+    "icon": "fruit",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Pfirsiche",
+    "en": "Peaches",
+    "icon": "fruit",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Nektarinen",
+    "en": "Nectarines",
+    "icon": "fruit",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Aprikosen",
+    "en": "Apricots",
+    "icon": "fruit",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Pflaumen",
+    "en": "Plums",
+    "icon": "fruit",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Kiwi",
+    "en": "Kiwi",
+    "icon": "fruit",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Mango",
+    "en": "Mango",
+    "icon": "fruit",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Ananas",
+    "en": "Pineapple",
+    "icon": "fruit",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Wassermelone",
+    "en": "Watermelon",
+    "icon": "fruit",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Honigmelone",
+    "en": "Honeydew melon",
+    "icon": "fruit",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Granatapfel",
+    "en": "Pomegranate",
+    "icon": "fruit",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Avocado",
+    "en": "Avocado",
+    "icon": "leaf",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Erdbeeren",
+    "en": "Strawberries",
+    "icon": "berries",
+    "group": "Fruit",
+    "aliases": [
+      "Erdbeere"
+    ]
+  },
+  {
+    "de": "Himbeeren",
+    "en": "Raspberries",
+    "icon": "berries",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Heidelbeeren",
+    "en": "Blueberries",
+    "icon": "berries",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Brombeeren",
+    "en": "Blackberries",
+    "icon": "berries",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Kirschen",
+    "en": "Cherries",
+    "icon": "berries",
+    "group": "Fruit",
+    "aliases": []
+  },
+  {
+    "de": "Kartoffeln",
+    "en": "Potatoes",
+    "icon": "carrot",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Süßkartoffeln",
+    "en": "Sweet potatoes",
+    "icon": "carrot",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Zwiebeln",
+    "en": "Onions",
+    "icon": "carrot",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "rote Zwiebeln",
+    "en": "Red onions",
+    "icon": "carrot",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Schalotten",
+    "en": "Shallots",
+    "icon": "carrot",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Knoblauch",
+    "en": "Garlic",
+    "icon": "carrot",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Frühlingszwiebeln",
+    "en": "Spring onions",
+    "icon": "carrot",
+    "group": "Vegetables",
+    "aliases": [
+      "Lauchzwiebeln",
+      "Scallions",
+      "Green onions"
+    ]
+  },
+  {
+    "de": "Karotten",
+    "en": "Carrots",
+    "icon": "carrot",
+    "group": "Vegetables",
+    "aliases": [
+      "Möhren"
+    ]
+  },
+  {
+    "de": "Rote Bete",
+    "en": "Beetroot",
+    "icon": "carrot",
+    "group": "Vegetables",
+    "aliases": [
+      "Beets"
+    ]
+  },
+  {
+    "de": "Radieschen",
+    "en": "Radishes",
+    "icon": "carrot",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Rettich",
+    "en": "Daikon radish",
+    "icon": "carrot",
+    "group": "Vegetables",
+    "aliases": [
+      "White radish"
+    ]
+  },
+  {
+    "de": "Lauch",
+    "en": "Leeks",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Gurken",
+    "en": "Cucumbers",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Paprika",
+    "en": "Bell peppers",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": [
+      "Sweet peppers"
+    ]
+  },
+  {
+    "de": "Zucchini",
+    "en": "Zucchini",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": [
+      "Courgettes"
+    ]
+  },
+  {
+    "de": "Auberginen",
+    "en": "Eggplants",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": [
+      "Aubergines"
+    ]
+  },
+  {
+    "de": "Brokkoli",
+    "en": "Broccoli",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Blumenkohl",
+    "en": "Cauliflower",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Weißkohl",
+    "en": "White cabbage",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Rotkohl",
+    "en": "Red cabbage",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Rosenkohl",
+    "en": "Brussels sprouts",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Kohlrabi",
+    "en": "Kohlrabi",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Sellerie",
+    "en": "Celeriac",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Stangensellerie",
+    "en": "Celery stalks",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Fenchel",
+    "en": "Fennel",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Kürbis",
+    "en": "Pumpkin",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Spargel",
+    "en": "Asparagus",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "grüne Bohnen",
+    "en": "Green beans",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Erbsen",
+    "en": "Peas",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Mais",
+    "en": "Corn",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": [
+      "Sweetcorn"
+    ]
+  },
+  {
+    "de": "Champignons",
+    "en": "Button mushrooms",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": [
+      "Champignon"
+    ]
+  },
+  {
+    "de": "Austernpilze",
+    "en": "Oyster mushrooms",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": [
+      "Austernpilz"
+    ]
+  },
+  {
+    "de": "Chili",
+    "en": "Chili peppers",
+    "icon": "vegetable",
+    "group": "Vegetables",
+    "aliases": [
+      "Chilli peppers"
+    ]
+  },
+  {
+    "de": "Tomaten",
+    "en": "Tomatoes",
+    "icon": "berries",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Cherrytomaten",
+    "en": "Cherry tomatoes",
+    "icon": "berries",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Spinat",
+    "en": "Spinach",
+    "icon": "leaf",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Grünkohl",
+    "en": "Kale",
+    "icon": "leaf",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Basilikum",
+    "en": "Basil",
+    "icon": "leaf",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Petersilie",
+    "en": "Parsley",
+    "icon": "leaf",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Schnittlauch",
+    "en": "Chives",
+    "icon": "leaf",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Koriander",
+    "en": "Cilantro",
+    "icon": "leaf",
+    "group": "Vegetables",
+    "aliases": [
+      "Fresh coriander"
+    ]
+  },
+  {
+    "de": "Dill",
+    "en": "Dill",
+    "icon": "leaf",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Minze",
+    "en": "Mint",
+    "icon": "leaf",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Rosmarin",
+    "en": "Rosemary",
+    "icon": "leaf",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Thymian",
+    "en": "Thyme",
+    "icon": "leaf",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Salbei",
+    "en": "Sage",
+    "icon": "leaf",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Ingwer",
+    "en": "Ginger",
+    "icon": "ginger",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Kopfsalat",
+    "en": "Butterhead lettuce",
+    "icon": "salad",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Eisbergsalat",
+    "en": "Iceberg lettuce",
+    "icon": "salad",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Romanasalat",
+    "en": "Romaine lettuce",
+    "icon": "salad",
+    "group": "Vegetables",
+    "aliases": [
+      "Cos lettuce"
+    ]
+  },
+  {
+    "de": "Feldsalat",
+    "en": "Lambs lettuce",
+    "icon": "salad",
+    "group": "Vegetables",
+    "aliases": [
+      "Lamb's lettuce",
+      "Corn salad"
+    ]
+  },
+  {
+    "de": "Rucola",
+    "en": "Arugula",
+    "icon": "salad",
+    "group": "Vegetables",
+    "aliases": [
+      "Rocket"
+    ]
+  },
+  {
+    "de": "Salatmischung",
+    "en": "Mixed salad greens",
+    "icon": "salad",
+    "group": "Vegetables",
+    "aliases": [
+      "Salad mix"
+    ]
+  },
+  {
+    "de": "Brot",
+    "en": "Bread",
+    "icon": "bread",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Vollkornbrot",
+    "en": "Whole grain bread",
+    "icon": "bread",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Toastbrot",
+    "en": "Sandwich bread",
+    "icon": "bread",
+    "group": "Bakery",
+    "aliases": [
+      "Toast bread"
+    ]
+  },
+  {
+    "de": "Brötchen",
+    "en": "Bread rolls",
+    "icon": "bread",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Baguette",
+    "en": "Baguette",
+    "icon": "bread",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Ciabatta",
+    "en": "Ciabatta",
+    "icon": "bread",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Fladenbrot",
+    "en": "Flatbread",
+    "icon": "bread",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Pita",
+    "en": "Pita",
+    "icon": "bread",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Wraps",
+    "en": "Wraps",
+    "icon": "bread",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Knäckebrot",
+    "en": "Crispbread",
+    "icon": "bread",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Zwieback",
+    "en": "Rusks",
+    "icon": "bread",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Brezeln",
+    "en": "Pretzels",
+    "icon": "bread",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Croissants",
+    "en": "Croissants",
+    "icon": "bread",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Burgerbrötchen",
+    "en": "Burger buns",
+    "icon": "bread",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Hotdogbrötchen",
+    "en": "Hot dog buns",
+    "icon": "bread",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Paniermehl",
+    "en": "Breadcrumbs",
+    "icon": "grain",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Milch",
+    "en": "Milk",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "laktosefreie Milch",
+    "en": "Lactose free milk",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Sahne",
+    "en": "Cream",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": [
+      "Schlagrahm",
+      "Schlagsahne",
+      "Whipping cream"
+    ]
+  },
+  {
+    "de": "Kochsahne",
+    "en": "Cooking cream",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "saure Sahne",
+    "en": "Sour cream",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Schmand",
+    "en": "Cultured sour cream",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Crème fraîche",
+    "en": "Creme fraiche",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Naturjoghurt",
+    "en": "Plain yogurt",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": [
+      "Naturjogurt"
+    ]
+  },
+  {
+    "de": "Griechischer Joghurt",
+    "en": "Greek yogurt",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Fruchtjoghurt",
+    "en": "Fruit yogurt",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": [
+      "Fruchtjogurt"
+    ]
+  },
+  {
+    "de": "Quark",
+    "en": "Quark",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Skyr",
+    "en": "Skyr",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Butter",
+    "en": "Butter",
+    "icon": "butter",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Hüttenkäse",
+    "en": "Cottage cheese",
+    "icon": "cheese",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Frischkäse",
+    "en": "Cream cheese",
+    "icon": "cheese",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Mozzarella",
+    "en": "Mozzarella",
+    "icon": "cheese",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Feta",
+    "en": "Feta",
+    "icon": "cheese",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Gouda",
+    "en": "Gouda",
+    "icon": "cheese",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Emmentaler",
+    "en": "Emmental",
+    "icon": "cheese",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Cheddar",
+    "en": "Cheddar",
+    "icon": "cheese",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Parmesan",
+    "en": "Parmesan",
+    "icon": "cheese",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Camembert",
+    "en": "Camembert",
+    "icon": "cheese",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Ziegenkäse",
+    "en": "Goat cheese",
+    "icon": "cheese",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Reibekäse",
+    "en": "Grated cheese",
+    "icon": "cheese",
+    "group": "Dairy & eggs",
+    "aliases": [
+      "Shredded cheese"
+    ]
+  },
+  {
+    "de": "Eier",
+    "en": "Eggs",
+    "icon": "egg",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Haferdrink",
+    "en": "Oat drink",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": [
+      "Oat milk"
+    ]
+  },
+  {
+    "de": "Sojadrink",
+    "en": "Soy drink",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": [
+      "Soy milk"
+    ]
+  },
+  {
+    "de": "Mandeldrink",
+    "en": "Almond drink",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": [
+      "Almond milk"
+    ]
+  },
+  {
+    "de": "Kokosdrink",
+    "en": "Coconut drink",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "pflanzlicher Joghurt",
+    "en": "Plant based yogurt",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "pflanzliche Sahne",
+    "en": "Plant based cream",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "vegane Butteralternative",
+    "en": "Vegan butter alternative",
+    "icon": "butter",
+    "group": "Dairy & eggs",
+    "aliases": [
+      "Vegan butter"
+    ]
+  },
+  {
+    "de": "Margarine",
+    "en": "Margarine",
+    "icon": "butter",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "veganer Käse",
+    "en": "Vegan cheese",
+    "icon": "cheese",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Tofu",
+    "en": "Tofu",
+    "icon": "plant-protein",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Räuchertofu",
+    "en": "Smoked tofu",
+    "icon": "plant-protein",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Tempeh",
+    "en": "Tempeh",
+    "icon": "plant-protein",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Seitan",
+    "en": "Seitan",
+    "icon": "plant-protein",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "veganes Hack",
+    "en": "Vegan mince",
+    "icon": "plant-protein",
+    "group": "Pantry",
+    "aliases": [
+      "Plant based ground meat"
+    ]
+  },
+  {
+    "de": "vegane Burger",
+    "en": "Vegan burgers",
+    "icon": "plant-protein",
+    "group": "Pantry",
+    "aliases": [
+      "Plant based burgers"
+    ]
+  },
+  {
+    "de": "vegane Würstchen",
+    "en": "Vegan sausages",
+    "icon": "plant-protein",
+    "group": "Pantry",
+    "aliases": [
+      "Plant based sausages"
+    ]
+  },
+  {
+    "de": "Hähnchenbrust",
+    "en": "Chicken breast",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": []
+  },
+  {
+    "de": "Hähnchenschenkel",
+    "en": "Chicken thighs",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": [
+      "Chicken legs"
+    ]
+  },
+  {
+    "de": "Ganzes Hähnchen",
+    "en": "Whole chicken",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": []
+  },
+  {
+    "de": "Putenbrust",
+    "en": "Turkey breast",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": []
+  },
+  {
+    "de": "Rinderhack",
+    "en": "Ground beef",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": [
+      "Beef mince"
+    ]
+  },
+  {
+    "de": "Gemischtes Hackfleisch",
+    "en": "Mixed ground meat",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": []
+  },
+  {
+    "de": "Rindersteak",
+    "en": "Beef steak",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": []
+  },
+  {
+    "de": "Gulaschfleisch",
+    "en": "Stewing beef",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": [
+      "Goulash meat"
+    ]
+  },
+  {
+    "de": "Schweineschnitzel",
+    "en": "Pork schnitzel",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": []
+  },
+  {
+    "de": "Schweinefilet",
+    "en": "Pork tenderloin",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": []
+  },
+  {
+    "de": "Schweinekotelett",
+    "en": "Pork chop",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": []
+  },
+  {
+    "de": "Speck",
+    "en": "Speck",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": []
+  },
+  {
+    "de": "Bacon",
+    "en": "Bacon",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": []
+  },
+  {
+    "de": "Kochschinken",
+    "en": "Cooked ham",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": []
+  },
+  {
+    "de": "Rohschinken",
+    "en": "Cured ham",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": []
+  },
+  {
+    "de": "Salami",
+    "en": "Salami",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": []
+  },
+  {
+    "de": "Fleischwurst",
+    "en": "Bologna sausage",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": []
+  },
+  {
+    "de": "Leberwurst",
+    "en": "Liver sausage",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": []
+  },
+  {
+    "de": "Bratwurst",
+    "en": "Bratwurst",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": []
+  },
+  {
+    "de": "Wiener Würstchen",
+    "en": "Wiener sausages",
+    "icon": "meat",
+    "group": "Meat",
+    "aliases": [
+      "Frankfurters"
+    ]
+  },
+  {
+    "de": "Lachs",
+    "en": "Salmon",
+    "icon": "fish",
+    "group": "Fish & seafood",
+    "aliases": []
+  },
+  {
+    "de": "Kabeljau",
+    "en": "Cod",
+    "icon": "fish",
+    "group": "Fish & seafood",
+    "aliases": []
+  },
+  {
+    "de": "Seelachs",
+    "en": "Pollock",
+    "icon": "fish",
+    "group": "Fish & seafood",
+    "aliases": []
+  },
+  {
+    "de": "Forelle",
+    "en": "Trout",
+    "icon": "fish",
+    "group": "Fish & seafood",
+    "aliases": []
+  },
+  {
+    "de": "Thunfisch",
+    "en": "Tuna",
+    "icon": "fish",
+    "group": "Fish & seafood",
+    "aliases": []
+  },
+  {
+    "de": "Räucherlachs",
+    "en": "Smoked salmon",
+    "icon": "fish",
+    "group": "Fish & seafood",
+    "aliases": []
+  },
+  {
+    "de": "Hering",
+    "en": "Herring",
+    "icon": "fish",
+    "group": "Fish & seafood",
+    "aliases": []
+  },
+  {
+    "de": "Makrele",
+    "en": "Mackerel",
+    "icon": "fish",
+    "group": "Fish & seafood",
+    "aliases": []
+  },
+  {
+    "de": "Garnelen",
+    "en": "Shrimp",
+    "icon": "fish",
+    "group": "Fish & seafood",
+    "aliases": [
+      "Prawns"
+    ]
+  },
+  {
+    "de": "Muscheln",
+    "en": "Mussels",
+    "icon": "fish",
+    "group": "Fish & seafood",
+    "aliases": []
+  },
+  {
+    "de": "Fischstäbchen",
+    "en": "Fish fingers",
+    "icon": "fish",
+    "group": "Fish & seafood",
+    "aliases": [
+      "Fish sticks"
+    ]
+  },
+  {
+    "de": "Spaghetti",
+    "en": "Spaghetti",
+    "icon": "pasta",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Penne",
+    "en": "Penne",
+    "icon": "pasta",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Fusilli",
+    "en": "Fusilli",
+    "icon": "pasta",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Lasagneplatten",
+    "en": "Lasagne sheets",
+    "icon": "pasta",
+    "group": "Pantry",
+    "aliases": [
+      "Lasagna sheets"
+    ]
+  },
+  {
+    "de": "Vollkornnudeln",
+    "en": "Whole wheat pasta",
+    "icon": "pasta",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "glutenfreie Nudeln",
+    "en": "Gluten free pasta",
+    "icon": "pasta",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Reisnudeln",
+    "en": "Rice noodles",
+    "icon": "pasta",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Glasnudeln",
+    "en": "Glass noodles",
+    "icon": "pasta",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Gnocchi",
+    "en": "Gnocchi",
+    "icon": "pasta",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Spätzle",
+    "en": "Spaetzle",
+    "icon": "pasta",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Tortellini",
+    "en": "Tortellini",
+    "icon": "pasta",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Basmatireis",
+    "en": "Basmati rice",
+    "icon": "rice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Jasminreis",
+    "en": "Jasmine rice",
+    "icon": "rice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Vollkornreis",
+    "en": "Brown rice",
+    "icon": "rice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Risottoreis",
+    "en": "Risotto rice",
+    "icon": "rice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Couscous",
+    "en": "Couscous",
+    "icon": "grain",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Bulgur",
+    "en": "Bulgur",
+    "icon": "grain",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Quinoa",
+    "en": "Quinoa",
+    "icon": "grain",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Hirse",
+    "en": "Millet",
+    "icon": "grain",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Polenta",
+    "en": "Polenta",
+    "icon": "grain",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Graupen",
+    "en": "Pearl barley",
+    "icon": "grain",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Rote Linsen",
+    "en": "Red lentils",
+    "icon": "bean",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Braune Linsen",
+    "en": "Brown lentils",
+    "icon": "bean",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Grüne Linsen",
+    "en": "Green lentils",
+    "icon": "bean",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Kichererbsen",
+    "en": "Chickpeas",
+    "icon": "bean",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Kidneybohnen",
+    "en": "Kidney beans",
+    "icon": "bean",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Schwarze Bohnen",
+    "en": "Black beans",
+    "icon": "bean",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Weiße Bohnen",
+    "en": "White beans",
+    "icon": "bean",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Getrocknete Erbsen",
+    "en": "Dried peas",
+    "icon": "bean",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Edamame",
+    "en": "Edamame",
+    "icon": "bean",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Gehackte Tomaten",
+    "en": "Chopped tomatoes",
+    "icon": "can",
+    "group": "Pantry",
+    "aliases": [
+      "Diced tomatoes"
+    ]
+  },
+  {
+    "de": "Mais aus der Dose",
+    "en": "Canned corn",
+    "icon": "can",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Erbsen aus der Dose",
+    "en": "Canned peas",
+    "icon": "can",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Bohnen aus der Dose",
+    "en": "Canned beans",
+    "icon": "can",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Kichererbsen aus der Dose",
+    "en": "Canned chickpeas",
+    "icon": "can",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Linsen aus der Dose",
+    "en": "Canned lentils",
+    "icon": "can",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Kokosmilch",
+    "en": "Coconut milk",
+    "icon": "can",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Thunfisch aus der Dose",
+    "en": "Canned tuna",
+    "icon": "can",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Sardinen",
+    "en": "Sardines",
+    "icon": "can",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Obstkonserven",
+    "en": "Canned fruit",
+    "icon": "can",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Gewürzgurken",
+    "en": "Pickles",
+    "icon": "jar",
+    "group": "Pantry",
+    "aliases": [
+      "Gherkins"
+    ]
+  },
+  {
+    "de": "Oliven",
+    "en": "Olives",
+    "icon": "jar",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Kapern",
+    "en": "Capers",
+    "icon": "jar",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Getrocknete Tomaten",
+    "en": "Sun dried tomatoes",
+    "icon": "jar",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Eingelegte Paprika",
+    "en": "Pickled peppers",
+    "icon": "jar",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Artischocken",
+    "en": "Artichokes",
+    "icon": "jar",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Sauerkraut",
+    "en": "Sauerkraut",
+    "icon": "jar",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Rotkohl im Glas",
+    "en": "Jarred red cabbage",
+    "icon": "jar",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Apfelmus",
+    "en": "Apple sauce",
+    "icon": "jar",
+    "group": "Pantry",
+    "aliases": [
+      "Applesauce"
+    ]
+  },
+  {
+    "de": "Passierte Tomaten",
+    "en": "Strained tomatoes",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": [
+      "Passata"
+    ]
+  },
+  {
+    "de": "Tomatenmark",
+    "en": "Tomato paste",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Weißweinessig",
+    "en": "White wine vinegar",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Rotweinessig",
+    "en": "Red wine vinegar",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Apfelessig",
+    "en": "Apple cider vinegar",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Balsamico",
+    "en": "Balsamic vinegar",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Gemüsebrühe",
+    "en": "Vegetable broth",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": [
+      "Vegetable stock"
+    ]
+  },
+  {
+    "de": "Hühnerbrühe",
+    "en": "Chicken broth",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": [
+      "Chicken stock"
+    ]
+  },
+  {
+    "de": "Rinderbrühe",
+    "en": "Beef broth",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": [
+      "Beef stock"
+    ]
+  },
+  {
+    "de": "Sojasauce",
+    "en": "Soy sauce",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Fischsauce",
+    "en": "Fish sauce",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Worcestersauce",
+    "en": "Worcestershire sauce",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Senf",
+    "en": "Mustard",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Ketchup",
+    "en": "Ketchup",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Mayonnaise",
+    "en": "Mayonnaise",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Remoulade",
+    "en": "Remoulade",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "BBQ-Sauce",
+    "en": "BBQ sauce",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": [
+      "Barbecue sauce"
+    ]
+  },
+  {
+    "de": "Sriracha",
+    "en": "Sriracha",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Tabasco",
+    "en": "Tabasco",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Pesto",
+    "en": "Pesto",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Ajvar",
+    "en": "Ajvar",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Tahini",
+    "en": "Tahini",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Currypaste",
+    "en": "Curry paste",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Meerrettich",
+    "en": "Horseradish",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Olivenöl",
+    "en": "Olive oil",
+    "icon": "oil",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Rapsöl",
+    "en": "Canola oil",
+    "icon": "oil",
+    "group": "Pantry",
+    "aliases": [
+      "Rapeseed oil"
+    ]
+  },
+  {
+    "de": "Sonnenblumenöl",
+    "en": "Sunflower oil",
+    "icon": "oil",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Sesamöl",
+    "en": "Sesame oil",
+    "icon": "oil",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Kokosöl",
+    "en": "Coconut oil",
+    "icon": "oil",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Salz",
+    "en": "Salt",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Pfeffer",
+    "en": "Pepper",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Paprikapulver edelsüß",
+    "en": "Sweet paprika powder",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Paprikapulver geräuchert",
+    "en": "Smoked paprika powder",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Currypulver",
+    "en": "Curry powder",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Kurkuma",
+    "en": "Turmeric",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Kreuzkümmel",
+    "en": "Cumin",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Kümmel",
+    "en": "Caraway",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Koriander gemahlen",
+    "en": "Ground coriander",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Zimt",
+    "en": "Cinnamon",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Muskatnuss",
+    "en": "Nutmeg",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Chiliflocken",
+    "en": "Chili flakes",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": [
+      "Chilli flakes"
+    ]
+  },
+  {
+    "de": "Cayennepfeffer",
+    "en": "Cayenne pepper",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Knoblauchpulver",
+    "en": "Garlic powder",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Zwiebelpulver",
+    "en": "Onion powder",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Oregano",
+    "en": "Oregano",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Basilikum getrocknet",
+    "en": "Dried basil",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": [
+      "getrockneter Basilikum",
+      "getrocknetes Basilikum",
+      "getrocknete Basilikum"
+    ]
+  },
+  {
+    "de": "Thymian getrocknet",
+    "en": "Dried thyme",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": [
+      "getrockneter Thymian",
+      "getrocknetes Thymian",
+      "getrocknete Thymian"
+    ]
+  },
+  {
+    "de": "Rosmarin getrocknet",
+    "en": "Dried rosemary",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": [
+      "getrockneter Rosmarin",
+      "getrocknetes Rosmarin",
+      "getrocknete Rosmarin"
+    ]
+  },
+  {
+    "de": "Nelken",
+    "en": "Cloves",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Kardamom",
+    "en": "Cardamom",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Vanille",
+    "en": "Vanilla",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Italienische Kräuter",
+    "en": "Italian herbs",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Garam Masala",
+    "en": "Garam masala",
+    "icon": "spice",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Lorbeerblätter",
+    "en": "Bay leaves",
+    "icon": "leaf",
+    "group": "Pantry",
+    "aliases": [
+      "Bay leaf"
+    ]
+  },
+  {
+    "de": "Weizenmehl",
+    "en": "Wheat flour",
+    "icon": "flour",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Dinkelmehl",
+    "en": "Spelt flour",
+    "icon": "flour",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Vollkornmehl",
+    "en": "Whole wheat flour",
+    "icon": "flour",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Roggenmehl",
+    "en": "Rye flour",
+    "icon": "flour",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Speisestärke",
+    "en": "Corn starch",
+    "icon": "flour",
+    "group": "Pantry",
+    "aliases": [
+      "Cornstarch"
+    ]
+  },
+  {
+    "de": "Zucker",
+    "en": "Sugar",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Brauner Zucker",
+    "en": "Brown sugar",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Puderzucker",
+    "en": "Icing sugar",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": [
+      "Powdered sugar"
+    ]
+  },
+  {
+    "de": "Vanillezucker",
+    "en": "Vanilla sugar",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Backpulver",
+    "en": "Baking powder",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Natron",
+    "en": "Baking soda",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Trockenhefe",
+    "en": "Dry yeast",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Frische Hefe",
+    "en": "Fresh yeast",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Backkakao",
+    "en": "Baking cocoa",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": [
+      "Cocoa powder"
+    ]
+  },
+  {
+    "de": "Kuvertüre",
+    "en": "Couverture chocolate",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Schokotropfen",
+    "en": "Chocolate chips",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Kokosraspeln",
+    "en": "Shredded coconut",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": [
+      "Desiccated coconut"
+    ]
+  },
+  {
+    "de": "Gelatine",
+    "en": "Gelatin",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Agar-Agar",
+    "en": "Agar agar",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Sahnesteif",
+    "en": "Whipped cream stabilizer",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Backaroma",
+    "en": "Baking flavouring",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": [
+      "Baking flavoring"
+    ]
+  },
+  {
+    "de": "Streusel",
+    "en": "Sprinkles",
+    "icon": "baking",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Gemahlene Mandeln",
+    "en": "Ground almonds",
+    "icon": "almond",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Mandeln",
+    "en": "Almonds",
+    "icon": "almond",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Gemahlene Haselnüsse",
+    "en": "Ground hazelnuts",
+    "icon": "nut",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Walnüsse",
+    "en": "Walnuts",
+    "icon": "nut",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Haselnüsse",
+    "en": "Hazelnuts",
+    "icon": "nut",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Cashewkerne",
+    "en": "Cashews",
+    "icon": "nut",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Erdnüsse",
+    "en": "Peanuts",
+    "icon": "nut",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Pistazien",
+    "en": "Pistachios",
+    "icon": "nut",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Pekannüsse",
+    "en": "Pecans",
+    "icon": "nut",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Paranüsse",
+    "en": "Brazil nuts",
+    "icon": "nut",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Pinienkerne",
+    "en": "Pine nuts",
+    "icon": "nut",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Haferflocken",
+    "en": "Rolled oats",
+    "icon": "grain",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Müsli",
+    "en": "Muesli",
+    "icon": "grain",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Granola",
+    "en": "Granola",
+    "icon": "grain",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Cornflakes",
+    "en": "Cornflakes",
+    "icon": "grain",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Porridge",
+    "en": "Porridge",
+    "icon": "grain",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Marmelade",
+    "en": "Jam",
+    "icon": "spread",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Konfitüre",
+    "en": "Fruit preserve",
+    "icon": "spread",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Honig",
+    "en": "Honey",
+    "icon": "spread",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Ahornsirup",
+    "en": "Maple syrup",
+    "icon": "spread",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Agavendicksaft",
+    "en": "Agave syrup",
+    "icon": "spread",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Nuss-Nougat-Creme",
+    "en": "Chocolate hazelnut spread",
+    "icon": "spread",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Erdnussbutter",
+    "en": "Peanut butter",
+    "icon": "spread",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Mandelmus",
+    "en": "Almond butter",
+    "icon": "spread",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Hummus",
+    "en": "Hummus",
+    "icon": "spread",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Gemüseaufstrich",
+    "en": "Vegetable spread",
+    "icon": "spread",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Sonnenblumenkerne",
+    "en": "Sunflower seeds",
+    "icon": "seeds",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Kürbiskerne",
+    "en": "Pumpkin seeds",
+    "icon": "seeds",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Sesam",
+    "en": "Sesame",
+    "icon": "seeds",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Chiasamen",
+    "en": "Chia seeds",
+    "icon": "seeds",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Leinsamen",
+    "en": "Flax seeds",
+    "icon": "seeds",
+    "group": "Pantry",
+    "aliases": [
+      "Flaxseed"
+    ]
+  },
+  {
+    "de": "Rosinen",
+    "en": "Raisins",
+    "icon": "fruit",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Datteln",
+    "en": "Dates",
+    "icon": "fruit",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Getrocknete Aprikosen",
+    "en": "Dried apricots",
+    "icon": "fruit",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Getrocknete Feigen",
+    "en": "Dried figs",
+    "icon": "fruit",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Cranberrys",
+    "en": "Cranberries",
+    "icon": "fruit",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Tiefkühlbeeren",
+    "en": "Frozen berries",
+    "icon": "berries",
+    "group": "Frozen",
+    "aliases": []
+  },
+  {
+    "de": "Tiefkühlgemüse",
+    "en": "Frozen vegetables",
+    "icon": "vegetable",
+    "group": "Frozen",
+    "aliases": []
+  },
+  {
+    "de": "Tiefkühlbrokkoli",
+    "en": "Frozen broccoli",
+    "icon": "vegetable",
+    "group": "Frozen",
+    "aliases": []
+  },
+  {
+    "de": "Tiefkühlerbsen",
+    "en": "Frozen peas",
+    "icon": "vegetable",
+    "group": "Frozen",
+    "aliases": []
+  },
+  {
+    "de": "Pommes",
+    "en": "French fries",
+    "icon": "vegetable",
+    "group": "Frozen",
+    "aliases": [
+      "Frozen fries"
+    ]
+  },
+  {
+    "de": "Kroketten",
+    "en": "Croquettes",
+    "icon": "vegetable",
+    "group": "Frozen",
+    "aliases": []
+  },
+  {
+    "de": "Rösti",
+    "en": "Hash browns",
+    "icon": "vegetable",
+    "group": "Frozen",
+    "aliases": []
+  },
+  {
+    "de": "Tiefkühlspinat",
+    "en": "Frozen spinach",
+    "icon": "leaf",
+    "group": "Frozen",
+    "aliases": []
+  },
+  {
+    "de": "Tiefkühlkräuter",
+    "en": "Frozen herbs",
+    "icon": "leaf",
+    "group": "Frozen",
+    "aliases": []
+  },
+  {
+    "de": "Tiefkühlfisch",
+    "en": "Frozen fish",
+    "icon": "fish",
+    "group": "Frozen",
+    "aliases": []
+  },
+  {
+    "de": "Tiefkühlgarnelen",
+    "en": "Frozen shrimp",
+    "icon": "fish",
+    "group": "Frozen",
+    "aliases": []
+  },
+  {
+    "de": "Tiefkühlpizza",
+    "en": "Frozen pizza",
+    "icon": "meal",
+    "group": "Frozen",
+    "aliases": []
+  },
+  {
+    "de": "Aufbackbrötchen",
+    "en": "Bake at home rolls",
+    "icon": "bread",
+    "group": "Frozen",
+    "aliases": []
+  },
+  {
+    "de": "Eiscreme",
+    "en": "Ice cream",
+    "icon": "icecream",
+    "group": "Frozen",
+    "aliases": []
+  },
+  {
+    "de": "Dosensuppe",
+    "en": "Canned soup",
+    "icon": "meal",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Eintopf",
+    "en": "Stew",
+    "icon": "meal",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Instantnudeln",
+    "en": "Instant noodles",
+    "icon": "meal",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Kartoffelpüree-Pulver",
+    "en": "Instant mashed potatoes",
+    "icon": "meal",
+    "group": "Pantry",
+    "aliases": [
+      "Mashed potato powder"
+    ]
+  },
+  {
+    "de": "Maultaschen",
+    "en": "Maultaschen",
+    "icon": "meal",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Sandwich",
+    "en": "Sandwich",
+    "icon": "meal",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Sushi",
+    "en": "Sushi",
+    "icon": "meal",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Fertigsauce",
+    "en": "Ready made sauce",
+    "icon": "sauce",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Fertiger Pizzateig",
+    "en": "Ready made pizza dough",
+    "icon": "baking",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Blätterteig",
+    "en": "Puff pastry",
+    "icon": "baking",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Flammkuchenteig",
+    "en": "Tarte flambee dough",
+    "icon": "baking",
+    "group": "Bakery",
+    "aliases": []
+  },
+  {
+    "de": "Fertiger Salat",
+    "en": "Prepared salad",
+    "icon": "salad",
+    "group": "Vegetables",
+    "aliases": []
+  },
+  {
+    "de": "Chips",
+    "en": "Potato chips",
+    "icon": "snack",
+    "group": "Pantry",
+    "aliases": [
+      "Crisps"
+    ]
+  },
+  {
+    "de": "Tortillachips",
+    "en": "Tortilla chips",
+    "icon": "snack",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Salzstangen",
+    "en": "Pretzel sticks",
+    "icon": "snack",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Cracker",
+    "en": "Crackers",
+    "icon": "snack",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Popcorn",
+    "en": "Popcorn",
+    "icon": "snack",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Reiswaffeln",
+    "en": "Rice cakes",
+    "icon": "snack",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Müsliriegel",
+    "en": "Granola bars",
+    "icon": "snack",
+    "group": "Pantry",
+    "aliases": [
+      "Cereal bars"
+    ]
+  },
+  {
+    "de": "Proteinriegel",
+    "en": "Protein bars",
+    "icon": "snack",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Kekse",
+    "en": "Cookies",
+    "icon": "snack",
+    "group": "Pantry",
+    "aliases": [
+      "Biscuits"
+    ]
+  },
+  {
+    "de": "Waffeln",
+    "en": "Waffles",
+    "icon": "snack",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Schokolade",
+    "en": "Chocolate",
+    "icon": "candy",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Pralinen",
+    "en": "Chocolates",
+    "icon": "candy",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Fruchtgummi",
+    "en": "Gummy candy",
+    "icon": "candy",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Bonbons",
+    "en": "Candies",
+    "icon": "candy",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Kaugummi",
+    "en": "Chewing gum",
+    "icon": "candy",
+    "group": "Pantry",
+    "aliases": []
+  },
+  {
+    "de": "Pudding",
+    "en": "Pudding",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Milchreis",
+    "en": "Rice pudding",
+    "icon": "milk",
+    "group": "Dairy & eggs",
+    "aliases": []
+  },
+  {
+    "de": "Mineralwasser",
+    "en": "Mineral water",
+    "icon": "water",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Stilles Wasser",
+    "en": "Still water",
+    "icon": "water",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Sprudelwasser",
+    "en": "Sparkling water",
+    "icon": "water",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Apfelsaft",
+    "en": "Apple juice",
+    "icon": "juice",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Orangensaft",
+    "en": "Orange juice",
+    "icon": "juice",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Multivitaminsaft",
+    "en": "Multivitamin juice",
+    "icon": "juice",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Saftschorle",
+    "en": "Juice spritzer",
+    "icon": "juice",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Limonade",
+    "en": "Lemonade",
+    "icon": "soda",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Eistee",
+    "en": "Iced tea",
+    "icon": "soda",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Sportgetränk",
+    "en": "Sports drink",
+    "icon": "soda",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Cola",
+    "en": "Cola",
+    "icon": "cola",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Energydrink",
+    "en": "Energy drink",
+    "icon": "energy",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Kaffee",
+    "en": "Coffee",
+    "icon": "coffee",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Espressobohnen",
+    "en": "Espresso beans",
+    "icon": "coffee",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Instantkaffee",
+    "en": "Instant coffee",
+    "icon": "coffee",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Schwarzer Tee",
+    "en": "Black tea",
+    "icon": "coffee",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Grüner Tee",
+    "en": "Green tea",
+    "icon": "coffee",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Kräutertee",
+    "en": "Herbal tea",
+    "icon": "coffee",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Früchtetee",
+    "en": "Fruit tea",
+    "icon": "coffee",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Trinkkakao",
+    "en": "Hot chocolate",
+    "icon": "coffee",
+    "group": "Drinks",
+    "aliases": [
+      "Drinking chocolate"
+    ]
+  },
+  {
+    "de": "Alkoholfreies Bier",
+    "en": "Non alcoholic beer",
+    "icon": "beer",
+    "group": "Drinks",
+    "aliases": [
+      "Alcohol free beer"
+    ]
+  },
+  {
+    "de": "Bier",
+    "en": "Beer",
+    "icon": "beer",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Wein",
+    "en": "Wine",
+    "icon": "wine",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Sekt",
+    "en": "Sparkling wine",
+    "icon": "sparkling",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Spirituosen",
+    "en": "Spirits",
+    "icon": "spirits",
+    "group": "Drinks",
+    "aliases": []
+  },
+  {
+    "de": "Toilettenpapier",
+    "en": "Toilet paper",
+    "icon": "toilet-paper",
+    "group": "Household",
+    "aliases": [
+      "Klopapier"
+    ]
+  },
+  {
+    "de": "Küchenrolle",
+    "en": "Paper towels",
+    "icon": "paper-towel",
+    "group": "Household",
+    "aliases": [
+      "Kitchen roll"
+    ]
+  },
+  {
+    "de": "Taschentücher",
+    "en": "Tissues",
+    "icon": "tissue",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Müllbeutel",
+    "en": "Trash bags",
+    "icon": "trash-bag",
+    "group": "Household",
+    "aliases": [
+      "Garbage bags"
+    ]
+  },
+  {
+    "de": "Kotbeutel",
+    "en": "Dog waste bags",
+    "icon": "trash-bag",
+    "group": "Household",
+    "aliases": [
+      "Poop bags"
+    ]
+  },
+  {
+    "de": "Backpapier",
+    "en": "Parchment paper",
+    "icon": "foil",
+    "group": "Household",
+    "aliases": [
+      "Baking paper"
+    ]
+  },
+  {
+    "de": "Alufolie",
+    "en": "Aluminum foil",
+    "icon": "foil",
+    "group": "Household",
+    "aliases": [
+      "Aluminium foil"
+    ]
+  },
+  {
+    "de": "Frischhaltefolie",
+    "en": "Cling film",
+    "icon": "foil",
+    "group": "Household",
+    "aliases": [
+      "Plastic wrap"
+    ]
+  },
+  {
+    "de": "Butterbrotpapier",
+    "en": "Sandwich paper",
+    "icon": "foil",
+    "group": "Household",
+    "aliases": [
+      "Wax paper"
+    ]
+  },
+  {
+    "de": "Gefrierbeutel",
+    "en": "Freezer bags",
+    "icon": "storage-bag",
+    "group": "Household",
+    "aliases": [
+      "Vorratsbeutel",
+      "Resealable bags",
+      "Zip top bags"
+    ]
+  },
+  {
+    "de": "Spülmittel",
+    "en": "Dish soap",
+    "icon": "dish-soap",
+    "group": "Household",
+    "aliases": [
+      "Washing up liquid"
+    ]
+  },
+  {
+    "de": "Spülmaschinentabs",
+    "en": "Dishwasher tablets",
+    "icon": "dishwasher",
+    "group": "Household",
+    "aliases": [
+      "Dishwasher tabs"
+    ]
+  },
+  {
+    "de": "Spülmaschinensalz",
+    "en": "Dishwasher salt",
+    "icon": "dishwasher",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Klarspüler",
+    "en": "Rinse aid",
+    "icon": "dishwasher",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Schwämme",
+    "en": "Sponges",
+    "icon": "sponge",
+    "group": "Household",
+    "aliases": [
+      "Schwamm",
+      "Sponge"
+    ]
+  },
+  {
+    "de": "Spülbürste",
+    "en": "Dish brush",
+    "icon": "brush",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Putztücher",
+    "en": "Cleaning cloths",
+    "icon": "cloth",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Allzweckreiniger",
+    "en": "All purpose cleaner",
+    "icon": "cleaner",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Badreiniger",
+    "en": "Bathroom cleaner",
+    "icon": "cleaner",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "WC-Reiniger",
+    "en": "Toilet cleaner",
+    "icon": "cleaner",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Glasreiniger",
+    "en": "Glass cleaner",
+    "icon": "cleaner",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Entkalker",
+    "en": "Descaler",
+    "icon": "cleaner",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Fleckenentferner",
+    "en": "Stain remover",
+    "icon": "cleaner",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Waschmittel",
+    "en": "Laundry detergent",
+    "icon": "detergent",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Weichspüler",
+    "en": "Fabric softener",
+    "icon": "detergent",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Gummihandschuhe",
+    "en": "Rubber gloves",
+    "icon": "gloves",
+    "group": "Household",
+    "aliases": [
+      "Gummihandschuh"
+    ]
+  },
+  {
+    "de": "Handseife",
+    "en": "Hand soap",
+    "icon": "soap",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Duschgel",
+    "en": "Shower gel",
+    "icon": "shampoo",
+    "group": "Household",
+    "aliases": [
+      "Body wash"
+    ]
+  },
+  {
+    "de": "Shampoo",
+    "en": "Shampoo",
+    "icon": "shampoo",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Spülung",
+    "en": "Hair conditioner",
+    "icon": "shampoo",
+    "group": "Household",
+    "aliases": [
+      "Conditioner"
+    ]
+  },
+  {
+    "de": "Deodorant",
+    "en": "Deodorant",
+    "icon": "deodorant",
+    "group": "Household",
+    "aliases": [
+      "Deo"
+    ]
+  },
+  {
+    "de": "Zahnpasta",
+    "en": "Toothpaste",
+    "icon": "toothpaste",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Zahnbürste",
+    "en": "Toothbrush",
+    "icon": "toothbrush",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Zahnseide",
+    "en": "Dental floss",
+    "icon": "floss",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Mundspülung",
+    "en": "Mouthwash",
+    "icon": "mouthwash",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Gesichtscreme",
+    "en": "Face cream",
+    "icon": "lotion",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Bodylotion",
+    "en": "Body lotion",
+    "icon": "lotion",
+    "group": "Household",
+    "aliases": [
+      "Lotion",
+      "Skin moisturizer",
+      "Skin moisturiser"
+    ]
+  },
+  {
+    "de": "Sonnencreme",
+    "en": "Sunscreen",
+    "icon": "lotion",
+    "group": "Household",
+    "aliases": [
+      "Sun cream",
+      "Sonnenschutz"
+    ]
+  },
+  {
+    "de": "Lippenpflege",
+    "en": "Lip balm",
+    "icon": "lotion",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Rasierschaum",
+    "en": "Shaving foam",
+    "icon": "lotion",
+    "group": "Household",
+    "aliases": [
+      "Rasiergel",
+      "Shaving gel"
+    ]
+  },
+  {
+    "de": "Wundschutzcreme",
+    "en": "Diaper cream",
+    "icon": "lotion",
+    "group": "Household",
+    "aliases": [
+      "Nappy cream"
+    ]
+  },
+  {
+    "de": "Rasierer",
+    "en": "Razor",
+    "icon": "razor",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Rasierklingen",
+    "en": "Razor blades",
+    "icon": "razor",
+    "group": "Household",
+    "aliases": [
+      "Rasierklinge"
+    ]
+  },
+  {
+    "de": "Wattepads",
+    "en": "Cotton pads",
+    "icon": "cotton",
+    "group": "Household",
+    "aliases": [
+      "Wattepad"
+    ]
+  },
+  {
+    "de": "Wattestäbchen",
+    "en": "Cotton buds",
+    "icon": "cotton",
+    "group": "Household",
+    "aliases": [
+      "Cotton swabs",
+      "Wattestäbchen"
+    ]
+  },
+  {
+    "de": "Binden",
+    "en": "Sanitary pads",
+    "icon": "period",
+    "group": "Household",
+    "aliases": [
+      "Period pads",
+      "Binde"
+    ]
+  },
+  {
+    "de": "Tampons",
+    "en": "Tampons",
+    "icon": "period",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Slipeinlagen",
+    "en": "Panty liners",
+    "icon": "period",
+    "group": "Household",
+    "aliases": [
+      "Slipeinlage"
+    ]
+  },
+  {
+    "de": "Feuchttücher",
+    "en": "Wet wipes",
+    "icon": "wipes",
+    "group": "Household",
+    "aliases": [
+      "Feuchttuch"
+    ]
+  },
+  {
+    "de": "Babyfeuchttücher",
+    "en": "Baby wipes",
+    "icon": "wipes",
+    "group": "Household",
+    "aliases": [
+      "Babyfeuchttuch"
+    ]
+  },
+  {
+    "de": "Kondome",
+    "en": "Condoms",
+    "icon": "condom",
+    "group": "Household",
+    "aliases": [
+      "Kondom"
+    ]
+  },
+  {
+    "de": "Windeln",
+    "en": "Diapers",
+    "icon": "diaper",
+    "group": "Household",
+    "aliases": [
+      "Nappies",
+      "Windel"
+    ]
+  },
+  {
+    "de": "Babybrei",
+    "en": "Baby puree",
+    "icon": "baby-food",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Babynahrung",
+    "en": "Baby food",
+    "icon": "baby-food",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Säuglingsmilch",
+    "en": "Infant formula",
+    "icon": "baby-milk",
+    "group": "Household",
+    "aliases": [
+      "Baby formula"
+    ]
+  },
+  {
+    "de": "Babyöl",
+    "en": "Baby oil",
+    "icon": "baby-care",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Katzenfutter",
+    "en": "Cat food",
+    "icon": "pet-food",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Hundefutter",
+    "en": "Dog food",
+    "icon": "pet-food",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Katzenstreu",
+    "en": "Cat litter",
+    "icon": "cat-litter",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Tierleckerlis",
+    "en": "Pet treats",
+    "icon": "pet-treat",
+    "group": "Household",
+    "aliases": [
+      "Leckerli"
+    ]
+  },
+  {
+    "de": "Batterien",
+    "en": "Batteries",
+    "icon": "battery",
+    "group": "Household",
+    "aliases": [
+      "Batterie"
+    ]
+  },
+  {
+    "de": "Kerzen",
+    "en": "Candles",
+    "icon": "candle",
+    "group": "Household",
+    "aliases": [
+      "Kerze"
+    ]
+  },
+  {
+    "de": "Streichhölzer",
+    "en": "Matches",
+    "icon": "fire",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Feuerzeug",
+    "en": "Lighter",
+    "icon": "fire",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Grillanzünder",
+    "en": "Firelighters",
+    "icon": "fire",
+    "group": "Household",
+    "aliases": [
+      "Fire starters"
+    ]
+  },
+  {
+    "de": "Servietten",
+    "en": "Napkins",
+    "icon": "napkin",
+    "group": "Household",
+    "aliases": [
+      "Serviette"
+    ]
+  },
+  {
+    "de": "Einweggeschirr",
+    "en": "Disposable tableware",
+    "icon": "tableware",
+    "group": "Household",
+    "aliases": [
+      "Paper plates"
+    ]
+  },
+  {
+    "de": "Zahnstocher",
+    "en": "Toothpicks",
+    "icon": "skewer",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Schaschlikspieße",
+    "en": "Skewers",
+    "icon": "skewer",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Grillkohle",
+    "en": "Charcoal",
+    "icon": "charcoal",
+    "group": "Household",
+    "aliases": []
+  },
+  {
+    "de": "Blumen",
+    "en": "Flowers",
+    "icon": "flowers",
+    "group": "Household",
+    "aliases": [
+      "Blume"
+    ]
+  },
+  {
+    "de": "Grußkarten",
+    "en": "Greeting cards",
+    "icon": "card",
+    "group": "Household",
+    "aliases": [
+      "Grußkarte"
+    ]
+  },
+  {
+    "de": "Einkaufstaschen",
+    "en": "Shopping bags",
+    "icon": "shopping-bag",
+    "group": "Household",
+    "aliases": [
+      "Einkaufstasche"
+    ]
+  }
+]

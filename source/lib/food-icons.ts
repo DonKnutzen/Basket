@@ -1,3 +1,4 @@
+import {CATALOG_ICONS,catalogExactProduct,catalogMatch} from './product-catalog';
 import {normalize} from './types';
 import {HOUSEHOLD_ICONS,householdIcon} from './household-icons';
 import {DRINK_ICONS,drinkIcon} from './drink-icons';
@@ -6,7 +7,7 @@ export const FOOD_ICONS=[
  ['ginger','Ginger'],['carrot','Root vegetables'],['leaf','Leafy vegetables'],['salad','Salad / mixed greens'],['vegetable','Other vegetables'],
  ['butter','Butter'],['cheese','Cheese'],['milk','Milk / yogurt'],['egg','Eggs'],['meat','Meat'],['fish','Fish / seafood'],
  ['almond','Almonds'],['nut','Nuts'],['bean','Beans / lentils'],['pasta','Pasta / noodles'],['rice','Rice'],['grain','Grains / flour'],['bread','Bread / pastry'],
- ['flour','Flour / starch'],['baking','Baking ingredients'],['candy','Sweets / chocolate'],['seeds','Seeds / kernels'],['oil','Cooking oils'],['spice','Spices / seasonings'],['sauce','Sauce / tamari'],['coffee','Coffee / tea'],...DRINK_ICONS,['drink','Drinks'],...HOUSEHOLD_ICONS,['package','Packaged goods'],['basket','Basket']
+ ['flour','Flour / starch'],['baking','Baking ingredients'],['candy','Sweets / chocolate'],['seeds','Seeds / kernels'],['oil','Cooking oils'],['spice','Spices / seasonings'],['sauce','Sauce / tamari'],['coffee','Coffee / tea'],...DRINK_ICONS,['drink','Drinks'],...HOUSEHOLD_ICONS,...CATALOG_ICONS,['package','Packaged goods'],['basket','Basket']
 ] as const;
 export type FoodIconKey=typeof FOOD_ICONS[number][0];
 export type IconPreference={name:string;icon:FoodIconKey};
@@ -84,8 +85,9 @@ const groups: [FoodIconKey,string][]=[
 const rules=groups.flatMap(([icon,words])=>words.split('|').map(word=>({icon,word:normalize(word.replace(/ß/gi,'ss'))}))).sort((a,b)=>b.word.split(' ').length-a.word.split(' ').length||b.word.length-a.word.length);
 export function foodIcon(name:string,preferences:readonly IconPreference[]=[],category?:string):FoodIconKey{
  const key=normalize(name.replace(/ß/gi,'ss'));const remembered=preferences.find(p=>(p.name===normalize(name)||p.name===key)&&isFoodIcon(p.icon));if(remembered)return remembered.icon;
+ const catalog=catalogExactProduct(name);if(catalog)return catalog.icon as FoodIconKey;
  const household=householdIcon(key);if(household)return household;
- const text=' '+key+' ';if(['haribo','milka','ritter sport','lindt','kinder bueno','ferrero','ferrero rocher','toffifee','toblerone','katjes','maoam','cadbury','hershey','hersheys','hershey s','reese','reeses','reese s','kitkat','kit kat','coffee crisp','caramilk','crunchie','oh henry','wunderbar','smarties','skittles','twix','snickers','maltesers','maynards','sour patch kids','jolly rancher'].some(brand=>text.includes(' '+brand+' ')))return 'candy';const beverage=drinkIcon(key);if(beverage)return beverage;const rule=rules.find(r=>text.includes(' '+r.word+' '));if(rule)return rule.icon;
+ const text=' '+key+' ';if(['haribo','milka','ritter sport','lindt','kinder bueno','ferrero','ferrero rocher','toffifee','toblerone','katjes','maoam','cadbury','hershey','hersheys','hershey s','reese','reeses','reese s','kitkat','kit kat','coffee crisp','caramilk','crunchie','oh henry','wunderbar','smarties','skittles','twix','snickers','maltesers','maynards','sour patch kids','jolly rancher'].some(brand=>text.includes(' '+brand+' ')))return 'candy';const beverage=drinkIcon(key);if(beverage)return beverage;const rule=rules.find(r=>text.includes(' '+r.word+' '));const match=catalogMatch(name);if(match&&match[1].group!=='Drinks'&&(!rule||match[0].split(' ').length>rule.word.split(' ').length||(match[0].split(' ').length===rule.word.split(' ').length&&match[0].length>=rule.word.length)))return match[1].icon as FoodIconKey;if(rule)return rule.icon;
  return ({'Produce':'vegetable','Dairy & eggs':'milk','Meat & fish':'meat','Bakery':'bread','Pantry':'package','Frozen':'package','Drinks':'drink','Household':'soap'} as Record<string,FoodIconKey>)[category||'']||'basket';
 }
 export function iconLabel(key:FoodIconKey){return FOOD_ICONS.find(([id])=>id===key)?.[1]||'Basket'}

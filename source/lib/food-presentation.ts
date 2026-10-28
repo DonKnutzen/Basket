@@ -1,3 +1,4 @@
+import {catalogProduct,catalogIconGroup} from './product-catalog';
 import {foodIcon,type IconPreference,type FoodIconKey} from './food-icons';
 import {normalize,type Item} from './types';
 import {HOUSEHOLD_ICONS} from './household-icons';
@@ -9,7 +10,8 @@ export type ShoppingGroup=typeof SHOPPING_GROUPS[number];
 const iconGroups:Partial<Record<FoodIconKey,ShoppingGroup>>={orange:'Fruit',lemon:'Fruit',apple:'Fruit',banana:'Fruit',berries:'Fruit',fruit:'Fruit',ginger:'Vegetables',carrot:'Vegetables',leaf:'Vegetables',salad:'Vegetables',vegetable:'Vegetables',bread:'Bakery',meat:'Meat',fish:'Fish & seafood',milk:'Dairy & eggs',cheese:'Dairy & eggs',butter:'Dairy & eggs',egg:'Dairy & eggs',almond:'Pantry',nut:'Pantry',bean:'Pantry',pasta:'Pantry',rice:'Pantry',grain:'Pantry',flour:'Pantry',baking:'Pantry',candy:'Pantry',seeds:'Pantry',oil:'Pantry',spice:'Pantry',sauce:'Pantry',coffee:'Drinks',drink:'Drinks',soap:'Household'};
 export function shoppingGroup(name:string,preferences:readonly IconPreference[]=[],category?:string):ShoppingGroup{
  if(category==='Frozen')return 'Frozen';
- const key=foodIcon(name,preferences,category);
+ const remembered=preferences.some(p=>p.name===normalize(name)||p.name===normalize(name.replace(/ß/gi,'ss')));const catalog=catalogProduct(name);
+ const key=foodIcon(name,preferences,category);if(catalog&&!remembered&&catalog.icon===key)return catalog.group as ShoppingGroup;const extraGroup=catalogIconGroup(key);if(extraGroup)return extraGroup;
  if(HOUSEHOLD_ICONS.some(([icon])=>icon===key))return 'Household';
  if(DRINK_ICONS.some(([icon])=>icon===key))return 'Drinks';
  if(key==='berries'&&/(^| )(tomato|tomatoes|tomate|tomaten|cherrytomaten)( |$)/.test(normalize(name)))return 'Vegetables';

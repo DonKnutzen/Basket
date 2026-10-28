@@ -215,7 +215,7 @@ test('seeds, cooking oils and spices have distinct bilingual icons and pantry gr
  const cases={
  oil:['Oil','Olive Oil','extra virgin olive oil 750ml','Sonnenblumenöl','Olivenöl','Öl','Öle','Rapsöl','Sesamöl','Leinöl','pumpkin seed oil','sunflower seed oil','Kürbiskernöl','toasted sesame oil'],
  seeds:['Sunflower Seeds','roasted sunflower kernels','Sonnenblumenkerne','Kürbiskerne','sesame seeds','Sesam','Chiasamen','chia seeds','Leinsamen','hemp hearts','Saatenmischung','mixed seeds'],
- spice:['Spices','Gewürze','mixed spices','Currypulver','cumin seeds','Kreuzkümmel','Paprikapulver','ground paprika','black pepper','Pfeffer','Zimt','Kurkuma','garam masala','oregano','Thymian'],
+ spice:['Spices','Gewürze','mixed spices','Currypulver','cumin seeds','Kreuzkümmel','Paprikapulver','ground paprika','black pepper','Pfeffer','Zimt','Kurkuma','garam masala','oregano','Thymian getrocknet'],
  };
  for(const [icon,names]of Object.entries(cases))for(const name of names){assert.equal(foodIcon(name),icon,name);assert.equal(shoppingGroup(name),'Pantry',name)}
  for(const name of ['Curry Leaf','Bay Leaf','Lorbeerblätter'])assert.equal(foodIcon(name),'leaf',name);
@@ -340,9 +340,29 @@ test('butter and salad use their own bilingual illustrations without replacing o
   assert.equal(foodIcon(name),'salad',name);assert.equal(shoppingGroup(name),'Vegetables',name);
   assert.equal(inferCategory(name),'Produce',name);
  }
- const cases={'peanut butter':'nut','Erdnussbutter':'nut','almond butter':'almond','butter beans':'bean','buttermilk':'milk','Buttermilch':'milk','butter chicken':'meat','salad dressing':'sauce','Salatdressing':'sauce','Salat-Dressing':'sauce','salad sauce':'sauce','fruit salad':'fruit','Salatgurke':'vegetable'};
+ const cases={'peanut butter':'spread','Erdnussbutter':'spread','almond butter':'spread','butter beans':'bean','buttermilk':'milk','Buttermilch':'milk','butter chicken':'meat','salad dressing':'sauce','Salatdressing':'sauce','Salat-Dressing':'sauce','salad sauce':'sauce','fruit salad':'fruit','Salatgurke':'vegetable'};
  for(const [name,icon]of Object.entries(cases))assert.equal(foodIcon(name),icon,name);
  assert.equal(foodIcon('Butter',[{name:'butter',icon:'package'}]),'package');
  assert.equal(foodIcon('Salad',[{name:'salad',icon:'leaf'}]),'leaf');
  assert.equal(foodIcon('Butterfly stationery'),'basket');
+});
+
+test('every article in the 468-entry bilingual supermarket catalogue resolves to its intended icon and category',async()=>{
+ const {PRODUCT_CATALOG}=await import('../lib/product-catalog');const {foodIcon,isFoodIcon}=await import('../lib/food-icons');const {shoppingGroup,shoppingCategory}=await import('../lib/food-presentation');
+ assert.equal(PRODUCT_CATALOG.length,468);
+ for(const item of PRODUCT_CATALOG){
+  assert.ok(isFoodIcon(item.icon),item.icon);
+  for(const name of [item.de,item.en,...item.aliases]){
+   assert.equal(foodIcon(name),item.icon,name);assert.equal(shoppingGroup(name),item.group,name);
+   const category=({Fruit:'Produce',Vegetables:'Produce',Meat:'Meat & fish','Fish & seafood':'Meat & fish'} as Record<string,string>)[item.group]||item.group;
+   assert.equal(inferCategory(name),category,name);assert.equal(shoppingCategory(name),category,name);
+  }
+ }
+});
+test('catalogue recognition keeps specific descriptions and user corrections ahead of generic ingredients',async()=>{
+ const {foodIcon}=await import('../lib/food-icons');const {shoppingGroup}=await import('../lib/food-presentation');
+ const cases={'Baby oil':'baby-care','sunflower seed oil':'oil','Sunflower seeds':'seeds','organic mint toothpaste':'toothpaste','Coke Zero Sugar':'cola','beer battered fish':'fish','curry leaf':'leaf','Curry powder':'spice','Coconut milk':'can','Coconut shampoo':'shampoo','Paprika':'vegetable','Paprikapulver geräuchert':'spice','vegane Burger':'plant-protein','Baking paper':'foil','Baking powder':'baking'};
+ for(const [name,icon]of Object.entries(cases))assert.equal(foodIcon(name),icon,name);
+ assert.equal(foodIcon('Windeln',[{name:'windeln',icon:'package'}]),'package');
+ assert.equal(shoppingGroup('Tiefkühlspinat'),'Frozen');assert.equal(shoppingGroup('Mundspülung'),'Household');
 });
