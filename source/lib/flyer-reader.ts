@@ -57,7 +57,7 @@ function textLines(content:any):string[]{
     return sorted.length? [sorted.map(p=>p.s).join(' ')]:[];
    });
 }
-export async function readFlyerFile(file:File,progress:FlyerReaderProgress=()=>{}):Promise<{text:string;pages:number;usedOcr:boolean}>{
+export async function readFlyerFile(file:File,progress:FlyerReaderProgress=()=>{},startPage=1):Promise<{text:string;pages:number;usedOcr:boolean;pageRange:string}>{
  if(!file||!file.size||file.size>MAX_FLYER_FILE)throw new Error('Choose a PDF or photo smaller than 12 MB.');
  if(!imageFile(file)&&!pdfFile(file))throw new Error('Only PDF, JPG, PNG and WebP are supported.');
  let worker:any=null,document:any=null;
@@ -72,7 +72,7 @@ export async function readFlyerFile(file:File,progress:FlyerReaderProgress=()=>{
    const canvas=await boundedImage(file);
    const text=await recognize(canvas);
    canvas.width=0;canvas.height=0;
-   return {text:text.slice(0,65000),pages:1,usedOcr:true};
+   return {text:text.slice(0,65000),pages:1,usedOcr:true,pageRange:'1'};
   }
   progress('Reading PDF text locally…');
   // Runtime URL avoids bundling a second heavy PDF parser into the Basket shell.
@@ -82,9 +82,10 @@ export async function readFlyerFile(file:File,progress:FlyerReaderProgress=()=>{
   const data=new Uint8Array(await file.arrayBuffer());
   const task=pdfjs.getDocument({data,isEvalSupported:false,useSystemFonts:true});
   document=await task.promise;
-  if(document.numPages>MAX_FLYER_PAGES)throw new Error('Please import at most eight PDF pages at once.');
+  if(!Number.isInteger(startPage)||startPage<1||startPage>document.numPages)throw new Error('Choose a PDF starting page between 1 and '+document.numPages+'.');
+  const lastPage=Math.min(document.numPages,startPage+MAX_FLYER_PAGES-1);
   const lines:string[]=[];let usedOcr=false;
-  for(let n=1;n<=document.numPages;n++){
+  for(let n=startPage;n<=lastPage;n++){
    progress('Reading PDF page '+n+' of '+document.numPages+'…');
    const page=await document.getPage(n);
    const textContent=await page.getTextContent();
@@ -105,7 +106,7 @@ export async function readFlyerFile(file:File,progress:FlyerReaderProgress=()=>{
    lines.push(pageText.slice(0,16000));
    page.cleanup();
   }
-  return {text:lines.join('\n').slice(0,65000),pages:document.numPages,usedOcr};
+  return {text:lines.join('\n').slice(0,65000),pages:document.numPages,usedOcr,pageRange:startPage===lastPage?String(startPage):startPage+'–'+lastPage};
  }finally{
   try{await worker?.terminate()}catch{}
   try{await document?.destroy()}catch{}
