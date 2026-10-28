@@ -63,7 +63,7 @@ test('integration adapter issues only two documented API GETs and no requests fo
   const mock:FetchLike=async(url)=>{
     requests.push(url);
     return {ok:true,json:async()=>url.includes('endpoint=search')
-      ? {ok:true,data:{results:[{id:'milk1',name:'Lait 2%'},{id:'other1',name:'Laitue romaine'}]}}
+      ? {ok:true,data:{results:[{id:'candy',name:'Boîte de chocolats au lait'},{id:'milk1',name:'Lait 2%'},{id:'other1',name:'Laitue romaine'}]}}
       : {ok:true,data:product()}};
   };
   const result=await fetchQuebecPrices('Milk',qc,mock,now);
@@ -77,6 +77,8 @@ test('integration adapter issues only two documented API GETs and no requests fo
 test('never silently matches a lettuce or potato product for milk or apples',async()=>{
   const onlyLettuce:FetchLike=async()=>({ok:true,json:async()=>({ok:true,data:{results:[{id:'lettuce',name:'Laitue romaine'}]}})});
   assert.equal(await fetchQuebecPrices('Milk',qc,onlyLettuce,now),null);
+  const chocolate:FetchLike=async()=>({ok:true,json:async()=>({ok:true,data:{results:[{id:'candy',name:'Boîte de chocolats au lait'}]}})});
+  assert.equal(await fetchQuebecPrices('Milk',qc,chocolate,now),null);
   const potato:FetchLike=async()=>({ok:true,json:async()=>({ok:true,data:{results:[{id:'potato',name:'Pomme de terre blanche'}]}})});
   assert.equal(await fetchQuebecPrices('Apple',qc,potato,now),null);
 });
