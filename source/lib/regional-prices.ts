@@ -161,7 +161,7 @@ function pickProduct(products: unknown[], query: string): ApiProduct | null {
   });
   return ranked[0] || null;
 }
-/** Two GETs at most (search + detail). No scraping; caller throttles/caches queries. */
+/** At most three documented API GETs (two searches + detail). No scraping; caller throttles/caches. */
 export async function fetchQuebecPrices(
   productName: string, region: GroceryRegion, fetcher: FetchLike = fetch, now = new Date(),
 ): Promise<ProductPriceResult | null> {
@@ -172,12 +172,19 @@ export async function fetchQuebecPrices(
   const controller = new AbortController();
   const timeout = setTimeout(()=>controller.abort(),8000);
   try {
-    const searchRes = await fetcher(base + 'search&q=' + encodeURIComponent(query) + '&limit=50', { signal:controller.signal });
-    if (!searchRes.ok) return null;
-    const searchPayload = await searchRes.json() as ApiResponse;
-    if (searchPayload.ok !== true || !searchPayload.data || typeof searchPayload.data !== 'object') return null;
-    const candidate = pickProduct((searchPayload.data as { results?: unknown }).results as unknown[], query);
-    const id = getText(candidate?.id);
+    // A generic term such as `lait` can return dozens of chocolates.
+    // Search a clearly labelled common variant first; keep it a possible match,
+    // not an assertion that the user requested 2% milk.
+    const candidates = query === 'lait' ? ['lait 2%',query] : [query];
+    let id = '';
+    for (const term of candidates) {
+      const searchRes = await fetcher(base + 'search&q=' + encodeURIComponent(term) + '&limit=50', { signal:controller.signal });
+      if (!searchRes.ok) return null;
+      const searchPayload = await searchRes.json() as ApiResponse;
+      if (searchPayload.ok !== true || !searchPayload.data || typeof searchPayload.data !== 'object') return null;
+      id = getText(pickProduct((searchPayload.data as { results?: unknown }).results as unknown[], term)?.id);
+      if (/^[a-z0-9_-]{1,80}$/i.test(id)) break;
+    }
     if (!/^[a-z0-9_-]{1,80}$/i.test(id)) return null;
     const detailRes = await fetcher(base + 'product&id=' + encodeURIComponent(id), { signal:controller.signal });
     if (!detailRes.ok) return null;
