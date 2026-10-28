@@ -2,7 +2,7 @@
 import React,{useEffect,useState} from 'react';
 import {locale,tr} from '../lib/i18n';
 import {
- DEFAULT_OFFER_REGION,OFFER_PROVINCES,checkOffers,providerAvailable,restoreOfferRegion,storeChoices,isStoreOfferConnected,
+ DEFAULT_OFFER_REGION,OFFER_PROVINCES,GERMAN_OFFER_CITIES,officialGermanFlyers,checkOffers,providerAvailable,restoreOfferRegion,storeChoices,isStoreOfferConnected,
  type Deal,type OfferRegion,
 } from '../lib/current-offers';
 
@@ -23,11 +23,15 @@ export function OfferSettings({region,onChange}:{region:OfferRegion;onChange:Rea
    <p>{tr('Only check offers for products on your shopping list. Select your region and preferred stores.')}</p>
    <div className="offer-region-fields">
     <label>{tr('Country')}<select value={region.country} onChange={e=>onChange({
-      country:e.target.value==='DE'?'DE':'CA',province:e.target.value==='DE'?'':'NS',postalCode:'',stores:[],
+      country:e.target.value==='DE'?'DE':'CA',province:e.target.value==='DE'?'':'NS',postalCode:'',stores:[],...(e.target.value==='DE'?{city:'Kiel'}:{}),
     })}><option value="CA">{tr('Canada')}</option><option value="DE">{tr('Germany')}</option></select></label>
     {region.country==='CA'&&<label>{tr('Province')}<select value={region.province}
      onChange={e=>onChange(x=>({...x,province:e.target.value,stores:[]}))}>
      {OFFER_PROVINCES.map(p=><option key={p} value={p}>{p}</option>)}
+    </select></label>}
+    {region.country==='DE'&&<label>{tr('Region')}<select value={region.city||'Kiel'}
+      onChange={e=>onChange(x=>({...x,city:e.target.value,stores:[]}))}>
+      {GERMAN_OFFER_CITIES.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}
     </select></label>}
    </div>
    <p className="offer-settings-caption">{tr('Preferred stores')} · {tr('No selection means all supported stores.')}</p>
@@ -39,7 +43,8 @@ export function OfferSettings({region,onChange}:{region:OfferRegion;onChange:Rea
     </button>;
    })}</div>
    <p className="offer-source-note">
-    {eligible&&region.province==='NS'
+    {region.country==='DE'?tr('Kiel is selected, but no licensed automatic weekly-offer feed is connected in Germany. Use the official retailer links on your shopping items.')
+      : eligible&&region.province==='NS'
       ? tr('Nova Scotia: weekly flyer reference prices for 19 common staples from Aubaine.ca. A price may not be a discount, and pack size and branch may differ. Source: aubaine.ca.')
       : eligible
       ? tr('Offer checks use a third-party data source. Deals must include dates and a recent observation; availability can differ by branch.')
@@ -55,8 +60,9 @@ function date(d:string){try{return new Intl.DateTimeFormat(locale(),{dateStyle:'
 export function OffersForItem({name,region,automatic}:{name:string;region:OfferRegion;automatic:boolean}){
  const [state,setState]=useState<'idle'|'checking'|'none'|'error'|'done'>('idle');
  const [deals,setDeals]=useState<Deal[]>([]);
- const connected=providerAvailable(region),key=JSON.stringify([region.country,region.province,region.stores]);
- useEffect(()=>{setState('idle');setDeals([])},[name,key]);
+ const [showGermanFlyers,setShowGermanFlyers]=useState(false);
+ const connected=providerAvailable(region),key=JSON.stringify([region.country,region.province,region.city,region.stores]);
+ useEffect(()=>{setState('idle');setDeals([]);setShowGermanFlyers(false)},[name,key]);
  useEffect(()=>{
   if(!automatic||!connected)return;
   let cancelled=false;setState('checking');
@@ -65,6 +71,17 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
   return()=>{cancelled=true};
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[name,key,automatic,connected]);
+ if(region.country==='DE'){
+  const links=officialGermanFlyers(region);
+  return <div className="offer-in-tile">
+   {!showGermanFlyers
+    ? <button type="button" className="offer-check" onClick={()=>setShowGermanFlyers(true)}>🏷️ {tr('Check official flyers')}</button>
+    : <>
+      <small>{tr('Automatic weekly offers for Kiel are not connected yet. Check the retailer’s current flyer; prices and availability depend on the store.')}</small>
+      <div className="offer-de-links">{links.map(l=><a key={l.id} href={l.url} target="_blank" rel="noopener noreferrer">{l.name} ↗</a>)}</div>
+     </>}
+  </div>;
+ }
  if(!connected)return null;
  const lookup=()=>{setState('checking');checkOffers(name,region).then(v=>{setDeals(v);setState(v.length?'done':'none')}).catch(()=>setState('error'))};
  return <div className="offer-in-tile" aria-live="polite">

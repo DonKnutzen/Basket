@@ -601,5 +601,9 @@
   "No current matching weekly flyer price in this source": "Kein passender aktueller Wochenprospektpreis in dieser Quelle",
   "Weekly flyer reference prices": "Wochenprospektpreise (Richtwerte)",
   "Valid": "Gültig",
-  "Source: aubaine.ca · Weekly flyer reference price, not guaranteed discount. Product, size and branch may differ. Verify before buying.": "Quelle: aubaine.ca · Prospektpreis, nicht zwingend ein Rabatt. Produkt, Größe und Filiale können abweichen. Vor dem Kauf prüfen."
+  "Source: aubaine.ca · Weekly flyer reference price, not guaranteed discount. Product, size and branch may differ. Verify before buying.": "Quelle: aubaine.ca · Prospektpreis, nicht zwingend ein Rabatt. Produkt, Größe und Filiale können abweichen. Vor dem Kauf prüfen.",
+  "Region": "Region",
+  "Kiel is selected, but no licensed automatic weekly-offer feed is connected in Germany. Use the official retailer links on your shopping items.": "Kiel ist ausgewählt. Für Deutschland ist noch keine lizenzierte automatische Angebotsquelle angeschlossen. Auf den Einkaufsartikeln findest du Links zu den offiziellen Händlerprospekten.",
+  "Check official flyers": "Angebote beim Händler prüfen",
+  "Automatic weekly offers for Kiel are not connected yet. Check the retailer’s current flyer; prices and availability depend on the store.": "Für Kiel gibt es noch keine automatische Angebotsabfrage. Öffne den aktuellen Händlerprospekt und prüfe Preis und Verfügbarkeit für deine Filiale."
 }
