@@ -48,6 +48,27 @@ jobs:
                pos=txt.find('Aubergine')
                print('SCRIPT NEAR AUBERGINE',repr(txt[max(0,pos-350):pos+950]))
                break
+             import json,collections
+             payload=json.loads(soup.select_one('script#__NEXT_DATA__').get_text())
+             print('NEXT TOP KEYS',list(payload.keys()))
+             print('PAGEPROPS',list(payload.get('props',{}).get('pageProps',{}).keys()))
+             records=[]
+             def walk(x,path='',depth=0):
+              if depth>18:return
+              if isinstance(x,dict):
+               if isinstance(x.get('currentPrice'),dict) and ('productSlug' in x or 'brandName' in x):
+                records.append((path,x))
+               for k,v in x.items():walk(v,path+'/'+str(k),depth+1)
+              elif isinstance(x,list):
+               for i,v in enumerate(x[:300]):walk(v,path+'/'+str(i),depth+1)
+             walk(payload)
+             print('PRICE RECORD COUNT',len(records))
+             print('PRICE PATHS',collections.Counter('/'.join(p.split('/')[:8]) for p,x in records).most_common(8))
+             for path,row in records[:3]:
+              print('EXAMPLE',path,'KEYS',list(row.keys()),'PRICE',row.get('currentPrice'),'PROMOS',row.get('promotionPrices'),'NAMEFIELDS',[(k,str(row.get(k))[:100]) for k in ('name','productName','headline','title','brandName','productSlug','productType','shortDescription','category','amount','amountUnit','salesUnit')])
+             for path,row in records:
+              if 'aubergine' in str(row.get('productSlug','')).lower():
+               print('AUBERGINE',path,'FIELDS',[(k,str(v)[:180]) for k,v in row.items() if k not in ('longDescription','richText','content')]);break
              for kw in ('__NEXT_DATA__','_data','application/json','application/ld+json','productPrice','originalPrice','priceValue'):
               print('KEY',kw,html.find(kw))
 
