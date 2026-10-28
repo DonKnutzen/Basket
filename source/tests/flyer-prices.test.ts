@@ -1,3 +1,4 @@
+import {flyerFileError,MAX_FLYER_PDF,MAX_FLYER_IMAGE} from '../lib/flyer-reader';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -53,4 +54,18 @@ test('matches only on valid dates, region and selected retailer',()=>{
  assert.deepEqual(flyerMatches('Milch',list,'2026-11-01'),[]);
  assert.deepEqual(flyerMatches('Milch',list,'2026-10-25'),[]);
  assert.deepEqual(flyerMatches('Milch',list,today,['lidl']),[]);
+});
+
+test('a 16 MB REWE PDF is allowed; PDF up to 25 MB, photos up to 12 MB',()=>{
+ const pdf=(size:number)=>({name:'REWE-Wochenprospekt.pdf',type:'application/pdf',size});
+ const image=(size:number)=>({name:'foto.jpg',type:'image/jpeg',size});
+ assert.equal(MAX_FLYER_PDF,25*1024*1024);
+ assert.equal(MAX_FLYER_IMAGE,12*1024*1024);
+ assert.equal(flyerFileError(pdf(16*1024*1024)),null);
+ assert.equal(flyerFileError(pdf(MAX_FLYER_PDF)),null);
+ assert.match(flyerFileError(pdf(MAX_FLYER_PDF+1))||'',/25 MB/);
+ assert.equal(flyerFileError(image(MAX_FLYER_IMAGE)),null);
+ assert.match(flyerFileError(image(MAX_FLYER_IMAGE+1))||'',/12 MB/);
+ assert.match(flyerFileError({name:'angebot.zip',type:'application/zip',size:100})||'',/Only PDF/);
+ assert.match(flyerFileError({name:'leer.pdf',type:'application/pdf',size:0})||'',/non-empty/);
 });
