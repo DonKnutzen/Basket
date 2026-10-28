@@ -223,3 +223,6 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
 .flyer-item-hit>strong{white-space:nowrap}
 .flyer-item-hit>small{grid-column:1/-1}
 @media(max-width:600px){.flyer-review-row{grid-template-columns:75px minmax(0,1fr)}.flyer-review-row label:nth-child(2){grid-column:2}.flyer-review-row label:nth-child(3){grid-column:1}.flyer-review-row label:nth-child(4){grid-column:2}}
+
+.flyer-start-page{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px;font-size:calc(11px * var(--text-scale));font-weight:650}
+.flyer-start-page input{max-width:85px;min-height:36px;border:1px solid var(--line);border-radius:8px;padding:5px;background:var(--paper);color:var(--ink)}
