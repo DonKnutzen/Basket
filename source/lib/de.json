@@ -651,5 +651,8 @@
   "Check exact product and branch": "Produkt und Filiale prüfen",
   "Kiel": "Kiel",
   "Kiel is selected. You can import a weekly flyer privately and see checked prices on your list. Automatic German price feeds are not connected.": "Kiel ist ausgewählt. Du kannst Wochenprospekte privat einlesen und geprüfte Preise in deiner Einkaufsliste sehen. Eine automatische deutsche Angebotsquelle ist nicht angebunden.",
-  "No automatic German feed is connected. You can import a flyer above or check the retailer’s official flyer; prices vary by branch.": "Noch keine automatische deutsche Angebotsquelle. Du kannst oben ein Prospekt importieren oder beim Händler prüfen. Preise können je Filiale abweichen."
+  "No automatic German feed is connected. You can import a flyer above or check the retailer’s official flyer; prices vary by branch.": "Noch keine automatische deutsche Angebotsquelle. Du kannst oben ein Prospekt importieren oder beim Händler prüfen. Preise können je Filiale abweichen.",
+  "PDF starting page (up to eight pages per import)": "PDF-Startseite (maximal acht Seiten pro Import)",
+  "PDF pages analyzed: ": "Gelesene PDF-Seiten: ",
+  "Choose the next starting page to read more pages.": "Wähle danach die nächste Startseite, um weitere Seiten einzulesen."
 }
