@@ -1,0 +1,22 @@
+name: Probe reusable weekly deals datasets
+on:
+  push:
+    paths:
+      - source/scripts/probe-licensed-deals.mjs
+      - .github/workflows/probe-licensed-deals.yml
+    branches:
+      - feature/current-shopping-list-offers-2026-10
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect public licensed CSV schema only (no scraping)
+        run: node source/scripts/probe-licensed-deals.mjs
