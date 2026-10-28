@@ -1,0 +1,44 @@
+name: Verify Basket regional prices
+on:
+  push:
+    branches:
+      - feature/verified-price-api-2026-10
+  pull_request:
+    branches:
+      - main
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.25.0 --activate
+      - name: Install exact dependencies
+        working-directory: source
+        run: pnpm install --frozen-lockfile
+      - name: Run offline tests
+        working-directory: source
+        run: pnpm test
+      - name: Typecheck application
+        working-directory: source
+        run: pnpm exec tsc --noEmit
+      - name: Generate GitHub Pages assets
+        working-directory: source
+        run: pnpm run build:pages --out ..
+      - name: Commit generated Pages assets on feature branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/verified-price-api-2026-10'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html account-complete.html manifest.webmanifest sw.js .nojekyll
+          if ! git diff --cached --quiet; then
+            git commit -m "build: regenerate Basket Pages for regional prices [skip ci]"
+            git push
+          fi
