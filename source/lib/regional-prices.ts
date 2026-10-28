@@ -8,7 +8,7 @@
  * Source terms reviewed 2026-10-28; upstream retailer data rights remain to be verified.
  */
 export type Country = 'CA' | 'DE';
-export type GroceryRegion = { country: Country; province: string; postalCode: string; preferredStores: string[] };
+export type GroceryRegion = { country: Country; province: string; city: 'halifax' | 'dartmouth' | 'kiel' | ''; postalCode: string; preferredStores: string[] };
 export type GroceryStore = { id: string; name: string; country: Country; provinces?: string[]; provider?: 'epiceries-ca' };
 export const GROCERY_STORES: readonly GroceryStore[] = [
   { id: 'walmart', name: 'Walmart Canada', country: 'CA', provinces: ['QC'], provider: 'epiceries-ca' },
@@ -22,6 +22,7 @@ export const GROCERY_STORES: readonly GroceryStore[] = [
   { id: 'sobeys', name: 'Sobeys', country: 'CA' },
   { id: 'freshco', name: 'FreshCo', country: 'CA' },
   { id: 'giant-tiger', name: 'Giant Tiger', country: 'CA' },
+  { id: 'wholesaleclub', name: 'Wholesale Club', country: 'CA' },
   { id: 'rewe', name: 'REWE', country: 'DE' },
   { id: 'aldi-nord', name: 'ALDI Nord', country: 'DE' },
   { id: 'aldi-sued', name: 'ALDI Süd', country: 'DE' },
@@ -31,7 +32,7 @@ export const GROCERY_STORES: readonly GroceryStore[] = [
   { id: 'kaufland', name: 'Kaufland', country: 'DE' },
 ];
 export const PROVINCES = ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'] as const;
-export const DEFAULT_GROCERY_REGION: GroceryRegion = { country: 'CA', province: 'NS', postalCode: '', preferredStores: [] };
+export const DEFAULT_GROCERY_REGION: GroceryRegion = { country: 'CA', province: 'NS', city: 'halifax', postalCode: '', preferredStores: [] };
 export function normalizePostal(country: Country, value: string): string {
   const raw = value.trim().toUpperCase().replace(/\s/g, '');
   if (country === 'DE') return /^\d{5}$/.test(raw) ? raw : '';
@@ -43,16 +44,23 @@ export function readGroceryRegion(raw: string | null): GroceryRegion {
     const value = JSON.parse(raw || '{}');
     const country: Country = value.country === 'DE' ? 'DE' : 'CA';
     const province = country === 'CA' && PROVINCES.includes(value.province) ? value.province : (country === 'CA' ? 'NS' : '');
+    const city: GroceryRegion['city'] = country==='DE' ? 'kiel' : province==='NS' ? (value.city==='dartmouth'?'dartmouth':'halifax') : '';
     const validIds = new Set(GROCERY_STORES.filter(s => s.country === country).map(s => s.id));
     return {
-      country, province, postalCode: normalizePostal(country, typeof value.postalCode === 'string' ? value.postalCode : ''),
+      country, province, city, postalCode: normalizePostal(country, typeof value.postalCode === 'string' ? value.postalCode : ''),
       preferredStores: Array.isArray(value.preferredStores)
         ? [...new Set<string>(value.preferredStores.filter((x: unknown): x is string => typeof x === 'string' && validIds.has(x)))] : [],
     };
   } catch { return DEFAULT_GROCERY_REGION; }
 }
 export function localStores(region: GroceryRegion): GroceryStore[] {
-  return GROCERY_STORES.filter(s => s.country === region.country);
+  return GROCERY_STORES.filter(s => s.country === region.country && (region.country!=='CA'||region.province!=='NS'||HALIFAX_STORE_IDS.has(s.id)) && (region.country!=='CA'||region.province!=='QC'||s.provider==='epiceries-ca'));
+}
+const HALIFAX_STORE_IDS=new Set(['walmart','nofrills','superstore','sobeys','giant-tiger','wholesaleclub']);
+export const HALIFAX_PROVIDER_STORES: Record<string,string> = {walmart:'Walmart',nofrills:'No Frills',superstore:'Atlantic Superstore',sobeys:'Sobeys','giant-tiger':'Giant Tiger',wholesaleclub:'Wholesale Club'};
+export function halifaxProviderStores(region: GroceryRegion): GroceryStore[] {
+ if(region.country!=='CA'||region.province!=='NS'||!['halifax','dartmouth'].includes(region.city))return [];
+ return localStores(region).filter(s=>HALIFAX_STORE_IDS.has(s.id) && (!region.preferredStores.length||region.preferredStores.includes(s.id)));
 }
 export function availableProviderStores(region: GroceryRegion): GroceryStore[] {
   if (region.country !== 'CA' || region.province !== 'QC') return [];
