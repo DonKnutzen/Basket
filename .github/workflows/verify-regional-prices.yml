@@ -39,6 +39,10 @@ jobs:
         working-directory: source
         continue-on-error: true
         run: node scripts/smoke-epiceries.mjs
+      - name: Assess public Open Prices coverage for Nova Scotia and Germany (informational)
+        working-directory: source
+        continue-on-error: true
+        run: node scripts/check-open-prices-coverage.mjs
       - name: Generate GitHub Pages assets
         working-directory: source
         run: pnpm run build:pages --out ..
