@@ -37,7 +37,7 @@ export function HalifaxListComparison({region,items}:{region:GroceryRegion;items
     setLoading(true);setError('');setData(null);setLastFingerprint(fingerprint);
     const cacheKey=key+fingerprint;
     try{
-      const raw=localStorage.getItem(cacheKey);
+      const raw=sessionStorage.getItem(cacheKey);
       const existing=raw?JSON.parse(raw):null;
       if(existing?.at&&Date.now()-existing.at<cacheHours*3600000&&existing.value?.source==='GroceryPulse.ca'){
         setData(existing.value as Plan);return;
@@ -51,7 +51,7 @@ export function HalifaxListComparison({region,items}:{region:GroceryRegion;items
       if(payload?.source!=='GroceryPulse.ca'||!Array.isArray(payload.stores)||!Array.isArray(payload.lines))throw Error(tr('Unexpected price comparison response.'));
       const value=payload as Plan;
       setData(value);
-      try{localStorage.setItem(cacheKey,JSON.stringify({at:Date.now(),value}));}catch{}
+      try{sessionStorage.setItem(cacheKey,JSON.stringify({at:Date.now(),value}));}catch{}
     }catch(e){setError(e instanceof Error?e.message:tr('The Halifax price comparison is unavailable right now.'))}
     finally{setLoading(false)}
   };
@@ -63,7 +63,7 @@ export function HalifaxListComparison({region,items}:{region:GroceryRegion;items
         {loading?tr('Comparing…'):tr('Compare my list')}
       </button>
     </div>
-    {lines.length>30&&<p>{tr('Only the first 30 open items are compared.')}</p>}
+    {items.filter(i=>!i.checked).length>30&&<p>{tr('Only the first 30 open items are compared.')}</p>}
     {!enabled&&<p>{tr('Select a supported store above to compare.')}</p>}
     {error&&<p role="alert" className="regional-price-error">{error}</p>}
     {current&&data&&<div className="halifax-comparison-results">
