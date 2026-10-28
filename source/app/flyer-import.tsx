@@ -8,6 +8,7 @@ import {
 } from '../lib/flyer-prices';
 import {readFlyerFile,flyerFileError} from '../lib/flyer-reader';
 import {groupFlyerText} from '../lib/flyer-text-view';
+import {fetchRewePartialData,matchRewePartialOffers,type RewePartialData} from '../lib/rewe-official-weekly';
 type Edit=FlyerCandidate&{id:number;enabled:boolean};
 function kielToday(){
  return new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -173,14 +174,34 @@ export function GermanFlyerImport(){
 }
 export function GermanFlyerMatches({name,chosenStores}:{name:string;chosenStores:readonly string[]}){
  const imported=useLocalFlyerPrices();
+ const [auto,setAuto]=useState<RewePartialData|null>(null);
+ const storesKey=[...chosenStores].sort().join(',');
+ useEffect(()=>{
+  if(chosenStores.length&&!chosenStores.includes('rewe')){setAuto(null);return}
+  let cancelled=false;
+  void fetchRewePartialData().then(data=>{if(!cancelled)setAuto(data)});
+  return()=>{cancelled=true};
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[storesKey]);
+ const autoResults=matchRewePartialOffers(name,auto,chosenStores).slice(0,2);
  const results=flyerMatches(name,imported,kielToday(),chosenStores).slice(0,4);
- if(!results.length)return null;
+ if(!results.length&&!autoResults.length)return null;
  return <div className="flyer-item-results">
-  <strong>🏷️ {tr('Your imported flyer matches')} ({results.length})</strong>
-  {results.map(x=><div className="flyer-item-hit" key={x.id}>
-   <span><b>{nameFor(x.store)}</b><small>{x.name}{x.packSize?' · '+x.packSize:''}</small></span>
-   <strong>{priceLabel(x.priceCents)}</strong>
-   <small>{tr('Valid')} {x.validFrom} – {x.validUntil} · {tr('Kiel')} · {tr('Check exact product and branch')}</small>
-  </div>)}
+  {!!autoResults.length&&<>
+   <strong>🏷️ {tr('Automatically read REWE flyer prices')}</strong>
+   {autoResults.map(x=><div className="flyer-item-hit" key={x.id}>
+    <span><b>{tr('REWE Holtenauer Straße 69–71')}</b><small>{x.name}{x.packSize?' · '+x.packSize:''}</small></span>
+    <strong>{priceLabel(x.priceCents)}</strong>
+    <small>{tr('Valid')} {auto!.validFrom} – {auto!.validUntil} · {tr('Flyer page')} {x.page} · {tr('Category match, verify exact product and pack at store')}</small>
+   </div>)}
+  </>}
+  {!!results.length&&<>
+   <strong>🏷️ {tr('Your imported flyer matches')} ({results.length})</strong>
+   {results.map(x=><div className="flyer-item-hit" key={x.id}>
+    <span><b>{nameFor(x.store)}</b><small>{x.name}{x.packSize?' · '+x.packSize:''}</small></span>
+    <strong>{priceLabel(x.priceCents)}</strong>
+    <small>{tr('Valid')} {x.validFrom} – {x.validUntil} · {tr('Kiel')} · {tr('Check exact product and branch')}</small>
+   </div>)}
+  </>}
  </div>;
 }
