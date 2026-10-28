@@ -1,0 +1,26 @@
+name: REWE Kiel PDF source check (one-off)
+on:
+  push:
+    branches: [feature/rewe-kiel-publitas-direct-2026w44]
+    paths: [.github/workflows/check-rewe-publitas-2026w44.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Check official linked PDF, CORS and readable text
+        shell: bash
+        run: |
+          set +e
+          URL='https://view.publitas.com/89773/3478778/pdfs/61827fae-6411-4697-a44c-0fca78d9da08.pdf?response-content-disposition=attachment%3B+filename%2A%3DUTF-8%27%27REWE%2520Markt%2520GmbH%2520-%2520rewe_2026_wk44_561204_v1.pdf'
+          echo 'Official REWE market 561204, 2026 week 44'
+          curl -L -I --max-time 20 -sS -H 'Origin: https://donknutzen.github.io' "$URL" | grep -Ei '^HTTP/|^content-type:|^content-length:|^access-control-allow-origin:|^location:|^x-robots-tag:|^cross-origin-resource-policy:|^cache-control:' | tail -15 || true
+          curl -L --max-time 50 -sS -H 'Origin: https://donknutzen.github.io' -D /tmp/rewe-headers -o /tmp/rewe.pdf -w 'DOWNLOAD http=%{http_code} bytes=%{size_download} type=%{content_type}\n' "$URL"
+          echo 'Actual GET headers:'
+          grep -Ei '^HTTP/|^content-type:|^content-length:|^access-control-allow-origin:|^x-robots-tag:' /tmp/rewe-headers | tail -12 || true
+          file /tmp/rewe.pdf
+          head -c 5 /tmp/rewe.pdf | xxd
+          python -m pip install -q pymupdf
+          python -c 'import fitz,os; d=fitz.open("/tmp/rewe.pdf"); print("PDF PAGES=",len(d),"BYTES=",os.path.getsize("/tmp/rewe.pdf")); [print("PAGE",i+1,"CHARS=",len(d[i].get_text()),"TEXT_SAMPLE=",repr(d[i].get_text()[:750])) for i in range(min(3,len(d)))]' || true
