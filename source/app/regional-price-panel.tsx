@@ -1,6 +1,6 @@
 'use client';
 import React, {useEffect, useState} from 'react';
-import {tr} from '../lib/i18n';
+import {tr,locale} from '../lib/i18n';
 import {
   DEFAULT_GROCERY_REGION, GROCERY_STORES, PROVINCES,
   availableProviderStores, getObservedPrices, localStores, normalizePostal,
@@ -78,7 +78,7 @@ export function RegionalPricesSettings({region,update}:{
     </div>
   </details>;
 }
-const fmtMoney=(cents:number)=>new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD'}).format(cents/100);
+const fmtMoney=(cents:number)=>new Intl.NumberFormat(locale(),{style:'currency',currency:'CAD'}).format(cents/100);
 function relativeDate(value:string) {
   const d=new Date(value);
   return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
