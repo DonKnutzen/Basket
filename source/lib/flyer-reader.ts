@@ -4,6 +4,7 @@
  * Tesseract is the same local-on-device recognizer already used for receipts.
  */
 import {extractFlyerCandidates} from './flyer-prices';
+import {FLYER_PAGE_MARKER,FLYER_OCR_MARKER} from './flyer-text-review';
 import {PAGES_BUILD} from './hosting';
 const PDF_JS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs';
 const PDF_WORKER='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
@@ -83,7 +84,7 @@ export async function readFlyerFile(file:File,progress:FlyerReaderProgress=()=>{
    const canvas=await boundedImage(file);
    const text=await recognize(canvas);
    canvas.width=0;canvas.height=0;
-   return {text:text.slice(0,65000),pages:1,usedOcr:true,pageRange:'1'};
+   return {text:(FLYER_PAGE_MARKER(1)+'\n'+FLYER_OCR_MARKER+'\n'+text).slice(0,65000),pages:1,usedOcr:true,pageRange:'1'};
   }
   progress('Reading PDF text locally…');
   // Runtime URL avoids bundling a second heavy PDF parser into the Basket shell.
@@ -111,10 +112,10 @@ export async function readFlyerFile(file:File,progress:FlyerReaderProgress=()=>{
     const ctx=canvas.getContext('2d');
     if(!ctx)throw new Error('Cannot render the PDF page.');
     await page.render({canvasContext:ctx,viewport}).promise;
-    pageText+='\n'+await recognize(canvas);
+    pageText+='\n'+FLYER_OCR_MARKER+'\n'+await recognize(canvas);
     canvas.width=0;canvas.height=0;usedOcr=true;
    }
-   lines.push(pageText.slice(0,16000));
+   lines.push(FLYER_PAGE_MARKER(n)+'\n'+pageText.slice(0,16000));
    page.cleanup();
   }
   return {text:lines.join('\n').slice(0,65000),pages:document.numPages,usedOcr,pageRange:startPage===lastPage?String(startPage):startPage+'–'+lastPage};
