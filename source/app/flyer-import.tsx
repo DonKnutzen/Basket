@@ -205,7 +205,7 @@ export function GermanFlyerMatches({name,chosenStores}:{name:string;chosenStores
   {!!aldiMatches.length&&<>
    <strong>🏷️ {tr('Automatically read ALDI Nord flyer prices')}</strong>
    {aldiMatches.map(x=><div className="flyer-item-hit" key={x.id}>
-    <span><b>{tr('ALDI Nord · Kiel')}</b>
+    <span><b>{tr('ALDI Nord · Verify local branch')}</b>
      <small>{x.brand?x.brand+' · ':''}{x.name}{x.packSize?' · '+x.packSize:''}</small></span>
     <strong>{priceLabel(x.priceCents)}</strong>
     <small>{tr('Valid')} {x.validFrom} – {x.validUntil} · {tr('Category match, verify exact product and pack at store')}</small>
