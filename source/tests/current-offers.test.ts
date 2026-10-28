@@ -94,3 +94,11 @@ test('Germany is explicitly Kiel-scoped and never claims an automated deal feed'
  assert.deepEqual(await lookupActiveOffers('Butter',de,async()=>{calls++;throw Error('should not fetch')},now),[]);
  assert.equal(calls,0);
 });
+
+test('REWE Kiel flyer link is for the selected Holtenauer Str. market, not another branch',()=>{
+ const kiel={country:'DE',province:'',postalCode:'',stores:['rewe'],city:'Kiel'} as const;
+ const links=officialGermanFlyers({...kiel,stores:['rewe']});
+ assert.equal(links.length,1);
+ assert.match(links[0].url,/\/angebote\/kiel\/561204\//);
+ assert.match(links[0].url,/holtenauer-str-69-71/);
+});
