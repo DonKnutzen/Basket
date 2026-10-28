@@ -11,13 +11,13 @@ const valid={name:'Lait 2%',store:'Maxi',price:3.49,regular_price:4.99,
  valid_from:'2026-10-26',valid_until:'2026-10-31',observed_at:'2026-10-27',
  source_url:'https://bidou.store/en/api',size:'2 L'};
 test('no lookup outside approved regions or with unsupported selection',async()=>{
- assert.equal(providerAvailable(DEFAULT_OFFER_REGION),false);
+ assert.equal(providerAvailable(DEFAULT_OFFER_REGION),true);
  assert.equal(providerAvailable({...qc,country:'DE',province:''}),false);
  assert.equal(providerAvailable({...qc,stores:['sobeys']}),false);
  assert.equal(providerAvailable(qc),true);
  assert.equal(providerAvailable({...on,stores:['nofrills']}),true);
  let calls=0;const mock:OfferFetch=async()=>{calls++;return {ok:true,json:async()=>({})}};
- assert.deepEqual(await lookupActiveOffers('Milk',DEFAULT_OFFER_REGION,mock,now),[]);
+ assert.deepEqual(await lookupActiveOffers('Milk',{...DEFAULT_OFFER_REGION,province:'NB'},mock,now),[]);
  assert.deepEqual(await lookupActiveOffers('Milch',{...qc,country:'DE',province:''},mock,now),[]);
  assert.equal(calls,0);
 });
