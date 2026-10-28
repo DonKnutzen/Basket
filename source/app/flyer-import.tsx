@@ -1,6 +1,7 @@
 'use client';
 import React,{useEffect,useRef,useState} from 'react';
 import {tr} from '../lib/i18n';
+import FlyerTextReview from './flyer-text-review';
 import {
  FLYER_CHANGED_EVENT,FLYER_STORAGE_KEY,FLYER_STORES,extractFlyerCandidates,flyerMatches,
  isDay,priceCents,readPrivateFlyers,writePrivateFlyers,
@@ -60,6 +61,15 @@ export function GermanFlyerImport(){
   finally{if(token===gen.current){setBusy(false);setProgress('')}}
  }
  const manual=()=>{setRows(r=>[...r,{id:Math.max(-1,...r.map(x=>x.id))+1,enabled:true,name:'',price:'',packSize:'',line:''}]);setHasRead(true)};
+ const draftFromText=(line:string)=>{
+  const match=extractFlyerCandidates(line)[0];
+  setRows(existing=>{
+   if(existing.length>=80)return existing;
+   return [...existing,{id:Math.max(-1,...existing.map(x=>x.id))+1,enabled:false,
+    name:(match?.name||line).slice(0,110),price:match?.price||'',packSize:match?.packSize||'',line}];
+  });
+  setNotice(tr('An unchecked draft was added below. Verify the product, price and pack size before saving.'));
+ };
  function save(){
   setError('');setNotice('');
   const today=kielToday();
@@ -119,6 +129,7 @@ export function GermanFlyerImport(){
   {hasRead&&<div className="flyer-review">
    <h4>{tr('Review detected offers')} · {rows.length}</h4>
    <p>{tr('Prices are proposals from OCR, not confirmed discounts. Compare each row with the original flyer; multi-price or split-column items may need manual entry.')}</p>
+   {!!text&&<FlyerTextReview raw={text} onAddLine={draftFromText}/>}
    {!!rows.length&&<div className="flyer-review-head">
     <button type="button" onClick={()=>setRows(r=>r.map(x=>({...x,enabled:true})))}>{tr('Select all for review')}</button>
     <button type="button" onClick={()=>setRows(r=>r.map(x=>({...x,enabled:false})))}>{tr('Deselect all')}</button>
@@ -133,8 +144,7 @@ export function GermanFlyerImport(){
     <button type="button" className="secondary" onClick={manual}>{tr('Add an offer manually')}</button>
     <button type="button" className="primary" onClick={save} disabled={!rows.some(r=>r.enabled)}>{tr('Save reviewed offers locally')}</button>
    </div>
-   {!!text&&<details className="flyer-raw"><summary>{tr('View recognized text to verify prices')}</summary><pre>{text.slice(0,14000)}</pre></details>}
-  </div>}
+   </div>}
   {prices.length>0&&<div className="flyer-saved">
    <small>{tr('Active imported flyer prices on this device: ')}{prices.length}</small>
    <button type="button" className="text-link" onClick={clear}>{confirmClear?tr('Confirm deleting all locally imported offers'):tr('Delete local flyer prices')}</button>
