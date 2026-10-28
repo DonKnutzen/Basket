@@ -25,12 +25,12 @@ def checked_iso_date(value: object) -> dt.date:
         raise ValueError("Invalid ISO date")
     return dt.date.fromisoformat(value)
 
-def load_source_config(path: Path = CONFIG) -> dict:
+def load_source_config(path: Path | None = None) -> dict:
     """A human must explicitly supply *each* dated, market-specific flyer link.
 
     No guessed URL, URL discovery, CORS bypass, or future-week PDF reuse.
     """
-    raw=json.loads(path.read_text(encoding="utf-8"))
+    raw=json.loads((path if path is not None else CONFIG).read_text(encoding="utf-8"))
     if not isinstance(raw,dict) or raw.get("schema")!=1 or raw.get("marketId")!=MARKET or raw.get("city")!="Kiel" or raw.get("suppliedBy")!="market-link-manually-provided":
         raise ValueError("Wrong market or missing manual provenance")
     week=raw.get("week")
