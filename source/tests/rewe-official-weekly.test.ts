@@ -13,6 +13,8 @@ test('accept only bounded official REWE Kiel market and current flyer facts',()=
  assert.ok(parseReweWeeklyData(valid));
  assert.equal(parseReweWeeklyData({...valid,marketId:'830872'}),null);
  assert.equal(parseReweWeeklyData({...valid,sourceUrl:'https://evil.example/other.pdf'}),null);
+ assert.ok(parseReweWeeklyData({...valid,sourceUrl:'https://view.publitas.com/89773/3512345/pdfs/61827fae-6411-4697-a44c-0fca78d9da08.pdf'}));
+ assert.equal(parseReweWeeklyData({...valid,sourceUrl:'https://view.publitas.com/99999/3512345/pdfs/61827fae-6411-4697-a44c-0fca78d9da08.pdf'}),null);
  assert.equal(parseReweWeeklyData({...valid,offers:[{...valid.offers[0],priceCents:0}]}),null);
  assert.equal(parseReweWeeklyData({...valid,offers:Array(41).fill(valid.offers[0])}),null);
  assert.equal(parseReweWeeklyData({...valid,validUntil:'2026-02-30'}),null);
