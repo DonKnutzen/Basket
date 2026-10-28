@@ -1,4 +1,6 @@
 'use client';
+import {createHouseholdLoader} from '../lib/household-loader';
+import {readBrowserSession} from '../lib/supabase-browser';
 import {tr,phrase,locale} from '../lib/i18n';
 import { SHOPPING_GROUPS, shoppingGroup, shoppingCategory, foodGroupClass, sortShoppingItems } from '../lib/food-presentation';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -94,45 +96,52 @@ function applyDemo(data: BasketData, a: string, b: any) { const d = structuredCl
 export default function BasketApp() { useLanguage();
     const [data, setData] = useState<BasketData | null>(null), [demo, setDemo] = useState(false), [loading, setLoading] = useState(true), [error, setError] = useState(''), [view, setView] = useState('lists'), [listId, setListId] = useState(''), [busy, setBusy] = useState(false), [sync, setSync] = useState(''), [toast, setToast] = useState(''), [modal, setModal] = useState(''), [scanFile, setScanFile] = useState<File | undefined>(), [editing, setEditing] = useState<Item | null>(null), [receipt, setReceipt] = useState<Receipt | null>(null), [product, setProduct] = useState<Product | null>(null);
     const [needsAuth, setNeedsAuth] = useState(false), [showAccount, setShowAccount] = useState(false);
-    const pending = useRef(false), demoRef = useRef(false), generation = useRef(0);
+    const pending = useRef(false), demoRef = useRef(false), needsAuthRef = useRef(false); needsAuthRef.current=needsAuth;
     useEffect(() => { initializeTextSize(); }, []);
-    const refresh = useCallback(async (initial = false) => { if (demoRef.current)
-        return; const gen = ++generation.current; try {
-        if (initial && PAGES_BUILD) {
-            const { data: sessionData } = await browserAuth().auth.getSession();
-            if (!sessionData.session) {
-                setNeedsAuth(true);
-                setData(null);
-                return;
+    const loader=useRef<ReturnType<typeof createHouseholdLoader<BasketData>>|null>(null);
+    if(!loader.current)loader.current=createHouseholdLoader<BasketData>({
+        load:async signal=>{
+            const session=PAGES_BUILD?await readBrowserSession(signal):undefined;
+            if(PAGES_BUILD&&!session)return {kind:'signin'};
+            const response=await basketFetch('/api/basket',{signal,cache:'no-store'},session);
+            if(response.status===401)return {kind:'signin'};
+            const result:any=await response.json();
+            if(!response.ok)throw Error(result.error||'Household unavailable. Please retry.');
+            return {kind:'ready',data:result};
+        },
+        ready:result=>{setData(result);setNeedsAuth(false);setSync('Up to date');setError('')},
+        signin:()=>{setNeedsAuth(true);setData(null);setError('')},
+        failed:error=>{setError(error instanceof Error?error.message:'Your household could not be loaded. Please retry.');setSync('Check connection')},
+        settled:()=>setLoading(false)
+    });
+    const refresh=useCallback((_initial=false)=>demoRef.current?Promise.resolve():loader.current!.run(),[]);
+    useEffect(()=>{
+        let authTimer:ReturnType<typeof setTimeout>|undefined;
+        const visible=()=>document.visibilityState==='visible'&&!demoRef.current&&!pending.current;
+        const resume=()=>{if(visible())void refresh()};
+        void refresh(true);
+        const timer=setInterval(()=>{if(visible()&&!needsAuthRef.current)void refresh()},3000);
+        document.addEventListener('visibilitychange',resume);
+        window.addEventListener('pageshow',resume);
+        window.addEventListener('focus',resume);
+        window.addEventListener('online',resume);
+        // Never call or await an auth API from inside its own state-change callback.
+        const {data:subscription}=browserAuth().auth.onAuthStateChange(event=>{
+            if(demoRef.current)return;
+            if(event==='SIGNED_OUT'){
+                loader.current?.cancel();setData(null);setNeedsAuth(true);setLoading(false);setModal('');setError('');
+            }else if(event==='SIGNED_IN'||event==='TOKEN_REFRESHED'){
+                if(authTimer)clearTimeout(authTimer);
+                authTimer=setTimeout(resume,0);
             }
-        }
-        const r = await basketFetch('/api/basket', { cache: 'no-store' });
-        if (r.status === 401) {
-            setNeedsAuth(true);
-            setData(null);
-            return;
-        }
-        const d: any = await r.json();
-        if (!r.ok)
-            throw Error(d.error || 'Household unavailable. Please retry.');
-        if (gen !== generation.current)
-            return;
-        setData(d);
-        setNeedsAuth(false);
-        setSync('Up to date');
-        setError('');
-    }
-    catch (e: any) {
-        if (initial)
-            setError(/fetch|network|load failed|failed to load/i.test(e.message) ? 'Basket cannot reach its data server right now. Your account and saved lists have not been deleted. Please retry later.' : e.message);
-        setSync('Check connection');
-    }
-    finally {
-        if (initial && gen === generation.current)
-            setLoading(false);
-    } }, []);
-    useEffect(() => { refresh(true); const timer = setInterval(() => { if (!pending.current && document.visibilityState === 'visible' && !needsAuth)
-        refresh(); }, 3000); return () => clearInterval(timer); }, [refresh, needsAuth]);
+        });
+        return()=>{
+            clearInterval(timer);if(authTimer)clearTimeout(authTimer);
+            document.removeEventListener('visibilitychange',resume);
+            window.removeEventListener('pageshow',resume);window.removeEventListener('focus',resume);window.removeEventListener('online',resume);
+            subscription.subscription.unsubscribe();loader.current?.cancel();
+        };
+    },[refresh]);
     useEffect(() => { if (data && !data.lists.some(l => l.id === listId))
         setListId(data.lists[0]?.id || ''); }, [data, listId]);
     useEffect(() => { if (toast) {
@@ -140,7 +149,7 @@ export default function BasketApp() { useLanguage();
         return () => clearTimeout(t);
     } }, [toast]);
     const mutate = async (a: string, b: any = {}, message = '') => { if (pending.current)
-        throw Error('Please wait for your change to save.'); pending.current = true; setBusy(true); generation.current++; setSync('Saving…'); try {
+        throw Error('Please wait for your change to save.'); pending.current = true; setBusy(true); loader.current?.cancel(); setSync('Saving…'); try {
         let result: any;
         if (demo) {
             const id = a === 'addList' ? newId() : b.id;
@@ -175,13 +184,13 @@ export default function BasketApp() { useLanguage();
         return null;
     } };
     const close = () => setModal('');
-    const signedIn = () => { demoRef.current = false; setDemo(false); setNeedsAuth(false); setShowAccount(false); setData(null); setLoading(true); setModal(''); refresh(true); };
-    const exploreDemo = () => { generation.current++; demoRef.current = true; setDemo(true); setData(demoData()); setNeedsAuth(false); setShowAccount(false); setSync('Demo household'); setLoading(false); };
+    const signedIn = () => { loader.current?.cancel(); demoRef.current = false; setDemo(false); setNeedsAuth(false); setShowAccount(false); setData(null); setLoading(true); setModal(''); refresh(true); };
+    const exploreDemo = () => { loader.current?.cancel(); demoRef.current = true; setDemo(true); setData(demoData()); setNeedsAuth(false); setShowAccount(false); setSync('Demo household'); setLoading(false); };
     const legacySignIn = async () => { setIdentityPreference('chatgpt'); demoRef.current = false; setDemo(false); const r = await basketFetch('/api/basket'); if (r.status === 401) {
         window.location.assign(API_ORIGIN + '/signin-with-chatgpt?return_to=%2F');
         return;
     } signedIn(); };
-    const signOut = async () => { generation.current++; try {
+    const signOut = async () => { loader.current?.cancel(); try {
         const { error } = await browserAuth().auth.signOut({ scope: 'local' });
         if (error) {
             setToast('Could not sign out. Please try again.');
@@ -195,7 +204,7 @@ export default function BasketApp() { useLanguage();
     if (showAccount || needsAuth)
         return <AuthScreen success={signedIn} demo={exploreDemo} chatgpt={() => { legacySignIn().catch(() => setError('Sign-in is temporarily unavailable.')); }} back={data && !needsAuth ? () => setShowAccount(false) : undefined}/>;
     if (loading || !data)
-        return <div className="loading"><ShoppingBasket size={44}/><h1>{tr("basket")}<span>{tr(".")}</span></h1>{loading ? <><LoaderCircle size={20} className="spin"/><p>{tr("Getting your household ready\u2026")}</p></> : <><p>{tr(error)}</p><button className="primary" onClick={() => { setLoading(true); refresh(true); }}>{tr("Try again")}</button>{PAGES_BUILD && <button className="secondary" onClick={() => setNeedsAuth(true)}>{tr("Sign in")}</button>}<button className="text-link" onClick={() => { demoRef.current = true; setDemo(true); setData(demoData()); setSync('Demo household'); }}>{tr("Explore the demo")}</button></>}</div>;
+        return <div className="loading"><ShoppingBasket size={44}/><h1>{tr("basket")}<span>{tr(".")}</span></h1>{loading ? <><LoaderCircle size={20} className="spin"/><p>{tr("Getting your household ready\u2026")}</p></> : <><p>{tr(error)}</p><button className="primary" onClick={() => { setLoading(true); refresh(true); }}>{tr("Try again")}</button>{PAGES_BUILD && <button className="secondary" onClick={() => setNeedsAuth(true)}>{tr("Sign in")}</button>}<button className="text-link" onClick={exploreDemo}>{tr("Explore the demo")}</button></>}</div>;
     const sharing = householdSharing(data);
     const list = data.lists.find(l => l.id === listId), items = data.items.filter(i => i.listId === listId), scan = () => { setScanFile(undefined); setModal('scan'); };
     const nav = <>{TABS.map(t => <button key={t.id} className={view === t.id ? 'active' : ''} onClick={() => setView(t.id)}><t.icon size={21} strokeWidth={1.6}/><span className="desktop-label">{tr(t.label)}</span><span className="mobile-label">{tr(t.short)}</span>{t.id === 'lists' && <small>{data.lists.length}</small>}</button>)}</>;

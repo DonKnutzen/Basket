@@ -554,5 +554,10 @@
   "Charcoal": "Grillkohle",
   "Flowers": "Blumen",
   "Greeting cards": "Grußkarten",
-  "Shopping bags": "Einkaufstaschen"
+  "Shopping bags": "Einkaufstaschen",
+  "The request took too long. Please try again.": "Die Anfrage hat zu lange gedauert. Bitte versuche es erneut.",
+  "Loading took too long. Check your connection and try again.": "Das Laden hat zu lange gedauert. Prüfe deine Verbindung und versuche es erneut.",
+  "Checking your session took too long. Please try again.": "Die Prüfung deiner Anmeldung hat zu lange gedauert. Bitte versuche es erneut.",
+  "Could not finish signing in. Check your connection and try again.": "Die Anmeldung konnte nicht abgeschlossen werden. Prüfe deine Verbindung und versuche es erneut.",
+  "Basket cannot reach its data server right now. Please try again.": "Basket erreicht den Datenserver gerade nicht. Bitte versuche es erneut."
 }
