@@ -183,3 +183,23 @@ main.auth-page{max-width:none;padding:0;margin:0;min-height:100dvh;display:grid;
 .regional-price-item>details p{font-size:calc(10px * var(--text-scale));line-height:1.35;margin:6px 0}
 .regional-price-item>details a{font-size:calc(10px * var(--text-scale));text-decoration:underline}
 @media(max-width:600px){.regional-price-fields form{flex-wrap:wrap}.regional-price-fields input{max-width:130px}}
+
+
+/* Bounded private-use Halifax market comparison; not a retailer checkout quote. */
+.halifax-comparison{margin:10px 0 16px;padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--surface,#fff);color:var(--ink)}
+.halifax-comparison-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.halifax-comparison-heading>div{flex:1 1 220px}
+.halifax-comparison-heading strong{font-size:calc(13px * var(--text-scale));font-weight:750}
+.halifax-comparison p{font-size:calc(11px * var(--text-scale));line-height:1.5;color:var(--muted);margin:6px 0}
+.halifax-comparison-heading button{min-width:135px;min-height:36px}
+.halifax-comparison-results{margin-top:11px;border-top:1px solid var(--line);padding-top:9px}
+.halifax-comparison-stores{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin:10px 0}
+.halifax-comparison-store{border:1px solid var(--line);border-radius:9px;padding:9px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.halifax-comparison-store>b{font-size:calc(12px * var(--text-scale))}
+.halifax-comparison-store>strong{font-size:calc(18px * var(--text-scale));font-variant-numeric:tabular-nums;color:var(--ink)}
+.halifax-comparison-store>small{font-size:calc(10px * var(--text-scale));line-height:1.35;color:var(--muted)}
+.halifax-comparison-lines{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+.halifax-comparison-lines>strong{font-size:calc(12px * var(--text-scale))}
+.halifax-comparison-lines p{padding:4px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.halifax-comparison-lines p>span{font-weight:650;color:var(--ink)}
+.halifax-comparison-results>a{font-size:calc(11px * var(--text-scale));text-decoration:underline}
