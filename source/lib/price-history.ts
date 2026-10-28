@@ -1,6 +1,6 @@
 import {catalogExactProduct} from './product-catalog';
 import {normalize,toCents,type PriceLine,type DraftLine} from './types';
-export type PriceObservation={country?:string;branch?:string;brand?:string;variant?:string;quality?:string;measuredQuantity?:string;measuredUnit?:'kg'|'g'|'lb'|'L'|'mL'|'piece';regularCents?:number;discountCents?:number;saleStatus?:'unknown'|'normal'|'advertised'|'reduced'};
+export type PriceObservation={sourceLines?:number[];country?:string;branch?:string;brand?:string;variant?:string;quality?:string;measuredQuantity?:string;measuredUnit?:'kg'|'g'|'lb'|'L'|'mL'|'piece';regularCents?:number;discountCents?:number;saleStatus?:'unknown'|'normal'|'advertised'|'reduced'};
 // Quantities are fixed-point integers with six decimal places; money stays in cents.
 function decimal(value:string){if(!/^\d+(?:[.,]\d{1,6})?$/.test(value))return null;const [a,b='']=value.replace(',','.').split('.');return BigInt(a)*BigInt(1000000)+BigInt(b.padEnd(6,'0'))}
 function quantity(value:string,unit:string){const n=decimal(value);if(n===null||n<=BigInt(0))return null;switch(unit.toLowerCase()){case 'kg':return {n,d:BigInt(1000000),unit:'kg'};case 'g':return {n,d:BigInt(1000000000),unit:'kg'};case 'lb':return {n:n*BigInt(45359237),d:BigInt(100000000000000),unit:'kg'};case 'l':return {n,d:BigInt(1000000),unit:'L'};case 'ml':return {n,d:BigInt(1000000000),unit:'L'};case 'piece':return {n,d:BigInt(1000000),unit:'piece'};default:return null}}
@@ -24,7 +24,7 @@ export function observationFromDraft(line:DraftLine):PriceObservation{
  const reduced=regularCents!==undefined&&regularCents>toCents(line.amount)||discountCents!==undefined&&discountCents>0;
  if(line.saleStatus==='normal'&&reduced)throw Error('A normal price cannot have an evidenced reduction.');
  if(line.saleStatus==='reduced'&&!reduced)throw Error('A reduced price needs an evidenced regular price or discount.');
- return {brand:line.brand?.trim()||undefined,variant:line.variant?.trim()||undefined,quality:line.quality?.trim()||undefined,measuredQuantity:line.measuredQuantity||undefined,measuredUnit:line.measuredQuantity?line.measuredUnit:undefined,regularCents,discountCents,saleStatus:reduced?'reduced':line.saleStatus||'unknown'};
+ return {sourceLines:Array.isArray(line.sourceLines)?line.sourceLines.filter(n=>Number.isInteger(n)&&n>0&&n<=10000).slice(0,100):undefined,brand:line.brand?.trim()||undefined,variant:line.variant?.trim()||undefined,quality:line.quality?.trim()||undefined,measuredQuantity:line.measuredQuantity||undefined,measuredUnit:line.measuredQuantity?line.measuredUnit:undefined,regularCents,discountCents,saleStatus:reduced?'reduced':line.saleStatus||'unknown'};
 }
 export function readObservation(raw:unknown):PriceObservation{try{const value=JSON.parse(String(raw));return value&&typeof value==='object'&&!Array.isArray(value)?value:{}}catch{return {}}}
 export function productNameKey(name:string){return normalize(catalogExactProduct(name)?.en||name)}

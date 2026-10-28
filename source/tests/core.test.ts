@@ -449,3 +449,23 @@ test('known quality variants never share a product identity or learned ambiguous
 });
 
 test('shopping and history match exact bilingual catalogue names without collapsing variants',()=>{assert.equal(productNameKey('Bananen'),productNameKey('Bananas'));assert.notEqual(productNameKey('Milk 2%'),productNameKey('Milk 3.25%'))});
+
+test('explicit named multiline discounts apply once and preserve regular evidence',()=>{
+ const d=parseReceipt('SOBEYS\n2026-10-28\nAPPLES 4.00\nBREAD 3.00\nDISCOUNT APPLES -1.00\nTOTAL 6.00');assert.equal(difference(d),0);assert.equal(d.lines[0].amount,'3.00');assert.equal(d.lines[0].regularPrice,'4.00');assert.equal(d.lines[0].discount,'1.00');assert.equal(d.lines[0].saleStatus,'reduced');assert.deepEqual(d.lines[0].sourceLines,[3,5]);assert.equal(d.unassignedAdjustments?.length,0);
+});
+test('repeated product discounts and generic coupons are never assigned by proximity',()=>{
+ const d=parseReceipt('SOBEYS\nAPPLES 4.00\nAPPLES 4.00\nDISCOUNT APPLES -1.00\nCOUPON -1.00\nTOTAL 6.00');assert.equal(d.lines[0].amount,'4.00');assert.equal(d.lines[1].amount,'4.00');assert.equal(d.unassignedAdjustments?.length,2);assert.equal(difference(d),-200);
+});
+test('multiline labels, measured totals and item-only amount lines retain evidence',()=>{
+ const d=parseReceipt('REWE\n28.10.2026\nBANANEN\n0,842 kg x 1,79 €/kg = 1,51 €\nTOTAL 1,51 €');assert.equal(d.lines.length,1);assert.equal(d.lines[0].measuredQuantity,'0.842');assert.equal(d.lines[0].amount,'1.51');assert.equal(difference(d),0);
+ const split=parseReceipt('SOBEYS\nMILK\n5.49\nTOTAL 5.49');assert.equal(split.lines.length,1);assert.equal(split.lines[0].name,'Milk');
+});
+test('German inclusive VAT, printed totals and negative adjustments remain distinct',()=>{
+ const d=parseReceipt('REWE\n28.10.2026\nMILCH 2,00 €\nMWST 0,13 €\nSUMME 2,00 €\nBAR 5,00 €');assert.equal(d.lines.length,1);assert.equal(d.tax,'0.00');assert.equal(difference(d),0);
+ const missing=parseReceipt('SOBEYS\nMILK 2.00\nSUBTOTAL 2.00');assert.equal(missing.total,'');
+ const returned=parseReceipt('SOBEYS\nMILK 2.00\nRETURN MILK -1.00\nTOTAL 1.00');assert.equal(returned.lines.length,2);assert.equal(returned.lines[1].amount,'-1.00');assert.equal(difference(returned),0);
+});
+test('thousands separators preserve original money values',()=>{assert.equal(parseReceipt('REWE\nKAFFEE 1.234,56 €\nTOTAL 1.234,56 €').lines[0].amount,'1234.56');assert.equal(parseReceipt('SOBEYS\nCOFFEE $1,234.56\nTOTAL $1,234.56').lines[0].amount,'1234.56')});
+
+test('item discounts already included in paid totals are not deducted twice',()=>{const d=parseReceipt('SOBEYS\nAPPLES 3.00\nREGULAR PRICE APPLES 4.00\nDISCOUNT APPLES -1.00\nTOTAL 3.00');assert.equal(d.lines.length,1);assert.equal(d.lines[0].amount,'3.00');assert.equal(d.lines[0].discount,'1.00');assert.equal(difference(d),0)});
+test('refund receipts preserve signed positions and do not enter purchase price comparisons',async()=>{await get();const d={...draft(),total:'-5.49',tax:'0',lines:[{...draft().lines[0],quantity:'1',amount:'-5.49'}]};assert.equal((await post('saveReceipt',{draft:d})).status,200);const data=(await get()).body;assert.equal(data.lines[0].amountCents,-549);assert.equal(history(data.lines).length,0)});
