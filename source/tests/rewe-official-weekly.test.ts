@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {parseReweWeeklyData,matchRewePartialOffers,berlinDay} from '../lib/rewe-official-weekly';
+import {parseReweWeeklyData,matchRewePartialOffers,berlinDay,fetchRewePartialData} from '../lib/rewe-official-weekly';
 const sourceUrl='https://view.publitas.com/89773/3478778/pdfs/61827fae-6411-4697-a44c-0fca78d9da08.pdf';
 const valid={
  schema:1,marketId:'561204',city:'Kiel',store:'rewe',
@@ -29,4 +29,16 @@ test('generic list items match only current week and correct store, never brande
  assert.equal(matchRewePartialOffers('Tomaten',source,[],new Date('2026-11-01T13:00:00Z')).length,0);
  assert.equal(matchRewePartialOffers('Tomaten',parseReweWeeklyData({...valid,status:'unavailable'}),[],date).length,0);
  assert.equal(berlinDay(date),'2026-10-28');
+});
+
+test('REWE checked prices load from freshly committed public data, not a stale Pages build',async()=>{
+ const fetched:string[]=[];
+ const fetcher=(async(url:RequestInfo|URL)=>{
+  fetched.push(String(url));
+  return {ok:true,json:async()=>valid} as Response;
+ }) as typeof fetch;
+ const actual=await fetchRewePartialData(fetcher);
+ assert.equal(actual?.marketId,'561204');
+ assert.equal(fetched.length,1);
+ assert.match(fetched[0],/^https:\/\/raw\.githubusercontent\.com\/DonKnutzen\/Basket\/main\/rewe-kiel-weekly\.json$/);
 });
