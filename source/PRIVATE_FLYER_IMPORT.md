@@ -36,3 +36,16 @@ ALDI's own [web offers page](https://www.aldi-nord.de/angebote.html) returned an
 **Current supported functionality:** readable per-page OCR/PDF text verification with price highlighting, optional all-lines view, search and original-line context; manual locally reviewed entries become offer cards in the grocery list. The external source links are clearly labeled. **Not delivered:** unattended live official retailer scraping or automatic flyer imports. Those require explicit access/reuse permission or a compatible documented licensed feed. A merchant's visible public marketing offers alone do not prove republication rights.
 
 For ALDI use the official [lightweight live-offers page](https://www.aldi-nord.de/angebote.html) in your browser rather than importing the entire 121 MB PDF. The import cap remains 25 MiB for locally chosen PDFs.
+
+## 28 Oct 2026: experimental automatic matching without user PDF uploads
+
+For this exact source, the user provided the official REWE Holtenauer Str. 69–71 (market 561204), week 44 flyer PDF on Publitas. A GitHub Actions job downloads that **one public PDF** (HTTP 200, PDF, 28 pages, 25,035,706 bytes), extracts only a small subset of high-confidence, grocery-category/price facts using PyMuPDF and publishes **no images, full PDF, original text or exhaustive catalog**. The resulting bounded, source-linked `rewe-kiel-weekly.json` includes market ID, dates, source PDF, week status, page number, actual printed price and explicit `category-only` confidence. The reader performs one controlled download per day, not a site crawl, and honors HTTP errors. It never bypasses anti-bot mechanisms.
+
+Basket fetches that small JSON from its own GitHub Pages origin automatically and matches generic shopping-list items only. If a matching, current-week category is available it appears as a REWE source-reference price on the item. A brand, exact SKU/size, and store availability are **not guaranteed**, and a missing match cannot be interpreted as no sale. The manual upload flow remains an optional fallback.
+
+**Important coverage and legal limits:**
+- This first integration only covers the explicit official REWE week **2026-10-26 through 2026-10-31**. Those prices become invisible after the last day. The official link for the next week cannot currently be discovered automatically from the REWE market page (unattended site fetch returned HTTP 403). The source must be refreshed by the maintainer or a properly authorized discovery/feed workflow; there is **no claim** of an uninterrupted ongoing Germany price feed.
+- Extraction intentionally discards ambiguous price-product pairs, including close-by multiple categories, non-sale unit prices, loyalty-only discounts and old prices.
+- Only a few summary price facts are published, not a replacement for the entire original flyer. This is not proof of a general reuse license; ongoing redistribution or a larger service would require a rights review or permission from the retailer/rights holder.
+- The scheduled job operates centrally; shoppers are never asked to upload the flyer or pay for OCR. It does not download the 25-MB PDF to their phones.
+- No user shopping-list items are sent to REWE/Publitas. Matching takes place in the client after the limited JSON is fetched.

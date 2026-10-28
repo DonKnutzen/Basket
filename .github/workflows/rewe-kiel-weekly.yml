@@ -1,0 +1,38 @@
+name: Read public REWE Kiel weekly flyer for limited price facts
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * *"
+  push:
+    branches:
+      - feature/rewe-kiel-publitas-direct-2026w44
+    paths:
+      - source/scripts/extract-rewe-kiel-weekly.py
+      - .github/workflows/rewe-kiel-weekly.yml
+permissions:
+  contents: write
+concurrency:
+  group: basket-rewe-kiel-weekly-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  read-public-file:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Prepare open-source PDF text extractor
+        run: python -m pip install -q pymupdf
+      - name: Read this week's explicitly supplied official flyer once
+        run: python source/scripts/extract-rewe-kiel-weekly.py rewe-kiel-weekly.json
+      - name: Publish only a bounded, partial list of source-linked price facts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add rewe-kiel-weekly.json
+          if ! git diff --cached --quiet; then
+            git commit -m "data: refresh limited REWE Kiel weekly facts [skip ci]"
+            git push
+          fi

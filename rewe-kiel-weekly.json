@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "marketId": "561204",
+  "city": "Kiel",
+  "store": "rewe",
+  "validFrom": "2026-10-26",
+  "validUntil": "2026-10-31",
+  "checkedAt": "2026-10-28",
+  "sourceUrl": "https://view.publitas.com/89773/3478778/pdfs/61827fae-6411-4697-a44c-0fca78d9da08.pdf?response-content-disposition=attachment%3B+filename%2A%3DUTF-8%27%27REWE%2520Markt%2520GmbH%2520-%2520rewe_2026_wk44_561204_v1.pdf",
+  "sourceType": "official-pdf",
+  "coverage": "partial",
+  "status": "partial",
+  "offers": [
+    {
+      "id": "rewe:561204:6:bananen:179",
+      "name": "Bananen",
+      "priceCents": 179,
+      "packSize": "1 kg",
+      "store": "rewe",
+      "marketId": "561204",
+      "page": 6,
+      "confidence": "category-only"
+    },
+    {
+      "id": "rewe:561204:13:joghurt:149",
+      "name": "Joghurt",
+      "priceCents": 149,
+      "packSize": "115-g",
+      "store": "rewe",
+      "marketId": "561204",
+      "page": 13,
+      "confidence": "category-only"
+    },
+    {
+      "id": "rewe:561204:22:kartoffeln:149",
+      "name": "Kartoffeln",
+      "priceCents": 149,
+      "packSize": "1 kg",
+      "store": "rewe",
+      "marketId": "561204",
+      "page": 22,
+      "confidence": "category-only"
+    },
+    {
+      "id": "rewe:561204:1:pizza:179",
+      "name": "Pizza",
+      "priceCents": 179,
+      "packSize": "390-g",
+      "store": "rewe",
+      "marketId": "561204",
+      "page": 1,
+      "confidence": "category-only"
+    },
+    {
+      "id": "rewe:561204:1:rispentomaten:189",
+      "name": "Rispentomaten",
+      "priceCents": 189,
+      "packSize": "1 kg",
+      "store": "rewe",
+      "marketId": "561204",
+      "page": 1,
+      "confidence": "category-only"
+    }
+  ]
+}
