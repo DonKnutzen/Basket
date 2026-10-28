@@ -9,6 +9,7 @@ import {
 import {readFlyerFile,flyerFileError} from '../lib/flyer-reader';
 import {groupFlyerText} from '../lib/flyer-text-view';
 import {fetchRewePartialData,matchRewePartialOffers,type RewePartialData} from '../lib/rewe-official-weekly';
+import {fetchAldiWeeklyData,matchAldiWeeklyOffers,type AldiWeeklyData} from '../lib/aldi-nord-weekly';
 type Edit=FlyerCandidate&{id:number;enabled:boolean};
 function kielToday(){
  return new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -174,30 +175,45 @@ export function GermanFlyerImport(){
 }
 export function GermanFlyerMatches({name,chosenStores}:{name:string;chosenStores:readonly string[]}){
  const imported=useLocalFlyerPrices();
- const [auto,setAuto]=useState<RewePartialData|null>(null);
+ const [rewe,setRewe]=useState<RewePartialData|null>(null);
+ const [aldi,setAldi]=useState<AldiWeeklyData|null>(null);
  const storesKey=[...chosenStores].sort().join(',');
  useEffect(()=>{
-  if(chosenStores.length&&!chosenStores.includes('rewe')){setAuto(null);return}
   let cancelled=false;
-  void fetchRewePartialData().then(data=>{if(!cancelled)setAuto(data)});
+  const reweEnabled=!chosenStores.length||chosenStores.includes('rewe');
+  const aldiEnabled=!chosenStores.length||chosenStores.includes('aldi');
+  if(reweEnabled)void fetchRewePartialData().then(d=>{if(!cancelled)setRewe(d)});
+  else setRewe(null);
+  if(aldiEnabled)void fetchAldiWeeklyData().then(d=>{if(!cancelled)setAldi(d)});
+  else setAldi(null);
   return()=>{cancelled=true};
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[storesKey]);
- const autoResults=matchRewePartialOffers(name,auto,chosenStores).slice(0,2);
- const results=flyerMatches(name,imported,kielToday(),chosenStores).slice(0,4);
- if(!results.length&&!autoResults.length)return null;
+ const reweMatches=matchRewePartialOffers(name,rewe,chosenStores).slice(0,2);
+ const aldiMatches=matchAldiWeeklyOffers(name,aldi,chosenStores).slice(0,3);
+ const importedMatches=flyerMatches(name,imported,kielToday(),chosenStores).slice(0,4);
+ if(!importedMatches.length&&!reweMatches.length&&!aldiMatches.length)return null;
  return <div className="flyer-item-results">
-  {!!autoResults.length&&<>
+  {!!reweMatches.length&&<>
    <strong>🏷️ {tr('Automatically read REWE flyer prices')}</strong>
-   {autoResults.map(x=><div className="flyer-item-hit" key={x.id}>
+   {reweMatches.map(x=><div className="flyer-item-hit" key={x.id}>
     <span><b>{tr('REWE Holtenauer Straße 69–71')}</b><small>{x.name} · {tr('Check package size in the flyer')}</small></span>
     <strong>{priceLabel(x.priceCents)}</strong>
-    <small>{tr('Valid')} {auto!.validFrom} – {auto!.validUntil} · {tr('Flyer page')} {x.page} · {tr('Category match, verify exact product and pack at store')}</small>
+    <small>{tr('Valid')} {rewe!.validFrom} – {rewe!.validUntil} · {tr('Flyer page')} {x.page} · {tr('Category match, verify exact product and pack at store')}</small>
    </div>)}
   </>}
-  {!!results.length&&<>
-   <strong>🏷️ {tr('Your imported flyer matches')} ({results.length})</strong>
-   {results.map(x=><div className="flyer-item-hit" key={x.id}>
+  {!!aldiMatches.length&&<>
+   <strong>🏷️ {tr('Automatically read ALDI Nord flyer prices')}</strong>
+   {aldiMatches.map(x=><div className="flyer-item-hit" key={x.id}>
+    <span><b>{tr('ALDI Nord · Kiel')}</b>
+     <small>{x.brand?x.brand+' · ':''}{x.name}{x.packSize?' · '+x.packSize:''}</small></span>
+    <strong>{priceLabel(x.priceCents)}</strong>
+    <small>{tr('Valid')} {x.validFrom} – {x.validUntil} · {tr('Category match, verify exact product and pack at store')}</small>
+   </div>)}
+  </>}
+  {!!importedMatches.length&&<>
+   <strong>🏷️ {tr('Your imported flyer matches')} ({importedMatches.length})</strong>
+   {importedMatches.map(x=><div className="flyer-item-hit" key={x.id}>
     <span><b>{nameFor(x.store)}</b><small>{x.name}{x.packSize?' · '+x.packSize:''}</small></span>
     <strong>{priceLabel(x.priceCents)}</strong>
     <small>{tr('Valid')} {x.validFrom} – {x.validUntil} · {tr('Kiel')} · {tr('Check exact product and branch')}</small>
