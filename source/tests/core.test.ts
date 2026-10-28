@@ -378,3 +378,74 @@ test('catalogue recognition keeps specific descriptions and user corrections ahe
  assert.equal(foodIcon('Windeln',[{name:'windeln',icon:'package'}]),'package');
  assert.equal(shoppingGroup('Tiefkühlspinat'),'Frozen');assert.equal(shoppingGroup('Mundspülung'),'Household');
 });
+
+// Personal price book: synthetic receipts only; never calls a real household.
+import {receiptDate} from '../lib/receipt-date';
+import {productNameKey,comparisonBasis,comparableLines,weightedAverage,cheapest,history,observationFromDraft} from '../lib/price-history';
+import {type PriceLine} from '../lib/types';
+function price(overrides:Partial<PriceLine>={}):PriceLine{return {id:'p1',receiptId:'r1',productId:'tomato-500',productName:'Tomatoes',label:'TOMATOES',category:'Produce',quantity:1,packSize:'500 g',amountCents:249,store:'Walmart',date:'2026-10-10',currency:'CAD',country:'CA',...overrides}}
+test('international purchase dates never fall back to scan day',()=>{
+ for(const text of ['28.10.2026','2026-10-28','10/28/2026','28/10/2026','28.10.26','28. Oktober 2026','October 28, 2026','28 octobre 2026'])assert.equal(receiptDate(text).date,'2026-10-28',text);
+ assert.equal(receiptDate('28 février 2024').date,'2024-02-28');
+ assert.equal(receiptDate('Nothing dated here').status,'missing');
+ assert.equal(parseReceipt('SOBEYS\nMILK 5.49\nTOTAL 5.49').date,'');
+ for(const text of ['31.02.2026','2026-13-28'])assert.equal(receiptDate(text).status,'invalid');
+});
+test('ambiguous Canadian dates and conflicting dates require confirmation',()=>{
+ const ambiguous=receiptDate('04/05/2026','CA');assert.equal(ambiguous.date,'');assert.equal(ambiguous.status,'ambiguous');assert.deepEqual(ambiguous.candidates,['2026-05-04','2026-04-05']);
+ assert.equal(receiptDate('04/05/2026','DE').date,'2026-05-04');
+ assert.equal(receiptDate('MM/DD/YYYY\n04/05/2026','CA').date,'2026-04-05');
+ assert.equal(receiptDate('2026-10-01\n2026-10-02').status,'ambiguous');
+ assert.equal(receiptDate('2026-10-01\nBest before 2026-10-02').date,'2026-10-01');
+});
+test('basic receipt extraction preserves pack sizes and canonical products without inventing attributes',()=>{
+ const d=parseReceipt('REWE\n28.10.2026\nBIO TOMATEN 500 g 2,49 €\nTOTAL 2,49 €');
+ assert.equal(d.date,'2026-10-28');assert.equal(d.country,'DE');assert.equal(d.currency,'EUR');assert.equal(d.lines[0].packSize,'500 g');assert.equal(d.lines[0].quality,'organic');assert.equal(d.lines[0].brand,undefined);assert.equal(d.lines[0].amount,'2.49');
+ const weighted=parseReceipt('REWE\n28.10.2026\nBANANEN 0,842 kg x 1,79 €/kg = 1,51 €\nTOTAL 1,51 €').lines[0];assert.equal(weighted.measuredQuantity,'0.842');assert.equal(weighted.measuredUnit,'kg');assert.equal(weighted.packSize,'');assert.equal(comparisonBasis({...weighted,quantity:1,amountCents:151})?.cents,179);
+ assert.equal(parseReceipt('UNKNOWN STORE\nAPPLES 1.00').currency,'');
+});
+test('unit prices use purchased total amounts, exact lb conversion and pack counts',()=>{
+ assert.equal(comparisonBasis(price())?.cents,498);
+ assert.equal(comparisonBasis(price({packSize:'1 kg',amountCents:429}))?.cents,429);
+ assert.equal(comparisonBasis(price({packSize:'2 lb',amountCents:200}))?.cents,220);
+ assert.equal(comparisonBasis(price({packSize:'500 g',quantity:2,amountCents:498}))?.cents,498);
+ assert.equal(comparisonBasis(price({measuredQuantity:'842',measuredUnit:'g',amountCents:151}))?.cents,179);
+ assert.equal(comparisonBasis(price({packSize:'250 mL',amountCents:200}))?.cents,800);
+ assert.equal(comparisonBasis(price({packSize:'',measuredQuantity:'6',measuredUnit:'piece',amountCents:300}))?.cents,50);
+});
+test('comparisons isolate currency, country, known quality, brand and unknown pack size',()=>{
+ const a=price(),b=price({id:'p2',productId:'tomato-1kg',packSize:'1 kg',amountCents:429,store:'Sobeys',date:'2026-10-15'});
+ const group=comparableLines([a,b,price({currency:'EUR'}),price({quality:'organic'}),price({brand:'Brand X'}),price({country:'DE'}),price({packSize:''})],a);
+ assert.equal(group.length,2);assert.equal(cheapest(group)?.store,'Sobeys');assert.equal(history(group)[0].date,'2026-10-15');assert.equal(weightedAverage(group)?.cents,452);
+ assert.equal(comparableLines([price({packSize:'',productId:'unknown1'}),price({packSize:'',productId:'unknown2'})],price({packSize:'',productId:'unknown1'})).length,1);
+});
+test('advertised offers and evidenced reductions remain distinct; discount is never subtracted twice',()=>{
+ const line={id:'x',name:'Milk',label:'MILK',category:'Dairy & eggs',quantity:'1',packSize:'2 L',amount:'3.00'};
+ assert.equal(observationFromDraft({...line,saleStatus:'advertised'}).saleStatus,'advertised');
+ const evidence=observationFromDraft({...line,regularPrice:'4.00',discount:'1.00'});assert.equal(evidence.regularCents,400);assert.equal(evidence.saleStatus,'reduced');assert.equal(comparisonBasis(price({...evidence,packSize:'2 L',amountCents:300}))?.cents,150);
+ assert.throws(()=>observationFromDraft({...line,regularPrice:'4.00',discount:'2.00'}));
+ assert.throws(()=>observationFromDraft({...line,saleStatus:'reduced'}));
+ assert.throws(()=>observationFromDraft({...line,measuredQuantity:'1',measuredUnit:undefined}));
+});
+test('saving successive receipts appends history, persists evidence and keeps original line labels',async()=>{
+ await get();const d=draft();d.lines[0].amount='8.00';d.total='8.00';
+ const first={...d,country:'CA',branch:'Halifax',dateEvidence:{date:d.date,status:'confirmed',candidates:[d.date]},lines:[{...d.lines[0],brand:'Brand X',quality:'organic',regularPrice:'10.00',discount:'2.00'}]};
+ assert.equal((await post('saveReceipt',{draft:first})).status,200);
+ assert.equal((await post('saveReceipt',{draft:{...first,id:'r2',date:'2026-10-28',dateEvidence:{date:'2026-10-28',status:'confirmed',candidates:['2026-10-28']},total:'6.00',lines:[{...first.lines[0],amount:'6.00',regularPrice:'10.00',discount:'4.00'}]}})).status,200);
+ const data=(await get()).body;assert.equal(data.lines.length,2);assert.equal(data.products.length,1);assert.equal(data.lines[0].date,'2026-10-28');assert.equal(data.lines[1].amountCents,800);assert.equal(data.lines[0].regularCents,1000);assert.equal(data.lines[0].discountCents,400);assert.equal(data.lines[0].brand,'Brand X');assert.equal(data.lines[0].branch,'Halifax');assert.equal(data.lines[0].label,'MILK 2L');assert.equal(data.receipts[0].dateEvidence.status,'confirmed');
+});
+test('unconfirmed dates and inconsistent discount evidence cannot pollute history',async()=>{
+ await get();const d=draft();assert.equal((await post('saveReceipt',{draft:{...d,dateEvidence:{status:'ambiguous'}}})).status,400);
+ assert.equal((await post('saveReceipt',{draft:{...d,currency:''}})).status,400);
+ assert.equal((await post('saveReceipt',{draft:{...d,lines:[{...d.lines[0],regularPrice:'12.00',discount:'2.00'}]}})).status,400);
+ assert.equal((await get()).body.lines.length,0);
+});
+test('same OCR receipt under a new scan ID does not create duplicate historical prices',async()=>{
+ await get();const d={...draft(),rawText:'NO FRILLS\n2026-10-27\nMILK 2L 10.98\nTOTAL 10.98'};
+ assert.equal((await post('saveReceipt',{draft:d})).status,200);const repeat=await post('saveReceipt',{draft:{...d,id:'another-scan'}});assert.equal(repeat.body.duplicate,true);assert.equal((await get()).body.lines.length,1);
+});
+test('known quality variants never share a product identity or learned ambiguous alias',async()=>{
+ await get();const d=draft();const both={...d,total:'21.96',lines:[{...d.lines[0],quality:'organic'},{...d.lines[0]}]};assert.equal((await post('saveReceipt',{draft:both})).status,200);const data=(await get()).body;assert.equal(data.products.length,2);assert.equal(data.aliases.length,0);
+});
+
+test('shopping and history match exact bilingual catalogue names without collapsing variants',()=>{assert.equal(productNameKey('Bananen'),productNameKey('Bananas'));assert.notEqual(productNameKey('Milk 2%'),productNameKey('Milk 3.25%'))});
