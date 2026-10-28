@@ -27,6 +27,7 @@ export function useLocalFlyerPrices(){
 /** Local household-only import. Nothing gets POSTed to Basket's API. */
 export function GermanFlyerImport(){
  const [file,setFile]=useState<File|null>(null);
+ const [startPage,setStartPage]=useState(1);
  const [store,setStore]=useState<FlyerStore>('rewe');
  const [from,setFrom]=useState(''),[until,setUntil]=useState('');
  const [rows,setRows]=useState<Edit[]>([]);
@@ -44,14 +45,16 @@ export function GermanFlyerImport(){
   setBusy(true);setRows([]);setHasRead(false);setError('');setNotice('');
   try{
    if(file.size>MAX_FLYER_FILE)throw new Error(tr('Choose a file smaller than 12 MB.'));
-   const result=await readFlyerFile(file,stage=>{if(token===gen.current)setProgress(stage)});
+   const result=await readFlyerFile(file,stage=>{if(token===gen.current)setProgress(stage)},startPage);
    if(token!==gen.current)return;
    const candidates=extractFlyerCandidates(result.text);
    setText(result.text);setHasRead(true);
    setRows(candidates.map((c,id)=>({...c,id,enabled:false})));
-   setNotice(candidates.length?
+   const pageInfo=/\.pdf$/i.test(file.name)||file.type==='application/pdf'?
+    ' '+tr('PDF pages analyzed: ')+result.pageRange+' / '+result.pages+'.'+(startPage+7<result.pages?' '+tr('Choose the next starting page to read more pages.'):''):'';
+   setNotice((candidates.length?
     tr('Check each product and price against your original flyer. Select only verified entries.'):
-    tr('No reliable same-line prices found. You can add an offer manually below.'));
+    tr('No reliable same-line prices found. You can add an offer manually below.'))+pageInfo);
   }catch(e){if(token===gen.current)setError(e instanceof Error?e.message:tr('The flyer could not be read.'))}
   finally{if(token===gen.current){setBusy(false);setProgress('')}}
  }
@@ -99,8 +102,13 @@ export function GermanFlyerImport(){
   </div>
   <label className="flyer-file-label">{tr('Your flyer (PDF / JPG / PNG / WebP, max. 12 MB)')}
    <input type="file" accept=".pdf,application/pdf,.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-    disabled={busy} onChange={e=>{setFile(e.target.files?.[0]||null);setRows([]);setError('');setNotice('');setHasRead(false);setText('')}}/>
+    disabled={busy} onChange={e=>{setFile(e.target.files?.[0]||null);setStartPage(1);setRows([]);setError('');setNotice('');setHasRead(false);setText('')}}/>
   </label>
+  {file&&(file.type==='application/pdf'||/\.pdf$/i.test(file.name))&&<label className="flyer-start-page">
+   {tr('PDF starting page (up to eight pages per import)')}
+   <input type="number" min="1" max="999" step="1" value={startPage} disabled={busy}
+     onChange={e=>setStartPage(Number(e.target.value)||1)}/>
+  </label>}
   <div className="flyer-import-actions">
    <button type="button" className="primary" disabled={!file||busy} onClick={()=>void read()}>{busy?tr('Reading flyer…'):tr('Read flyer on this device')}</button>
    {busy&&<small role="status">{progress}</small>}
