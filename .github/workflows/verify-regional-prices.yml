@@ -29,9 +29,8 @@ jobs:
       - name: Verify regional price integration (must pass)
         working-directory: source
         run: pnpm run test:regional
-      - name: Check existing regression suite (baseline currently has category assertion failures)
+      - name: Run full regression suite (must pass)
         working-directory: source
-        continue-on-error: true
         run: pnpm test
       - name: Typecheck application
         working-directory: source
