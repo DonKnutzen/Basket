@@ -11,10 +11,10 @@ export type FlyerReaderProgress=(label:string)=>void;
 export const MAX_FLYER_PDF=25*1024*1024;
 export const MAX_FLYER_IMAGE=12*1024*1024;
 export const MAX_FLYER_PAGES=8;
-function imageFile(file:File){
+function imageFile(file:Pick<File,'type'|'name'>){
  return /^image\/(?:jpeg|png|webp)$/.test(file.type)||/\.(?:jpe?g|png|webp)$/i.test(file.name);
 }
-function pdfFile(file:File){
+function pdfFile(file:Pick<File,'type'|'name'>){
  return file.type==='application/pdf'||/\.pdf$/i.test(file.name);
 }
 async function ocrWorker(){
