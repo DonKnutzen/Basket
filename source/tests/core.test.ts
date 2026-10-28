@@ -143,7 +143,7 @@ test('shopping groups keep fruit and vegetables first and use remembered icons f
  const names=['Nudeln','Pancetta','Äpfel','Reis','Tomaten','Milk','Lachs','Bananen','Gurke'];
  const items=names.map((name,i)=>({id:String(i),listId:'l',name,quantity:'1',category:'Other',checked:0,addedBy:'Don'}));
  const sorted=sortShoppingItems(items);
- assert.deepEqual(sorted.map(i=>shoppingGroup(i.name)),['Fruit','Fruit','Vegetables','Vegetables','Meat','Fish & seafood','Dairy & eggs','Pantry','Pantry']);
+ assert.deepEqual(sorted.map(i=>shoppingGroup(i.name)),['Fruit','Fruit','Vegetables','Vegetables','Dairy & eggs','Meat','Fish & seafood','Pasta, rice & grains','Pasta, rice & grains']);
  assert.deepEqual(items.map(i=>i.name),names,'sorting must not mutate household data');
  assert.equal(foodGroupClass('Pancetta'),foodGroupClass('Hähnchen'));
  assert.notEqual(foodGroupClass('Pancetta'),foodGroupClass('Reis'));
@@ -229,7 +229,7 @@ test('seeds, cooking oils and spices have distinct bilingual icons and pantry gr
  seeds:['Sunflower Seeds','roasted sunflower kernels','Sonnenblumenkerne','Kürbiskerne','sesame seeds','Sesam','Chiasamen','chia seeds','Leinsamen','hemp hearts','Saatenmischung','mixed seeds'],
  spice:['Spices','Gewürze','mixed spices','Currypulver','cumin seeds','Kreuzkümmel','Paprikapulver','ground paprika','black pepper','Pfeffer','Zimt','Kurkuma','garam masala','oregano','Thymian getrocknet'],
  };
- for(const [icon,names]of Object.entries(cases))for(const name of names){assert.equal(foodIcon(name),icon,name);assert.equal(shoppingGroup(name),'Pantry',name)}
+ for(const [icon,names]of Object.entries(cases))for(const name of names){assert.equal(foodIcon(name),icon,name);const expected=({oil:'Oils & vinegar',seeds:'Nuts, seeds & dried fruit',spice:'Spices'} as Record<string,string>)[icon];assert.equal(shoppingGroup(name),expected,name);assert.equal(inferCategory(name),'Pantry',name)}
  for(const name of ['Curry Leaf','Bay Leaf','Lorbeerblätter'])assert.equal(foodIcon(name),'leaf',name);
  assert.equal(foodIcon('Paprika'),'vegetable');assert.equal(foodIcon('Olive Oil',[{name:'olive oil',icon:'sauce'}]),'sauce');
 });
@@ -277,7 +277,7 @@ test('household illustrations recognize German and English names, plurals and sc
  for(const [icon,names]of Object.entries(cases)){
   for(const name of names){
    assert.equal(foodIcon(name),icon,name);assert.equal(inferCategory(name),'Household',name);
-   assert.equal(shoppingGroup(name),'Household',name);assert.equal(shoppingCategory(name),'Household',name);
+   assert.ok(['Household','Personal care'].includes(shoppingGroup(name)),name);assert.equal(shoppingCategory(name),'Household',name);
   }
   assert.ok(Object.hasOwn(german,iconLabel(icon as any)),icon);
  }
@@ -349,7 +349,7 @@ test('butter and salad use their own bilingual illustrations without replacing o
   assert.equal(inferCategory(name),'Dairy & eggs',name);
  }
  for(const name of ['Salat','Salate','Salad','Salads','Salat / Salad','green salad','mixed salad','gemischter Salat','salad mix','Blattsalat','potato salad','pasta salad','tomato salad']){
-  assert.equal(foodIcon(name),'salad',name);assert.equal(shoppingGroup(name),'Vegetables',name);
+  assert.equal(foodIcon(name),'salad',name);assert.equal(shoppingGroup(name),'Salads & herbs',name);
   assert.equal(inferCategory(name),'Produce',name);
  }
  const cases={'peanut butter':'spread','Erdnussbutter':'spread','almond butter':'spread','butter beans':'bean','buttermilk':'milk','Buttermilch':'milk','butter chicken':'meat','salad dressing':'sauce','Salatdressing':'sauce','Salat-Dressing':'sauce','salad sauce':'sauce','fruit salad':'fruit','Salatgurke':'vegetable'};
@@ -365,7 +365,7 @@ test('every article in the 468-entry bilingual supermarket catalogue resolves to
  for(const item of PRODUCT_CATALOG){
   assert.ok(isFoodIcon(item.icon),item.icon);
   for(const name of [item.de,item.en,...item.aliases]){
-   assert.equal(foodIcon(name),item.icon,name);assert.equal(shoppingGroup(name),item.group,name);
+   assert.equal(foodIcon(name),item.icon,name);assert.equal(shoppingGroup(name),item.displayGroup,name);
    const category=({Fruit:'Produce',Vegetables:'Produce',Meat:'Meat & fish','Fish & seafood':'Meat & fish'} as Record<string,string>)[item.group]||item.group;
    assert.equal(inferCategory(name),category,name);assert.equal(shoppingCategory(name),category,name);
   }
@@ -376,7 +376,7 @@ test('catalogue recognition keeps specific descriptions and user corrections ahe
  const cases={'Baby oil':'baby-care','sunflower seed oil':'oil','Sunflower seeds':'seeds','organic mint toothpaste':'toothpaste','Coke Zero Sugar':'cola','beer battered fish':'fish','curry leaf':'leaf','Curry powder':'spice','Coconut milk':'can','Coconut shampoo':'shampoo','Paprika':'vegetable','Paprikapulver geräuchert':'spice','vegane Burger':'plant-protein','Baking paper':'foil','Baking powder':'baking'};
  for(const [name,icon]of Object.entries(cases))assert.equal(foodIcon(name),icon,name);
  assert.equal(foodIcon('Windeln',[{name:'windeln',icon:'package'}]),'package');
- assert.equal(shoppingGroup('Tiefkühlspinat'),'Frozen');assert.equal(shoppingGroup('Mundspülung'),'Household');
+ assert.equal(shoppingGroup('Tiefkühlspinat'),'Frozen');assert.equal(shoppingGroup('Mundspülung'),'Personal care');assert.equal(inferCategory('Mundspülung'),'Household');
 });
 
 // Personal price book: synthetic receipts only; never calls a real household.
