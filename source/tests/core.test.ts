@@ -9,6 +9,7 @@ import {GET as IMAGE_GET} from '../app/api/receipt-image/route';
 import {getBasketUser} from '../lib/basket-user';
 import {budgetSpent,monthOptions} from '../lib/budgets';
 import {parseReceipt,difference} from '../lib/receipt-parser';
+import {RECEIPT_FIXTURES,checkReceiptFixture} from '../lib/receipt-fixtures';
 import {toCents,inferCategory,normalize} from '../lib/types';
 import {householdSharing} from '../lib/household-display';
 const globals=globalThis as any;let sql:DatabaseSync;
@@ -64,6 +65,17 @@ test('receipt save stores line quantities, learns aliases and avoids duplicates'
 test('invalid arithmetic, dates and foreign photos cannot be saved',async()=>{await get();const d=draft();assert.equal((await post('saveReceipt',{draft:{...d,total:'20.00'}})).status,400);assert.equal((await post('saveReceipt',{draft:{...d,date:'2026-02-30'}})).status,400);assert.equal((await post('saveReceipt',{draft:{...d,imageKey:'foreign-home/image'}})).status,403);assert.equal((await get()).body.receipts.length,0)});
 test('different pack sizes stay separate and receipt deletion removes prices',async()=>{await get();const d=draft();await post('saveReceipt',{draft:d});await post('saveReceipt',{draft:{...d,id:'r2',lines:[{...d.lines[0],packSize:'1 L'}]}});assert.equal((await get()).body.products.length,2);await post('deleteReceipt',{id:d.id});assert.equal((await get()).body.lines.length,1)});
 test('parser separates taxes, totals and payment',()=>{const d=parseReceipt('NO FRILLS\n2026-10-27\n2 x BANANAS 3.38\nMILK 2L 5.49\nSUBTOTAL 8.87\nHST 0.72\nTOTAL 9.59\nDEBIT 9.59');assert.equal(d.lines.length,2);assert.equal(d.lines[0].quantity,'2');assert.equal(d.tax,'0.72');assert.equal(difference(d),0)});
+test('published receipt samples exercise the same parser as real scanned text',()=>{
+ for(const sample of RECEIPT_FIXTURES){
+  const parsed=parseReceipt(sample.text);
+  const checks=checkReceiptFixture(parsed,sample);
+  assert.ok(checks.length>=7,sample.id);
+  assert.equal(parsed.rawText,sample.text,sample.id);
+  if(['basic','quantities'].includes(sample.id))assert.ok(checks.every(check=>check.ok),sample.id+': '+JSON.stringify(checks.filter(c=>!c.ok)));
+ }
+ const discounted=RECEIPT_FIXTURES.find(sample=>sample.id==='discount')!;
+ assert.ok(checkReceiptFixture(parseReceipt(discounted.text),discounted).some(check=>!check.ok),'Known discounts limitation must remain visible until fixed');
+});
 test('learned labels match only their store',()=>{const p=[{id:'milk',name:'Whole milk',normalized:'whole milk|2 l',category:'Dairy & eggs',packSize:'2 L'}],a=[{store:'no frills',label:'pc mlk',productId:'milk'}];assert.equal(parseReceipt('NO FRILLS\nPC MLK 5.49\nTOTAL 5.49',p,a).lines[0].name,'Whole milk');assert.notEqual(parseReceipt('SOBEYS\nPC MLK 5.49\nTOTAL 5.49',p,a).lines[0].name,'Whole milk')});
 test('discounts require review and absent totals are not invented',()=>{const d=parseReceipt('SOBEYS\nAPPLES 4.00\nCOUPON -1.00\nTOTAL 3.00');assert.equal(difference(d),-100);assert.equal(parseReceipt('SOBEYS\nAPPLES 4.00').total,'')});
 test('decimal commas, invalid money and food categories are handled',()=>{const d=parseReceipt('IGA\nPAIN 3,99\nTPS 0,20\nTVQ 0,40\nTOTAL 4,59');assert.equal(difference(d),0);assert.equal(toCents('19.99'),1999);assert.ok(Number.isNaN(toCents('1e2')));assert.ok(Number.isNaN(toCents('1.005')));assert.equal(inferCategory('Ice cream'),'Frozen')});
