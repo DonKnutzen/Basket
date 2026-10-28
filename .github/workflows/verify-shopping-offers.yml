@@ -8,6 +8,7 @@ on:
       - feature/rewe-aldi-offers-and-readable-ocr-2026-10
       - feature/rewe-kiel-publitas-direct-2026w44
       - feature/auto-rewe-aldi-kiel-weekly-2026-10
+      - feature/manual-rewe-link-weekly-processing-2026-10
       - fix/ios-external-offer-navigation-2026-10
       - feature/kiel-german-offer-access-2026-10
   pull_request:
@@ -34,6 +35,8 @@ jobs:
       - name: Install locked dependencies
         working-directory: source
         run: pnpm install --frozen-lockfile
+      - name: Validate human-provided REWE market/week links (Python)
+        run: python -m unittest discover -s source/tests -p 'test_rewe_config.py'
       - name: Test full app and offers
         working-directory: source
         run: pnpm test
@@ -44,7 +47,7 @@ jobs:
         working-directory: source
         run: pnpm run build:pages --out ..
       - name: Commit Pages files only to feature branch
-        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/auto-rewe-aldi-kiel-weekly-2026-10'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/manual-rewe-link-weekly-processing-2026-10'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

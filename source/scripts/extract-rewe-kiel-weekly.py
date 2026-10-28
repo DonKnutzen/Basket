@@ -10,12 +10,57 @@ import json
 import re
 import sys
 import urllib.request
+from urllib.parse import urlparse, parse_qs, unquote
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
-SOURCE = "https://view.publitas.com/89773/3478778/pdfs/61827fae-6411-4697-a44c-0fca78d9da08.pdf?response-content-disposition=attachment%3B+filename%2A%3DUTF-8%27%27REWE%2520Markt%2520GmbH%2520-%2520rewe_2026_wk44_561204_v1.pdf"
 MARKET = "561204"
-FROM, UNTIL = "2026-10-26", "2026-10-31"
+CONFIG = Path("source/config/rewe-kiel-current-flyer.json")
 OUTPUT = Path(sys.argv[1] if len(sys.argv) > 1 else "rewe-kiel-weekly.json")
+SOURCE_PATTERN = re.compile(r"^/89773/\d+/pdfs/[a-f0-9-]{36}\.pdf$", re.I)
+FILENAME_PATTERN = re.compile(r"rewe_(?P<year>20\d{2})_wk(?P<week>\d{1,2})_561204_v\d+\.pdf", re.I)
+
+def checked_iso_date(value: object) -> dt.date:
+    if not isinstance(value,str) or not re.fullmatch(r"20\d{2}-\d{2}-\d{2}",value):
+        raise ValueError("Invalid ISO date")
+    return dt.date.fromisoformat(value)
+
+def load_source_config(path: Path | None = None) -> dict:
+    """A human must explicitly supply *each* dated, market-specific flyer link.
+
+    No guessed URL, URL discovery, CORS bypass, or future-week PDF reuse.
+    """
+    raw=json.loads((path if path is not None else CONFIG).read_text(encoding="utf-8"))
+    if not isinstance(raw,dict) or raw.get("schema")!=1 or raw.get("marketId")!=MARKET or raw.get("city")!="Kiel" or raw.get("suppliedBy")!="market-link-manually-provided":
+        raise ValueError("Wrong market or missing manual provenance")
+    week=raw.get("week")
+    if not isinstance(week,str) or not re.fullmatch(r"20\d{2}-W\d{2}",week):
+        raise ValueError("Invalid week")
+    start=checked_iso_date(raw.get("validFrom"))
+    end=checked_iso_date(raw.get("validUntil"))
+    if start>end or (end-start).days>7 or start.weekday()!=0:
+        raise ValueError("Invalid weekly date range")
+    iso=start.isocalendar()
+    if week!=f"{iso.year}-W{iso.week:02d}" or end.isocalendar()[:2] != (iso.year,iso.week):
+        raise ValueError("The supplied date range does not belong to the declared ISO week")
+    url=raw.get("sourceUrl")
+    if not isinstance(url,str) or len(url)>1200:
+        raise ValueError("No bounded official URL supplied")
+    parsed=urlparse(url)
+    if parsed.scheme!="https" or parsed.netloc.lower()!="view.publitas.com" or parsed.username or parsed.password or not SOURCE_PATTERN.fullmatch(parsed.path) or parsed.fragment:
+        raise ValueError("Not an approved official flyer PDF URL")
+    disposition=parse_qs(parsed.query,keep_blank_values=True).get("response-content-disposition",[])
+    if len(disposition)!=1:
+        raise ValueError("Official flyer filename is required to validate market and week")
+    flyer_filename=unquote(disposition[0])
+    matched=FILENAME_PATTERN.search(flyer_filename)
+    if not matched or int(matched["year"])!=iso.year or int(matched["week"])!=iso.week:
+        raise ValueError("Flyer filename does not match REWE market 561204 and the requested week")
+    if set(parse_qs(parsed.query,keep_blank_values=True))!={"response-content-disposition"}:
+        raise ValueError("Unexpected PDF query arguments")
+    return {"sourceUrl":url,"marketId":MARKET,"validFrom":start.isoformat(),
+            "validUntil":end.isoformat(),"week":week}
+
 PRODUCTS = (
     ("Rispentomaten", r"\brispentomaten\b"),
     ("Kartoffeln", r"\bkartoffeln?\b"),
@@ -88,14 +133,19 @@ def entries(pdf_data: bytes) -> list[dict]:
                   key=lambda r:r["name"])[:35]
 
 def main():
-    today=dt.datetime.now(dt.timezone.utc).date().isoformat()
+    # Date checks prevent publishing stale source data; an expired config is
+    # treated as inactive rather than searching for a replacement.
+    today=dt.datetime.now(ZoneInfo('Europe/Berlin')).date().isoformat()
+    config=load_source_config()
+    source=config["sourceUrl"]
+    valid_from,valid_until=config["validFrom"],config["validUntil"]
     output={"schema":1,"marketId":MARKET,"city":"Kiel","store":"rewe",
-            "validFrom":FROM,"validUntil":UNTIL,"checkedAt":today,
-            "sourceUrl":SOURCE,"sourceType":"official-pdf","coverage":"partial",
-            "status":"expired" if today>UNTIL else "unavailable","offers":[]}
-    if FROM<=today<=UNTIL:
+            "validFrom":valid_from,"validUntil":valid_until,"checkedAt":today,
+            "sourceUrl":source,"sourceType":"official-pdf","coverage":"partial",
+            "status":"expired" if today>valid_until else "unavailable","offers":[]}
+    if valid_from<=today<=valid_until:
         try:
-            req=urllib.request.Request(SOURCE,headers={"User-Agent":"BasketPersonalWeeklyFlyerReader/1.0"})
+            req=urllib.request.Request(source,headers={"User-Agent":"BasketPersonalWeeklyFlyerReader/1.0"})
             with urllib.request.urlopen(req,timeout=45) as res:
                 if res.status!=200 or "pdf" not in res.headers.get("content-type",""):
                     raise RuntimeError("Official PDF unavailable")
