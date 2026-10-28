@@ -117,7 +117,7 @@ test('food icons recognize meaningful words in descriptions, plural forms and fo
  'Ginger':'ginger','organic fresh ginger root 100g':'ginger','marinated Ginger':'ginger','A jar of pickled ginger please':'ginger',
  'Back cottage cheese':'cheese','mature cheddar cheese':'cheese','Parmigiano Reggiano':'cheese','Pancetta':'meat','smoked bacon cubes':'meat',
  'Almonds':'almond','roasted unsalted almonds 250g':'almond','Tamari':'sauce','Tamari Sauce':'sauce','We need gluten free tamari sauce for dinner':'sauce',
- 'almond milk':'milk','almond flour':'grain','cream cheese':'cheese','ginger beer':'drink','eggplant':'vegetable','tea towels':'soap','organic chickpeas':'bean',
+ 'almond milk':'milk','almond flour':'flour','cream cheese':'cheese','ginger beer':'drink','eggplant':'vegetable','tea towels':'soap','organic chickpeas':'bean',
  'Nudeln':'pasta','Vollkornnudeln 500g':'pasta','rice noodles':'pasta','Spaghetti':'pasta','Reis':'rice','basmati rice':'rice',
  'Äpfel':'apple','frische Möhren':'carrot','Käse':'cheese','Hafermilch':'milk','Hähnchen':'meat','Lachs':'fish','Tonkabohnen':'bean'
  } as const;
@@ -208,4 +208,35 @@ test('German localization preserves product names and internal category values a
   assert.equal(tr('The numbers add up.'),'Die Beträge stimmen überein.');
   setLanguage('en');assert.equal(tr('Shopping lists'),'Shopping lists');assert.equal(phrase('Edit {0}','Cola Zero'),'Edit Cola Zero');
  }finally{setLanguage('en')}
+});
+
+test('seeds, cooking oils and spices have distinct bilingual icons and pantry grouping',async()=>{
+ const {foodIcon}=await import('../lib/food-icons');const {shoppingGroup}=await import('../lib/food-presentation');
+ const cases={
+ oil:['Oil','Olive Oil','extra virgin olive oil 750ml','Sonnenblumenöl','Olivenöl','Öl','Öle','Rapsöl','Sesamöl','Leinöl','pumpkin seed oil','sunflower seed oil','Kürbiskernöl','toasted sesame oil'],
+ seeds:['Sunflower Seeds','roasted sunflower kernels','Sonnenblumenkerne','Kürbiskerne','sesame seeds','Sesam','Chiasamen','chia seeds','Leinsamen','hemp hearts','Saatenmischung','mixed seeds'],
+ spice:['Spices','Gewürze','mixed spices','Currypulver','cumin seeds','Kreuzkümmel','Paprikapulver','ground paprika','black pepper','Pfeffer','Zimt','Kurkuma','garam masala','oregano','Thymian'],
+ };
+ for(const [icon,names]of Object.entries(cases))for(const name of names){assert.equal(foodIcon(name),icon,name);assert.equal(shoppingGroup(name),'Pantry',name)}
+ for(const name of ['Curry Leaf','Bay Leaf','Lorbeerblätter'])assert.equal(foodIcon(name),'leaf',name);
+ assert.equal(foodIcon('Paprika'),'vegetable');assert.equal(foodIcon('Olive Oil',[{name:'olive oil',icon:'sauce'}]),'sauce');
+});
+test('new oil, seed and spice icon corrections can be saved and shared',async()=>{
+ const d=(await get()).body;const listId=d.lists[0].id;
+ for(const icon of ['oil','seeds','spice']){
+  await post('addItem',{id:icon,listId,name:'Custom '+icon,quantity:'1'});
+  assert.equal((await post('updateItem',{id:icon,icon})).status,200);
+ }
+ assert.equal((await get()).body.iconPreferences.length,3);
+});
+
+test('flour, baking ingredients and sweets recognize bilingual product names and specific brands',async()=>{
+ const {foodIcon}=await import('../lib/food-icons');
+ const cases={
+ flour:['All purpose flour','Robin Hood','Five Roses flour','Weizenmehl Type 405','Dinkelmehl','Mand elmehl'.replace(' ',''),'Speisestärke','Great Value Corn Starch'],
+ baking:['Backzutaten','Dr. Oetker Backpulver','Vanillezucker','Natron','Redpath Sugar','Fleischmann’s yeast','Magic Baking Powder','No Name Icing Sugar'],
+ candy:['Süßigkeiten','Milka','Ritter Sport','Haribo Goldbären','Kinder Bueno','Cadbury Dairy Milk','Coffee Crisp','Reese’s Peanut Butter Cups','Maynards Swedish Berries','Kit Kat','Lindt chocolate'],
+ };
+ for(const [icon,names]of Object.entries(cases))for(const name of names)assert.equal(foodIcon(name),icon,name);
+ assert.equal(foodIcon('No Name Olive Oil'),'oil');assert.equal(foodIcon('Great Value Pumpkin Seeds'),'seeds');assert.equal(foodIcon('Great Value Milk'),'milk');
 });

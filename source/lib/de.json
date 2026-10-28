@@ -486,5 +486,11 @@
   "Choose a budget category.": "Wähle eine Budgetkategorie.",
   "Choose a valid budget month.": "Wähle einen gültigen Budgetmonat.",
   "Enter a budget greater than zero and no more than 1,000,000.": "Gib ein Budget über null und höchstens 1.000.000 ein.",
-  "Keep at least one list.": "Mindestens eine Liste muss erhalten bleiben."
+  "Keep at least one list.": "Mindestens eine Liste muss erhalten bleiben.",
+  "Seeds / kernels": "Saaten / Kerne",
+  "Cooking oils": "Speiseöle",
+  "Spices / seasonings": "Gewürze / Würzmischungen",
+  "Flour / starch": "Mehl / Stärke",
+  "Baking ingredients": "Backzutaten",
+  "Sweets / chocolate": "Süßigkeiten / Schokolade"
 }
