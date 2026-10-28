@@ -203,3 +203,10 @@ main.auth-page{max-width:none;padding:0;margin:0;min-height:100dvh;display:grid;
 .halifax-comparison-lines p{padding:4px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
 .halifax-comparison-lines p>span{font-weight:650;color:var(--ink)}
 .halifax-comparison-results>a{font-size:calc(11px * var(--text-scale));text-decoration:underline}
+
+.halifax-store-items{margin-top:6px;border-top:1px solid var(--line);padding-top:5px}
+.halifax-store-items>summary{cursor:pointer;font-size:calc(11px * var(--text-scale));color:var(--ink);font-weight:650}
+.halifax-store-line{display:grid;grid-template-columns:1fr auto;gap:3px 7px;padding:6px 0;border-bottom:1px solid var(--line);font-size:calc(11px * var(--text-scale))}
+.halifax-store-line>span{overflow-wrap:anywhere}
+.halifax-store-line>strong{font-variant-numeric:tabular-nums}
+.halifax-store-line>small{grid-column:1/-1;color:var(--muted);font-size:calc(10px * var(--text-scale))}
