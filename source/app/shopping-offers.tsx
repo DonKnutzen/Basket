@@ -52,13 +52,14 @@ function GermanAutomaticSourceStatus({stores}:{stores:readonly string[]}){
  },[storeKey]);
  const today=berlinDay();
  const reweCurrent=!!rewe&&rewe.status==='partial'&&rewe.validFrom<=today&&rewe.validUntil>=today;
+ const reweExpired=!!rewe&&rewe.validUntil<today;
  const aldiFresh=!!aldi&&(Date.parse(today+'T12:00:00Z')-Date.parse(aldi.checkedAt+'T12:00:00Z'))/86400000<=3;
  const aldiCurrent=!!aldi&&aldi.status==='partial'&&aldi.checkedAt<=today&&aldiFresh&&
   aldi.offers.some(x=>x.validFrom<=today&&x.validUntil>=today);
  return <div className="offer-de-feed-status">
   {(!stores.length||stores.includes('rewe'))&&<small>REWE Kiel: {reweCurrent
    ?tr('Current partial flyer matches')+' · '+rewe!.validUntil
-   :tr('No verified current flyer data')}</small>}
+   :reweExpired?tr('New weekly REWE PDF link needed'):tr('No verified current flyer data')}</small>}
   {(!stores.length||stores.includes('aldi'))&&<small>ALDI Nord: {aldiCurrent
    ?tr('Current partial flyer matches')+' · '+aldi!.checkedAt
    :tr('No verified current flyer data')}</small>}
@@ -100,7 +101,7 @@ export function OfferSettings({region,onChange}:{region:OfferRegion;onChange:Rea
     </button>;
    })}</div>
    <p className="offer-source-note">
-    {region.country==='DE'?tr("REWE Kiel and ALDI Nord are selected by default. ALDI Nord's limited official-page offer data is refreshed daily; REWE's currently linked week can expire unless a newly authorized flyer source is supplied. Prices are incomplete and must be checked for product and pack size.")
+    {region.country==='DE'?tr("REWE Kiel and ALDI Nord are selected by default. For REWE, the weekly PDF link is supplied manually and Basket then automatically extracts limited matches. ALDI Nord continues daily updates. Expired prices are hidden; product and pack size must be checked.")
       : eligible&&region.province==='NS'
       ? tr('Nova Scotia: weekly flyer reference prices for 19 common staples from Aubaine.ca. A price may not be a discount, and pack size and branch may differ. Source: aubaine.ca.')
       : eligible
