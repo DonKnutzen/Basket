@@ -83,7 +83,7 @@ export async function readFlyerFile(file:File,progress:FlyerReaderProgress=()=>{
    const canvas=await boundedImage(file);
    const text=await recognize(canvas);
    canvas.width=0;canvas.height=0;
-   return {text:text.slice(0,65000),pages:1,usedOcr:true,pageRange:'1'};
+   return {text:'[[BASKET_FLYER_PAGE_1]]\n'+text.slice(0,65000),pages:1,usedOcr:true,pageRange:'1'};
   }
   progress('Reading PDF text locally…');
   // Runtime URL avoids bundling a second heavy PDF parser into the Basket shell.
@@ -114,7 +114,7 @@ export async function readFlyerFile(file:File,progress:FlyerReaderProgress=()=>{
     pageText+='\n'+await recognize(canvas);
     canvas.width=0;canvas.height=0;usedOcr=true;
    }
-   lines.push(pageText.slice(0,16000));
+   lines.push('[[BASKET_FLYER_PAGE_'+n+']]\n'+pageText.slice(0,16000));
    page.cleanup();
   }
   return {text:lines.join('\n').slice(0,65000),pages:document.numPages,usedOcr,pageRange:startPage===lastPage?String(startPage):startPage+'–'+lastPage};
