@@ -95,3 +95,33 @@ main.auth-page{max-width:none;padding:0;margin:0;min-height:100dvh;display:grid;
 
 /* Direct removal stays separate from the tile's bought/unbought action. */
 .tile-remove{position:absolute;top:3px;right:3px;z-index:2;width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;color:#bb534d;border-radius:7px;background:transparent}.tile-remove:hover:not(:disabled){color:#973b36;background:#fae6df}.tile-remove:focus-visible{outline:2px solid #bb534d;outline-offset:-2px}.tile-remove svg{pointer-events:none;stroke-width:2.3}.tile.bought .tile-remove{opacity:1}
+
+/* Category colors: dark readable labels plus a colored top edge. */
+.tile.food-group-0{background:#f9e8ce;color:#2d4435;box-shadow:inset 0 3px 0 #a16a27}
+.tile.food-group-1{background:#e0eed6;color:#2d4435;box-shadow:inset 0 3px 0 #598044}
+.tile.food-group-2{background:#d3e8dc;color:#2d4435;box-shadow:inset 0 3px 0 #46785f}
+.tile.food-group-3{background:#f1dfc9;color:#2d4435;box-shadow:inset 0 3px 0 #956f46}
+.tile.food-group-4{background:#f7efd0;color:#2d4435;box-shadow:inset 0 3px 0 #8b7c38}
+.tile.food-group-5{background:#e2e9c9;color:#2d4435;box-shadow:inset 0 3px 0 #6b7f3d}
+.tile.food-group-6{background:#f3d9d7;color:#2d4435;box-shadow:inset 0 3px 0 #a85d58}
+.tile.food-group-7{background:#d9e9f3;color:#2d4435;box-shadow:inset 0 3px 0 #537d98}
+.tile.food-group-8{background:#eee0cf;color:#2d4435;box-shadow:inset 0 3px 0 #98744d}
+.tile.food-group-9{background:#e7dccd;color:#2d4435;box-shadow:inset 0 3px 0 #896548}
+.tile.food-group-10{background:#dfdfed;color:#2d4435;box-shadow:inset 0 3px 0 #737095}
+.tile.food-group-11{background:#f0e8bd;color:#2d4435;box-shadow:inset 0 3px 0 #93833c}
+.tile.food-group-12{background:#f1dcd0;color:#2d4435;box-shadow:inset 0 3px 0 #a16a54}
+.tile.food-group-13{background:#eddbd1;color:#2d4435;box-shadow:inset 0 3px 0 #986c5b}
+.tile.food-group-14{background:#f2e5cf;color:#2d4435;box-shadow:inset 0 3px 0 #958056}
+.tile.food-group-15{background:#f3e8cf;color:#2d4435;box-shadow:inset 0 3px 0 #9a793d}
+.tile.food-group-16{background:#e4d1bc;color:#2d4435;box-shadow:inset 0 3px 0 #87623d}
+.tile.food-group-17{background:#d8ecf2;color:#2d4435;box-shadow:inset 0 3px 0 #4d8194}
+.tile.food-group-18{background:#e3e0d4;color:#2d4435;box-shadow:inset 0 3px 0 #7d7b53}
+.tile.food-group-19{background:#f1dbdf;color:#2d4435;box-shadow:inset 0 3px 0 #a36479}
+.tile.food-group-20{background:#dce6d5;color:#2d4435;box-shadow:inset 0 3px 0 #63814e}
+.tile.food-group-21{background:#d9e8e2;color:#2d4435;box-shadow:inset 0 3px 0 #4d8070}
+.tile.food-group-22{background:#e9dfef;color:#2d4435;box-shadow:inset 0 3px 0 #8b639c}
+.tile.food-group-23{background:#e6e2f3;color:#2d4435;box-shadow:inset 0 3px 0 #74639b}
+.tile.food-group-24{background:#e3e5e9;color:#2d4435;box-shadow:inset 0 3px 0 #6b7384}
+.tile.food-group-25{background:#eee7d9;color:#2d4435;box-shadow:inset 0 3px 0 #947b52}
+.tile.food-group-26{background:#eeeee7;color:#2d4435;box-shadow:inset 0 3px 0 #757c6b}
+.tile[class*="food-group-"] .tile-hit>b{color:#2d4435}.tile[class*="food-group-"] .tile-hit>small{color:#52634f}
