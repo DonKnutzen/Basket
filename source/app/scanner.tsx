@@ -115,7 +115,7 @@ export default function ReceiptScanner({ data, demo, initialFile, initialListId,
     const testChecks = draft && testFixture ? checkReceiptFixture(draft,testFixture) : [];
     const testCheckLabel=(label:string)=>{
         if(getLanguage()!=='de')return label;
-        const item=label.match(/^Item (\\d+) \\/ (label|price|quantity|category)$/);
+        const item=label.match(/^Item ([0-9]+) [/](label|price|quantity|category)$/);
         if(item)return 'Artikel '+item[1]+' · '+({label:'Bezeichnung',price:'Preis',quantity:'Menge',category:'Kategorie'} as Record<string,string>)[item[2]];
         return ({Store:'Geschäft',Date:'Datum',Total:'Gesamtbetrag',Tax:'Steuern','Number of items':'Artikelanzahl','Receipt balanced':'Bon stimmt rechnerisch'} as Record<string,string>)[label]||label;
     };
