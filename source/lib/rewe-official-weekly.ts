@@ -57,6 +57,11 @@ export function matchRewePartialOffers(name:string,data:RewePartialData|null,sto
  const match=MATCH[key];if(!match)return [];
  return data.offers.filter(o=>o.name===match);
 }
+// Read the newly committed summary directly from the public repository.
+// GitHub Actions' GITHUB_TOKEN commits may not trigger a Pages rebuild, so
+// the old site copy can lag behind the week's freshly processed PDF.
+// Never transmit shopper items; the request retrieves only the public JSON.
+const RAW='https://raw.githubusercontent.com/DonKnutzen/Basket/main/rewe-kiel-weekly.json';
 const SRC=appPath('rewe-kiel-weekly.json');
 let cached:{at:number;data:RewePartialData|null}|null=null;
 let inFlight:Promise<RewePartialData|null>|null=null;
@@ -65,9 +70,16 @@ export async function fetchRewePartialData(fetcher:typeof fetch=fetch):Promise<R
  if(inFlight)return inFlight;
  inFlight=(async()=>{
   try{
-   const response=await fetcher(SRC,{cache:'no-cache'});
-   if(!response.ok)throw Error('No current public REWE weekly price source');
-   const d=parseReweWeeklyData(await response.json());
+   let d:RewePartialData|null=null;
+   try{
+    const response=await fetcher(RAW,{cache:'no-cache',mode:'cors'});
+    if(response.ok)d=parseReweWeeklyData(await response.json());
+   }catch{/* GitHub raw may be blocked by a network policy; try Pages. */}
+   if(!d){
+    const response=await fetcher(SRC,{cache:'no-cache'});
+    if(!response.ok)throw Error('No current public REWE weekly price source');
+    d=parseReweWeeklyData(await response.json());
+   }
    cached={at:Date.now(),data:d};return d;
   }catch{cached={at:Date.now(),data:null};return null}
   finally{inFlight=null}
