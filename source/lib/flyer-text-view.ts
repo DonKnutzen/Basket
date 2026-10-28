@@ -15,7 +15,7 @@ export function groupFlyerText(text:string,filter='',onlyPrices=true,maxPerPage=
   if(page){flush();current={page:Number(page[1]),lines:[],total:0,matched:0};continue;}
   current.total++;
   if(query&&!line.toLocaleLowerCase('de').includes(query))continue;
-  if(!query&&onlyPrices&&!/(?:\d{1,4}[.,]\d{2}|€|\\bEUR\\b)/i.test(line))continue;
+  if(!query&&onlyPrices&&!/(?:\d{1,4}[.,]\d{2}|€|\bEUR\b)/i.test(line))continue;
   current.matched++;
   if(current.lines.length<maxPerPage)current.lines.push(line.slice(0,260));
  }
