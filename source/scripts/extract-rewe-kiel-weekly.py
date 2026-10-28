@@ -12,6 +12,7 @@ import sys
 import urllib.request
 from urllib.parse import urlparse, parse_qs, unquote
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 MARKET = "561204"
 CONFIG = Path("source/config/rewe-kiel-current-flyer.json")
@@ -134,7 +135,7 @@ def entries(pdf_data: bytes) -> list[dict]:
 def main():
     # Date checks prevent publishing stale source data; an expired config is
     # treated as inactive rather than searching for a replacement.
-    today=dt.datetime.now(dt.timezone(dt.timedelta(hours=1))).date().isoformat()
+    today=dt.datetime.now(ZoneInfo('Europe/Berlin')).date().isoformat()
     config=load_source_config()
     source=config["sourceUrl"]
     valid_from,valid_until=config["validFrom"],config["validUntil"]
