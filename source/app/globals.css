@@ -226,3 +226,26 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
 
 .flyer-start-page{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px;font-size:calc(11px * var(--text-scale));font-weight:650}
 .flyer-start-page input{max-width:85px;min-height:36px;border:1px solid var(--line);border-radius:8px;padding:5px;background:var(--paper);color:var(--ink)}
+
+
+/* Per-page local flyer OCR inspection: searchable, readable and bounded on iOS. */
+.flyer-raw{margin:12px 0;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--paper);color:var(--ink)}
+.flyer-raw summary{font-size:calc(13px * var(--text-scale));font-weight:700;line-height:1.5;padding:3px;cursor:pointer}
+.flyer-raw-help{font-size:calc(12px * var(--text-scale));line-height:1.5;color:var(--muted);margin:9px 0}
+.flyer-raw-toolbar{display:grid;grid-template-columns:minmax(105px,0.75fr) minmax(150px,1.5fr);gap:9px;margin:10px 0}
+.flyer-raw-toolbar label{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:calc(11px * var(--text-scale));font-weight:650}
+.flyer-raw-toolbar select,.flyer-raw-toolbar input{width:100%;min-width:0;min-height:39px;border:1px solid var(--line);border-radius:8px;padding:7px 9px;background:var(--surface,#fff);color:var(--ink);font-size:calc(13px * var(--text-scale))}
+.flyer-raw-filter{display:flex;align-items:center;gap:9px;margin:9px 0;font-size:calc(12px * var(--text-scale));line-height:1.4;cursor:pointer}
+.flyer-raw-filter input{width:18px;height:18px;flex-shrink:0}
+.flyer-raw-count{font-size:calc(11px * var(--text-scale));color:var(--muted)}
+.flyer-raw-empty{font-size:calc(12px * var(--text-scale));color:var(--muted)}
+.flyer-raw-lines{list-style:none;display:flex;flex-direction:column;gap:6px;margin:0;padding:0;max-height:480px;overflow:auto;overscroll-behavior:contain}
+.flyer-raw-line{display:grid;grid-template-columns:27px minmax(0,1fr) auto;align-items:start;gap:8px;padding:9px 7px;border:1px solid var(--line);border-radius:9px;background:var(--surface,#fff);line-height:1.5}
+.flyer-raw-line-number{font-variant-numeric:tabular-nums;text-align:right;color:var(--muted);font-size:calc(11px * var(--text-scale));padding-top:3px}
+.flyer-raw-line-text{min-width:0;overflow-wrap:anywhere;word-break:normal;font-size:calc(13px * var(--text-scale));white-space:normal}
+.flyer-raw-line-text small{display:block;margin-top:4px;color:var(--muted);font-size:calc(10px * var(--text-scale))}
+.flyer-raw-line-text mark{background:#f5e29a;color:#2e2916;padding:1px 3px;border-radius:3px;font-weight:750;box-decoration-break:clone}
+.flyer-raw-line>button{border:1px solid var(--line);border-radius:7px;background:var(--paper);color:var(--ink);padding:6px 8px;min-height:32px;font:inherit;font-size:calc(11px * var(--text-scale));cursor:pointer;white-space:normal;max-width:102px}
+.flyer-raw-line>button:focus-visible,.flyer-raw-toolbar input:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.flyer-raw-more{margin-top:10px;min-height:38px}
+@media(max-width:540px){.flyer-raw{padding:8px}.flyer-raw-toolbar{grid-template-columns:1fr}.flyer-raw-line{grid-template-columns:24px minmax(0,1fr);gap:6px}.flyer-raw-line>button{grid-column:2;justify-self:start;max-width:none}.flyer-raw-lines{max-height:400px}}
