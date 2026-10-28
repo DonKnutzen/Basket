@@ -55,12 +55,18 @@ export function restoreOfferRegion(input:string|null):OfferRegion{
   const province=country==='DE'?'':CA_PROVINCES.has(d.province)?d.province:'NS';
   const postal=(typeof d.postalCode==='string'?d.postalCode.trim().toUpperCase():'').slice(0,9);
   const ids=new Set<string>(OFFER_STORES.filter(s=>s.country===country).map(s=>s.id));
-  const stores=Array.isArray(d.stores)?[...new Set<string>(d.stores.filter((s:unknown):s is string=>typeof s==='string'&&ids.has(s)))]:[];
+  const selected=Array.isArray(d.stores)?[...new Set<string>(d.stores.filter((s:unknown):s is string=>typeof s==='string'&&ids.has(s)))]:[];
+  // For Germany both live sources are selected by default, including older
+  // localStorage preferences which used [] to mean every chain.
+  const stores=country==='DE'&&selected.length===0?['rewe','aldi']:selected;
   return {country,province,postalCode:postal,stores,...(country==='DE'?{city:'Kiel'}:{})};
  }catch{return {...DEFAULT_OFFER_REGION};}
 }
 export function storeChoices(region:OfferRegion){return OFFER_STORES.filter(s=>s.country===region.country);}
-export function isStoreOfferConnected(region:OfferRegion,id:string){return region.country==='CA'&&region.province==='NS'?AUBAINE_NS_STORE_IDS.includes(id):region.country==='CA'&&supportedStores(region).includes(id);}
+export function isStoreOfferConnected(region:OfferRegion,id:string){
+ if(region.country==='DE')return region.city==='Kiel'&&(id==='rewe'||id==='aldi');
+ return region.country==='CA'&&region.province==='NS'?AUBAINE_NS_STORE_IDS.includes(id):region.country==='CA'&&supportedStores(region).includes(id);
+}
 export function providerAvailable(region:OfferRegion){
  return region.country==='CA'&&(region.province==='NS'||region.province==='QC'||region.province==='ON') &&
    (!region.stores.length || region.stores.some(s=>region.province==='NS'?AUBAINE_NS_STORE_IDS.includes(s):supportedStores(region).includes(s)));

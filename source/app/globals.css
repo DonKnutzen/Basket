@@ -251,3 +251,6 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
 .flyer-optional-import{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
 .flyer-optional-import>summary{font-size:calc(12px * var(--text-scale));font-weight:650;cursor:pointer;color:var(--ink)}
 .flyer-item-hit>small{line-height:1.4}
+
+.offer-de-feed-status{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0 13px}
+.offer-de-feed-status small{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:6px 8px;max-width:100%;font-size:calc(10px * var(--text-scale));color:var(--ink);line-height:1.4}

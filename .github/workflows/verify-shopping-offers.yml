@@ -7,6 +7,7 @@ on:
       - fix/rewe-flyer-25mb-pdf-2026-10
       - feature/rewe-aldi-offers-and-readable-ocr-2026-10
       - feature/rewe-kiel-publitas-direct-2026w44
+      - feature/auto-rewe-aldi-kiel-weekly-2026-10
       - fix/ios-external-offer-navigation-2026-10
       - feature/kiel-german-offer-access-2026-10
   pull_request:
@@ -43,7 +44,7 @@ jobs:
         working-directory: source
         run: pnpm run build:pages --out ..
       - name: Commit Pages files only to feature branch
-        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/rewe-kiel-publitas-direct-2026w44'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/auto-rewe-aldi-kiel-weekly-2026-10'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
