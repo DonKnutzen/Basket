@@ -8,12 +8,13 @@ import {PAGES_BUILD} from './hosting';
 const PDF_JS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs';
 const PDF_WORKER='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
 export type FlyerReaderProgress=(label:string)=>void;
-export const MAX_FLYER_FILE=12*1024*1024;
+export const MAX_FLYER_PDF=25*1024*1024;
+export const MAX_FLYER_IMAGE=12*1024*1024;
 export const MAX_FLYER_PAGES=8;
-function imageFile(file:File){
+function imageFile(file:Pick<File,'type'|'name'>){
  return /^image\/(?:jpeg|png|webp)$/.test(file.type)||/\.(?:jpe?g|png|webp)$/i.test(file.name);
 }
-function pdfFile(file:File){
+function pdfFile(file:Pick<File,'type'|'name'>){
  return file.type==='application/pdf'||/\.pdf$/i.test(file.name);
 }
 async function ocrWorker(){
@@ -57,9 +58,19 @@ function textLines(content:any):string[]{
     return sorted.length? [sorted.map(p=>p.s).join(' ')]:[];
    });
 }
+/**
+ * File validation without loading the bytes. An ordinary 16 MB REWE PDF is
+ * accepted; image uploads remain limited to 12 MB to protect mobile memory.
+ */
+export function flyerFileError(file:Pick<File,'size'|'name'|'type'>|null):string|null{
+ if(!file||!Number.isFinite(file.size)||file.size<=0)return 'Choose a non-empty flyer file.';
+ if(pdfFile(file))return file.size>MAX_FLYER_PDF?'Choose a PDF no larger than 25 MB.':null;
+ if(imageFile(file))return file.size>MAX_FLYER_IMAGE?'Choose a photo no larger than 12 MB.':null;
+ return 'Only PDF, JPG, PNG and WebP are supported.';
+}
 export async function readFlyerFile(file:File,progress:FlyerReaderProgress=()=>{},startPage=1):Promise<{text:string;pages:number;usedOcr:boolean;pageRange:string}>{
- if(!file||!file.size||file.size>MAX_FLYER_FILE)throw new Error('Choose a PDF or photo smaller than 12 MB.');
- if(!imageFile(file)&&!pdfFile(file))throw new Error('Only PDF, JPG, PNG and WebP are supported.');
+ const fileError=flyerFileError(file);
+ if(fileError)throw new Error(fileError);
  let worker:any=null,document:any=null;
  async function recognize(canvas:HTMLCanvasElement){
   if(!worker)worker=await ocrWorker();
