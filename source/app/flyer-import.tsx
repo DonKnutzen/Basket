@@ -190,7 +190,7 @@ export function GermanFlyerMatches({name,chosenStores}:{name:string;chosenStores
   {!!autoResults.length&&<>
    <strong>🏷️ {tr('Automatically read REWE flyer prices')}</strong>
    {autoResults.map(x=><div className="flyer-item-hit" key={x.id}>
-    <span><b>{tr('REWE Holtenauer Straße 69–71')}</b><small>{x.name}{x.packSize?' · '+x.packSize:''}</small></span>
+    <span><b>{tr('REWE Holtenauer Straße 69–71')}</b><small>{x.name} · {tr('Check package size in the flyer')}</small></span>
     <strong>{priceLabel(x.priceCents)}</strong>
     <small>{tr('Valid')} {auto!.validFrom} – {auto!.validUntil} · {tr('Flyer page')} {x.page} · {tr('Category match, verify exact product and pack at store')}</small>
    </div>)}
