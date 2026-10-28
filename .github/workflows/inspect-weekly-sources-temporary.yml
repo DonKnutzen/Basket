@@ -62,6 +62,24 @@ jobs:
               elif isinstance(x,list):
                for i,v in enumerate(x[:300]):walk(v,path+'/'+str(i),depth+1)
              walk(payload)
+             props=payload.get('props',{}).get('pageProps',{})
+             for key,val in props.items():
+              print('PROPS',key,'TYPE',type(val).__name__,'LEN',len(val) if isinstance(val,(str,list,dict)) else -1,'KEYS',list(val)[:20] if isinstance(val,dict) else '','SNIP',str(val)[:170])
+             api=props.get('apiData')
+             if isinstance(api,dict):
+              for k,v in api.items():
+               print('API DATA',k,'TYPE',type(v).__name__,'LEN',len(v) if isinstance(v,(str,dict,list)) else -1,'SNIP',str(v)[:110])
+             def deepparse(obj,d=0):
+              if d>14:return
+              if isinstance(obj,str) and len(obj)<2000000 and 'currentPrice' in obj and obj.lstrip().startswith(('{','[')):
+               try:walk(json.loads(obj),'parsed',0);return
+               except Exception:pass
+              if isinstance(obj,dict):
+               for val in obj.values():deepparse(val,d+1)
+              elif isinstance(obj,list):
+               for val in obj[:200]:deepparse(val,d+1)
+             deepparse(props)
+             print('PARSED PRICE RECORD COUNT',len(records))
              print('PRICE RECORD COUNT',len(records))
              print('PRICE PATHS',collections.Counter('/'.join(p.split('/')[:8]) for p,x in records).most_common(8))
              for path,row in records[:3]:
