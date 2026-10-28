@@ -149,3 +149,34 @@ main.auth-page{max-width:none;padding:0;margin:0;min-height:100dvh;display:grid;
 .receipt-test-modes button{flex:1;min-width:130px;white-space:normal}
 
 .price-evidence{font-size:.75rem;margin-top:.5rem}.price-evidence label{display:block;margin:.4rem 0}.price-evidence input,.price-evidence select{width:100%;min-width:0}.price-evidence small{display:block;line-height:1.4}.tile-hit small span{display:block;line-height:1.4}
+
+
+/* Compact per-item weekly offers. No generic retailer-price tables. */
+.offer-settings{margin:8px 0 12px;border:1px solid var(--line,#d6ddcf);border-radius:11px;background:var(--surface,#fff);color:var(--ink)}
+.offer-settings>summary{display:flex;justify-content:space-between;gap:10px;align-items:center;cursor:pointer;padding:10px 12px;font-size:calc(12px * var(--text-scale));font-weight:700}
+.offer-settings>summary small{font-size:calc(11px * var(--text-scale));font-weight:400;color:var(--muted)}
+.offer-settings-inner{padding:0 12px 12px;font-size:calc(12px * var(--text-scale));line-height:1.45}
+.offer-settings-inner p{margin:5px 0 10px;color:var(--muted)}
+.offer-region-fields{display:flex;gap:10px;flex-wrap:wrap}
+.offer-region-fields label{display:flex;flex-direction:column;gap:4px;font-size:calc(11px * var(--text-scale))}
+.offer-region-fields select{border:1px solid var(--line,#d6ddcf);border-radius:7px;background:var(--surface,#fff);color:var(--ink);padding:8px 10px;min-width:105px}
+.offer-settings-inner .offer-settings-caption{font-weight:650;color:var(--ink);margin-top:12px}
+.offer-store-chips{display:flex;gap:6px;flex-wrap:wrap}
+.offer-store-chips button{border:1px solid var(--line,#d6ddcf);border-radius:999px;padding:6px 10px;background:var(--surface,#fff);color:var(--ink);font-size:calc(11px * var(--text-scale))}
+.offer-store-chips button.active{border-color:#527b51;background:#e1eddb;color:#244b34;font-weight:700}
+.offer-settings-inner .offer-source-note{font-size:calc(11px * var(--text-scale));margin-top:12px}
+.tile.with-offer-check:not(.bought) .tile-hit{height:auto;min-height:120px}
+.offer-in-tile{padding:0 7px 9px;text-align:left;font-size:calc(11px * var(--text-scale));color:var(--ink);line-height:1.4}
+.offer-in-tile>small{display:block;text-align:center;color:var(--muted);margin-top:4px}
+.offer-in-tile>strong{font-size:calc(11px * var(--text-scale));display:block;margin-bottom:5px;color:#285640}
+.offer-check,.offer-again{background:transparent;border:0;color:#285640;cursor:pointer;font-size:calc(11px * var(--text-scale));padding:4px;text-decoration:underline;text-underline-offset:2px}
+.offer-check{display:block;margin:auto;font-weight:700}
+.offer-again{display:block;margin:auto}
+.offer-hit{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 6px;padding:7px 6px;text-decoration:none;color:var(--ink);border:1px solid #ccddc7;border-radius:8px;background:#f3f8ed;margin:5px 0}
+.offer-hit>span:first-child{min-width:0;overflow-wrap:anywhere}
+.offer-hit>span b{font-size:calc(11px * var(--text-scale))}
+.offer-hit>span small{display:block;font-size:calc(10px * var(--text-scale));font-weight:400;line-height:1.35}
+.offer-money{text-align:right}
+.offer-money b{color:#285640}
+.offer-money .offer-was{text-decoration:line-through;color:#7a8273}
+.offer-hit .offer-period{grid-column:1/-1;color:#52634f;font-size:calc(10px * var(--text-scale));line-height:1.3}

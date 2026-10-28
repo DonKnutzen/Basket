@@ -1,0 +1,48 @@
+name: Verify on-demand shopping offers
+on:
+  push:
+    branches:
+      - feature/current-shopping-list-offers-2026-10
+  pull_request:
+    branches:
+      - main
+concurrency:
+  group: basket-offers-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.25.0 --activate
+      - name: Install locked dependencies
+        working-directory: source
+        run: pnpm install --frozen-lockfile
+      - name: Test full app and offers
+        working-directory: source
+        run: pnpm test
+      - name: TypeScript check
+        working-directory: source
+        run: pnpm exec tsc --noEmit
+      - name: Build GitHub Pages app
+        working-directory: source
+        run: pnpm run build:pages --out ..
+      - name: Commit Pages files only to feature branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/current-shopping-list-offers-2026-10'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html account-complete.html manifest.webmanifest sw.js .nojekyll
+          if ! git diff --cached --quiet; then
+            git commit -m "build: regenerate Basket offer-check Pages [skip ci]"
+            git push
+          fi
