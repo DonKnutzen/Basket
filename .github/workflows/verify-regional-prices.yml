@@ -47,6 +47,10 @@ jobs:
         working-directory: source
         continue-on-error: true
         run: node scripts/check-grocerypulse.mjs
+      - name: Check Kiel Open Prices coverage (informational)
+        working-directory: source
+        continue-on-error: true
+        run: node scripts/check-kiel-openprices.mjs
       - name: Generate GitHub Pages assets
         working-directory: source
         run: pnpm run build:pages --out ..
