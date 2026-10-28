@@ -152,36 +152,12 @@
       "confidence": "category-only"
     },
     {
-      "id": "aldi:nord:1033876:2026-10-26",
-      "category": "Paprika",
-      "name": "Red Paprika",
-      "brand": "LAY’S",
-      "packSize": "150-g-Beutel",
-      "priceCents": 99,
-      "validFrom": "2026-10-26",
-      "validUntil": "2026-10-31",
-      "store": "aldi",
-      "confidence": "category-only"
-    },
-    {
       "id": "aldi:nord:1000891:2026-10-26",
       "category": "Reis",
       "name": "Sushi-Reis",
       "brand": "ASIA GREEN GARDEN",
       "packSize": "500-g-Beutel",
       "priceCents": 129,
-      "validFrom": "2026-10-26",
-      "validUntil": "2026-10-31",
-      "store": "aldi",
-      "confidence": "category-only"
-    },
-    {
-      "id": "aldi:nord:1024263:2026-10-26",
-      "category": "Reis",
-      "name": "Sauce zu Reis",
-      "brand": "ASIA GREEN GARDEN",
-      "packSize": "400-g-Glas",
-      "priceCents": 149,
       "validFrom": "2026-10-26",
       "validUntil": "2026-10-31",
       "store": "aldi",
