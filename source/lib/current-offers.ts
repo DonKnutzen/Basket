@@ -3,9 +3,10 @@
  * catalogues: only documented public, reusable third-party API endpoints.
  * No historical prices are promoted to deals.
  */
+import {AUBAINE_NS_STORE_IDS,getAubaineOffers} from './aubaine-offers';
 export type OfferCountry='CA'|'DE';
 export type OfferRegion={country:OfferCountry;province:string;postalCode:string;stores:string[]};
-export type Deal={id:string;name:string;storeId:string;store:string;priceCents:number;regularCents?:number;currency:'CAD'|'EUR';validFrom:string;validUntil:string;observedAt:string;sourceUrl:string;packSize:string;loyalty:boolean;provider:'bidou'};
+export type Deal={id:string;name:string;storeId:string;store:string;priceCents:number;regularCents?:number;currency:'CAD'|'EUR';validFrom:string;validUntil:string;observedAt:string;sourceUrl:string;packSize:string;loyalty:boolean;provider:'bidou'|'aubaine'};
 export const OFFER_STORES=[
  {id:'walmart',name:'Walmart',country:'CA'},
  {id:'maxi',name:'Maxi',country:'CA'},
@@ -14,6 +15,14 @@ export const OFFER_STORES=[
  {id:'superc',name:'Super C',country:'CA'},
  {id:'provigo',name:'Provigo',country:'CA'},
  {id:'nofrills',name:'No Frills',country:'CA'},
+ {id:'foodland',name:'Foodland',country:'CA'},
+ {id:'freshmart',name:'Freshmart',country:'CA'},
+ {id:'wholesaleclub',name:'Wholesale Club',country:'CA'},
+ {id:'independent',name:'Your Independent Grocer',country:'CA'},
+ {id:'coop',name:'Co-op',country:'CA'},
+ {id:'cloverfarm',name:'Clover Farm',country:'CA'},
+ {id:'mmfood',name:'M&M Food Market',country:'CA'},
+ {id:'freshco',name:'FreshCo',country:'CA'},
  {id:'superstore',name:'Atlantic Superstore',country:'CA'},
  {id:'sobeys',name:'Sobeys',country:'CA'},
  {id:'rewe',name:'REWE',country:'DE'},
@@ -37,9 +46,10 @@ export function restoreOfferRegion(input:string|null):OfferRegion{
  }catch{return {...DEFAULT_OFFER_REGION};}
 }
 export function storeChoices(region:OfferRegion){return OFFER_STORES.filter(s=>s.country===region.country);}
+export function isStoreOfferConnected(region:OfferRegion,id:string){return region.country==='CA'&&region.province==='NS'?AUBAINE_NS_STORE_IDS.includes(id):region.country==='CA'&&supportedStores(region).includes(id);}
 export function providerAvailable(region:OfferRegion){
- return region.country==='CA'&&(region.province==='QC'||region.province==='ON') &&
-   (!region.stores.length || region.stores.some(s=>supportedStores(region).includes(s)));
+ return region.country==='CA'&&(region.province==='NS'||region.province==='QC'||region.province==='ON') &&
+   (!region.stores.length || region.stores.some(s=>region.province==='NS'?AUBAINE_NS_STORE_IDS.includes(s):supportedStores(region).includes(s)));
 }
 function supportedStores(region:OfferRegion):string[]{
  return region.province==='QC'?['walmart','maxi','iga','metro','superc','provigo']:['nofrills','superstore'];
@@ -126,6 +136,7 @@ export function normalizeBidouDeal(row:unknown,productName:string,region:OfferRe
 export type OfferFetch=(url:string,init?:RequestInit)=>Promise<Pick<Response,'ok'|'json'>>;
 export async function lookupActiveOffers(productName:string,region:OfferRegion,fetcher:OfferFetch=fetch,now=new Date()):Promise<Deal[]>{
  if(!providerAvailable(region))return [];
+ if(region.province==='NS')return getAubaineOffers(productName,region.stores,fetch,now);
  const query=offerSearchTerm(productName).slice(0,65);if(query.length<2)return [];
  const ctrl=new AbortController();const timer=setTimeout(()=>ctrl.abort(),8000);
  try{
