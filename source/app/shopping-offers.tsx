@@ -1,6 +1,7 @@
 'use client';
 import React,{useEffect,useState} from 'react';
 import {locale,tr} from '../lib/i18n';
+import {GermanFlyerImport,GermanFlyerMatches} from './flyer-import';
 import {isCopyOnlyOfferLinkContext} from '../lib/offer-link-navigation';
 import {
  DEFAULT_OFFER_REGION,OFFER_PROVINCES,GERMAN_OFFER_CITIES,officialGermanFlyers,checkOffers,providerAvailable,restoreOfferRegion,storeChoices,isStoreOfferConnected,
@@ -70,13 +71,14 @@ export function OfferSettings({region,onChange}:{region:OfferRegion;onChange:Rea
     </button>;
    })}</div>
    <p className="offer-source-note">
-    {region.country==='DE'?tr('Kiel is selected, but no licensed automatic weekly-offer feed is connected in Germany. Use the official retailer links on your shopping items.')
+    {region.country==='DE'?tr('Kiel is selected. You can import a weekly flyer privately and see checked prices on your list. Automatic German price feeds are not connected.')
       : eligible&&region.province==='NS'
       ? tr('Nova Scotia: weekly flyer reference prices for 19 common staples from Aubaine.ca. A price may not be a discount, and pack size and branch may differ. Source: aubaine.ca.')
       : eligible
       ? tr('Offer checks use a third-party data source. Deals must include dates and a recent observation; availability can differ by branch.')
       : tr('No verified automated offer feed is connected for this region or store selection. Receipt price history still works normally.')}
    </p>
+   {region.country==='DE'&&<GermanFlyerImport/>}
   </div>
  </details>;
 }
@@ -101,10 +103,11 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
  if(region.country==='DE'){
   const links=officialGermanFlyers(region);
   return <div className="offer-in-tile">
+   <GermanFlyerMatches name={name} chosenStores={region.stores}/>
    {!showGermanFlyers
     ? <button type="button" className="offer-check" onClick={()=>setShowGermanFlyers(true)}>🏷️ {tr('Check official flyers')}</button>
     : <>
-      <small>{tr('Automatic weekly offers for Kiel are not connected yet. Check the retailer’s current flyer; prices and availability depend on the store.')}</small>
+      <small>{tr('No automatic German feed is connected. You can import a flyer above or check the retailer’s official flyer; prices vary by branch.')}</small>
       <div className="offer-de-links">{links.map(l=><OfferSourceLink key={l.id} url={l.url}>{l.name}</OfferSourceLink>)}</div>
      </>}
   </div>;
