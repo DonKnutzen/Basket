@@ -67,12 +67,12 @@ export type ObservedPrice = {
 export type ProductPriceResult = { productName: string; brand: string; packSize: string; prices: ObservedPrice[]; sourceName: string; fetchedAt: string };
 const FR_TERMS: Record<string,string> = {
   milk:'lait', milch:'lait', eggs:'oeufs', egg:'oeuf', eier:'oeufs', ei:'oeuf',
-  tomatoes:'tomate', tomato:'tomate', tomaten:'tomate', tomatenes:'tomate',
+  tomatoes:'tomate', tomato:'tomate', tomaten:'tomate',
   apples:'pomme', apple:'pomme', apfel:'pomme', aepfel:'pomme',
   bananas:'banane', banana:'banane', bananen:'banane',
   potatoes:'pomme de terre', potato:'pomme de terre', kartoffeln:'pomme de terre',
   bread:'pain', brot:'pain', cheese:'fromage', kase:'fromage', kaese:'fromage',
-  butter:'beurre', eggs:'oeufs', chicken:'poulet', hahnchen:'poulet',
+  butter:'beurre', chicken:'poulet', hahnchen:'poulet',
   carrots:'carotte', carrot:'carotte', karotten:'carotte',
   cucumber:'concombre', gurke:'concombre', rice:'riz', reis:'riz',
   onion:'oignon', onions:'oignon', zwiebel:'oignon', zwiebeln:'oignon',
@@ -144,9 +144,15 @@ function pickProduct(products: unknown[], query: string): ApiProduct | null {
     if (!p || typeof p !== 'object') return false;
     const name = normalizedName(getText((p as ApiProduct).name));
     // Show only candidates with the searched name, never an unrelated product.
-    return name === term || name.startsWith(term + ' ') || name.includes(' ' + term + ' ');
+    const words=name.split(' ');
+    // Accept French plural endings without treating 'laitue' as the word 'lait'.
+    return words.some(word=>word===term || word===term+'s' || word===term+'es') || name.startsWith(term+' ');
   }) as ApiProduct[];
-  const ranked = matched.sort((a,b)=>{
+  const ranked = matched.filter(p=>{
+    const full=normalizedName(getText(p.name));
+    // 'pomme de terre' is a potato, not an apple.
+    return !(term==='pomme' && full.includes('pomme de terre'));
+  }).sort((a,b)=>{
     const score=(p:ApiProduct) => normalizedName(getText(p.name))===term ? 2 : normalizedName(getText(p.name)).startsWith(term+' ') ? 1 : 0;
     return score(b)-score(a);
   });
