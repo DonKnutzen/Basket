@@ -79,7 +79,7 @@ const FR_TERMS: Record<string,string> = {
   yogurt:'yogourt', yoghurt:'yogourt', joghurt:'yogourt',
 };
 export function normalizedName(name: string): string {
-  return name.toLocaleLowerCase('fr').replace(/ß/g,'ss').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+  return name.toLocaleLowerCase('fr').replace(/œ/g,'oe').replace(/ß/g,'ss').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
 }
 export function searchTerm(name: string): string {
   const clean = normalizedName(name);
@@ -144,15 +144,17 @@ function pickProduct(products: unknown[], query: string): ApiProduct | null {
     if (!p || typeof p !== 'object') return false;
     const name = normalizedName(getText((p as ApiProduct).name));
     // Show only candidates with the searched name, never an unrelated product.
-    // Match product-name prefix only: `au lait` chocolate is NOT milk.
-    // Accept French plural endings but never a loose substring such as `laitue`.
-    return name===term || name.startsWith(term+' ') ||
-      name.startsWith(term+'s ') || name.startsWith(term+'es ');
+    // Match complete initial words, allowing French plurals.
+    // `au lait` chocolate and `laitue` are NOT milk.
+    const wanted=term.split(' '), actual=name.split(' ');
+    return actual.length>=wanted.length && wanted.every((token,i)=>
+      actual[i]===token || actual[i]===token+'s' ||
+      (token.endsWith('s') && actual[i]===token.slice(0,-1)));
   }) as ApiProduct[];
   const ranked = matched.filter(p=>{
     const full=normalizedName(getText(p.name));
     // 'pomme de terre' is a potato, not an apple.
-    return !(term==='pomme' && full.includes('pomme de terre'));
+    return !(term==='pomme' && /^pommes? de terre(?: |$)/.test(full));
   }).sort((a,b)=>{
     const score=(p:ApiProduct) => normalizedName(getText(p.name))===term ? 2 : normalizedName(getText(p.name)).startsWith(term+' ') ? 1 : 0;
     return score(b)-score(a);
