@@ -1,4 +1,4 @@
-import {catalogProduct,catalogIconGroup} from './product-catalog';
+import {catalogProduct,catalogIconGroup,catalogExactProduct,catalogCategory} from './product-catalog';
 import {foodIcon,type IconPreference,type FoodIconKey} from './food-icons';
 import {normalize,type Item} from './types';
 import {HOUSEHOLD_ICONS} from './household-icons';
@@ -21,6 +21,11 @@ export function shoppingGroup(name:string,preferences:readonly IconPreference[]=
 export function foodGroupClass(name:string,preferences:readonly IconPreference[]=[],category?:string){return 'food-group-'+SHOPPING_GROUPS.indexOf(shoppingGroup(name,preferences,category));}
 const storageGroups:Record<string,string>={Fruit:'Produce',Vegetables:'Produce','Salads & herbs':'Produce',Meat:'Meat & fish','Fish & seafood':'Meat & fish','Plant-based alternatives':'Pantry','Pasta, rice & grains':'Pantry',Pulses:'Pantry','Cans & jars':'Pantry','Oils & vinegar':'Pantry','Sauces & condiments':'Pantry',Spices:'Pantry','Baking ingredients':'Pantry','Breakfast & spreads':'Pantry','Nuts, seeds & dried fruit':'Pantry','Ready meals':'Pantry','Snacks & sweets':'Pantry','Personal care':'Household','Baby & pets':'Household','Other supermarket items':'Household'};
 export function shoppingCategory(name:string,preferences:readonly IconPreference[]=[],category?:string):string{
+ // A display group is not a persisted category: e.g. Haferdrink is displayed under
+ // Plant-based alternatives but its catalogue receipt/budget category is Dairy & eggs.
+ // Honour explicit icon overrides and the user's Frozen category.
+ const remembered=preferences.some(p=>p.name===normalize(name)||p.name===normalize(name.replace(/ß/gi,'ss')));
+ if(!remembered&&category!=='Frozen'&&catalogExactProduct(name))return catalogCategory(name)!;
  const group=shoppingGroup(name,preferences,category);
  return storageGroups[group]||group;
 }
