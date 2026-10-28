@@ -117,7 +117,7 @@ test('food icons recognize meaningful words in descriptions, plural forms and fo
  'Ginger':'ginger','organic fresh ginger root 100g':'ginger','marinated Ginger':'ginger','A jar of pickled ginger please':'ginger',
  'Back cottage cheese':'cheese','mature cheddar cheese':'cheese','Parmigiano Reggiano':'cheese','Pancetta':'meat','smoked bacon cubes':'meat',
  'Almonds':'almond','roasted unsalted almonds 250g':'almond','Tamari':'sauce','Tamari Sauce':'sauce','We need gluten free tamari sauce for dinner':'sauce',
- 'almond milk':'milk','almond flour':'flour','cream cheese':'cheese','ginger beer':'drink','eggplant':'vegetable','tea towels':'cloth','organic chickpeas':'bean',
+ 'almond milk':'milk','almond flour':'flour','cream cheese':'cheese','ginger beer':'soda','eggplant':'vegetable','tea towels':'cloth','organic chickpeas':'bean',
  'Nudeln':'pasta','Vollkornnudeln 500g':'pasta','rice noodles':'pasta','Spaghetti':'pasta','Reis':'rice','basmati rice':'rice',
  'Äpfel':'apple','frische Möhren':'carrot','Käse':'cheese','Hafermilch':'milk','Hähnchen':'meat','Lachs':'fish','Tonkabohnen':'bean'
  } as const;
@@ -187,10 +187,10 @@ test('every selectable food icon renders a compact coloured illustration',async(
  }
 });
 
-test('common beverage brands and German descriptions use the shared drink illustration',async()=>{
+test('common beverage brands have distinct drink illustrations and German descriptions remain recognized',async()=>{
  const {foodIcon}=await import('../lib/food-icons');const {shoppingGroup,shoppingCategory}=await import('../lib/food-presentation');
- for(const name of ['Cola','Coca-Cola','Coke Zero','Cola Zero 1,5 L','Red Bull','RedBull Sugarfree 250ml','Pepsi Max','Fanta Orange Zero','Sprite','Schweppes','Apfelsaft']){
-  assert.equal(foodIcon(name),'drink',name);assert.equal(shoppingGroup(name),'Drinks',name);assert.equal(shoppingCategory(name),'Drinks',name);
+ for(const [name,icon]of Object.entries({'Cola':'cola','Coca-Cola':'cola','Coke Zero':'cola','Cola Zero 1,5 L':'cola','Red Bull':'energy','RedBull Sugarfree 250ml':'energy','Pepsi Max':'cola','Fanta Orange Zero':'soda','Sprite':'soda','Schweppes':'soda','Apfelsaft':'juice'})){
+  assert.equal(foodIcon(name),icon,name);assert.equal(shoppingGroup(name),'Drinks',name);assert.equal(shoppingCategory(name),'Drinks',name);
  }
  const cases={ 'frische Äpfel':'apple','eingelegter Ingwer':'ginger','marinierter Ingwer':'ginger','Hüttenkäse':'cheese','geröstete Mandeln':'almond','Curry Leaf':'leaf','Curry Leaves':'leaf','Bay Leaf':'leaf','getrocknete Lorbeerblätter':'leaf','Curryblätter':'leaf','Soße':'sauce','Sojasoße':'sauce'};
  for(const [name,key] of Object.entries(cases))assert.equal(foodIcon(name),key,name);
@@ -286,5 +286,46 @@ test('household icon choices save and sync through the existing item editor API'
   await post('deleteItem',{id:icon});
   await post('addItem',{id:icon+'-again',listId,name,quantity:'1'});
   assert.ok((await get()).body.iconPreferences.some((p:any)=>p.name===normalize(name)&&p.icon===icon),icon);
+ }
+});
+
+test('drink types have distinct bilingual illustrations and stay in the drinks group',async()=>{
+ const {foodIcon,iconLabel}=await import('../lib/food-icons');
+ const {shoppingGroup,shoppingCategory}=await import('../lib/food-presentation');
+ const {DRINK_ICONS}=await import('../lib/drink-icons');
+ const {default:german}=await import('../lib/de.json');
+ const cases={
+  cola:['Coca Cola','Coca-Cola','cola','Cola Zero','Coke Zero Sugar','Diet Coke','Pepsi Max','cola 6 cans'],
+  energy:['Red Bull','RedBull','Red Bull Sugarfree 250ml','Red Bull Zero','Energydrinks','Energy drinks','Energygetränk','Monster Energy'],
+  wine:['Wein','Rotwein','Weißwein','Weisswein','Roséwein','red wine','white wine','rosé wine','Chardonnay','alcohol free wine'],
+  beer:['Bier','Weizenbier','alkoholfreies Bier','beer','lager','IPA','cider'],
+  sparkling:['Sekt','Prosecco','Champagner','Champagne','sparkling wine','Crémant','Cava'],
+  water:['Wasser','Mineralwasser','stilles Wasser','sparkling water','mineral water','club soda'],
+  juice:['Saft','Säfte','Apfelsaft','Orangensaft','apple juice','orange juice','cranberry juice','coconut water'],
+  soda:['Limonade','Fanta Orange Zero','Sprite','ginger beer','root beer','tonic water','Eistee'],
+  spirits:['Spirituosen','Whisky','Whiskey','Wodka','Vodka','Gin','Rum','Tequila','Likör'],
+ };
+ for(const [icon,names]of Object.entries(cases))for(const name of names){
+  assert.equal(foodIcon(name),icon,name);assert.equal(inferCategory(name),'Drinks',name);
+  assert.equal(shoppingGroup(name),'Drinks',name);assert.equal(shoppingCategory(name),'Drinks',name);
+ }
+ for(const [icon]of DRINK_ICONS)assert.ok(Object.hasOwn(german,iconLabel(icon)),icon);
+ assert.equal(foodIcon('Cola',[{name:'cola',icon:'drink'}]),'drink','explicit existing choices remain respected');
+ assert.equal(foodIcon('white wine vinegar'),'sauce');assert.equal(foodIcon('Rotweinessig'),'sauce');
+ assert.equal(foodIcon('beer battered fish'),'fish');assert.equal(foodIcon('ginger'),'ginger');
+ assert.equal(foodIcon('coconut shampoo'),'shampoo');assert.equal(foodIcon('Ginster'),'basket');
+});
+
+test('drink icon choices save through the item editor and every new motif renders differently',async()=>{
+ const {DRINK_ICONS}=await import('../lib/drink-icons');
+ const React=await import('react');const {createRequire}=await import('node:module');
+ const {renderToStaticMarkup}=createRequire(import.meta.url)('react-dom/server');const {Food}=await import('../app/art');
+ const listId=(await get()).body.lists[0].id;const illustrations=new Set<string>();
+ for(const [icon]of DRINK_ICONS){
+  await post('addItem',{id:icon,listId,name:'Custom '+icon,quantity:'1'});
+  assert.equal((await post('updateItem',{id:icon,icon})).status,200,icon);
+  assert.ok((await get()).body.iconPreferences.some((p:any)=>p.icon===icon),icon);
+  const markup=renderToStaticMarkup(React.createElement(Food,{name:'',icon}));
+  assert.ok(!illustrations.has(markup),'motif must be distinct: '+icon);illustrations.add(markup);
  }
 });

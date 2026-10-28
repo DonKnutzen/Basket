@@ -1,6 +1,7 @@
 import {foodIcon,type IconPreference,type FoodIconKey} from './food-icons';
 import {normalize,type Item} from './types';
 import {HOUSEHOLD_ICONS} from './household-icons';
+import {DRINK_ICONS} from './drink-icons';
 
 // Presentation groups do not change stored receipt or budget categories.
 export const SHOPPING_GROUPS=['Fruit','Vegetables','Bakery','Meat','Fish & seafood','Dairy & eggs','Pantry','Frozen','Drinks','Household','Other'] as const;
@@ -10,6 +11,7 @@ export function shoppingGroup(name:string,preferences:readonly IconPreference[]=
  if(category==='Frozen')return 'Frozen';
  const key=foodIcon(name,preferences,category);
  if(HOUSEHOLD_ICONS.some(([icon])=>icon===key))return 'Household';
+ if(DRINK_ICONS.some(([icon])=>icon===key))return 'Drinks';
  if(key==='berries'&&/(^| )(tomato|tomatoes|tomate|tomaten|cherrytomaten)( |$)/.test(normalize(name)))return 'Vegetables';
  if(iconGroups[key])return iconGroups[key]!;
  return ({Produce:'Vegetables','Dairy & eggs':'Dairy & eggs','Meat & fish':'Meat',Bakery:'Bakery',Pantry:'Pantry',Drinks:'Drinks',Household:'Household'} as Record<string,ShoppingGroup>)[category||'']||'Other';
