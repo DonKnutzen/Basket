@@ -101,6 +101,10 @@ def extract(html: bytes, today: str) -> list[dict]:
         if not isinstance(name,str) or not name.strip() or len(name)>100:continue
         match=next((category for category,regex in PATTERNS if regex.search(name)),None)
         if not match:continue
+        # Prevent prepared meals and special breads being mistaken for the
+        # staple ingredients shoppers actually wrote on their lists.
+        if match=="Hähnchen" and not re.match(r"^Hähnchen(?:[- ]|$)",name,re.I):continue
+        if match=="Brot" and not re.match(r"^(?:Brot|Vollkornbrot|Toastbrot|Weizenbrot|Roggenbrot)(?:[- ]|$)",name,re.I):continue
         promos=item.get("promotionPrices")
         if not isinstance(promos,list):continue
         active=[]
