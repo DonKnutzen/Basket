@@ -97,7 +97,7 @@ export default function ReceiptScanner({ data, demo, initialFile, initialListId,
     };
     const scanFixturePhoto=async (fixture:ReceiptFixture)=>{
         try{
-            const lines=fixture.text.split('\\n');
+            const lines=fixture.text.split('\n');
             const canvas=document.createElement('canvas');
             canvas.width=1200;canvas.height=Math.max(520,140+lines.length*57);
             const ctx=canvas.getContext('2d');
