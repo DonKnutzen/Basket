@@ -226,3 +226,23 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
 
 .flyer-start-page{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px;font-size:calc(11px * var(--text-scale));font-weight:650}
 .flyer-start-page input{max-width:85px;min-height:36px;border:1px solid var(--line);border-radius:8px;padding:5px;background:var(--paper);color:var(--ink)}
+
+/* Flyer OCR verification is a page-based searchable reading view, never a raw text wall. */
+.flyer-raw{margin:14px 0;border:1px solid var(--line);border-radius:11px;padding:11px;background:var(--paper)}
+.flyer-raw>summary{font-weight:750;cursor:pointer;line-height:1.45}
+.flyer-raw-description{margin:8px 0;font-size:calc(11px * var(--text-scale));color:var(--muted)}
+.flyer-raw-controls{display:flex;gap:9px;flex-wrap:wrap;align-items:end;margin:10px 0}
+.flyer-raw-controls label{display:flex;flex-direction:column;gap:4px;font-size:calc(11px * var(--text-scale));font-weight:650;flex:1;min-width:175px}
+.flyer-raw-controls input[type=search]{width:100%;min-height:40px;border-radius:8px;border:1px solid var(--line);background:var(--surface,#fff);color:var(--ink);padding:7px;font-size:calc(13px * var(--text-scale))}
+.flyer-raw-controls .flyer-raw-filter{flex-direction:row;gap:6px;align-items:center;min-width:150px}
+.flyer-raw-filter input{width:16px;height:16px}
+.flyer-raw-count{font-size:calc(11px * var(--text-scale));font-weight:650;margin:8px 0}
+.flyer-text-page{margin:10px 0;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--surface,#fff)}
+.flyer-text-page h5{display:flex;align-items:center;gap:9px;font-size:calc(12px * var(--text-scale));margin:0;padding:9px 10px;border-bottom:1px solid var(--line)}
+.flyer-text-page h5 small{color:var(--muted);font-weight:400}
+.flyer-text-page ol{padding:0;margin:0;list-style:none;max-height:440px;overflow-y:auto}
+.flyer-text-page li{overflow-wrap:anywhere;padding:7px 10px;border-bottom:1px solid var(--line);line-height:1.45;font-size:calc(11px * var(--text-scale))}
+.flyer-text-page li:last-child{border-bottom:0}
+.flyer-text-page>small,.flyer-text-page>.flyer-text-empty{display:block;margin:7px 10px;color:var(--muted);font-size:calc(10px * var(--text-scale))}
+.flyer-text-price{font-weight:800;color:var(--ink);white-space:nowrap}
+.flyer-source-line{grid-column:1/-1;font-size:calc(10px * var(--text-scale));color:var(--muted);line-height:1.4;overflow-wrap:anywhere;border-top:1px solid var(--line);padding-top:6px}

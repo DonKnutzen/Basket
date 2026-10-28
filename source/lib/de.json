@@ -658,5 +658,17 @@
   "Your flyer (PDF up to 25 MB · photos up to 12 MB)": "Dein Prospekt (PDF bis 25 MB · Fotos bis 12 MB)",
   "Choose a PDF no larger than 25 MB.": "Wähle eine PDF mit höchstens 25 MB.",
   "Choose a photo no larger than 12 MB.": "Wähle ein Foto mit höchstens 12 MB.",
-  "Choose a non-empty flyer file.": "Wähle eine nicht leere Prospektdatei."
+  "Choose a non-empty flyer file.": "Wähle eine nicht leere Prospektdatei.",
+  "Recognized flyer text, grouped by page": "Erkannten Prospekttext übersichtlich prüfen",
+  "These are unverified OCR lines. Search them or show all lines to compare against the original flyer. Only checked offers are saved.": "Hier siehst du die erkannten Zeilen nach Prospektseite. Suche nach Produkten oder Preisen und vergleiche sie mit dem Original. Nur von dir bestätigte Angebote werden gespeichert.",
+  "Search recognized text": "Erkannten Text durchsuchen",
+  "Product or price": "Produkt oder Preis",
+  "Show only lines with prices": "Nur Zeilen mit Preisen anzeigen",
+  "matching text lines": "passende Textzeilen",
+  "pages": "Seiten",
+  "Page": "Seite",
+  "No matching lines on this page.": "Keine passenden Zeilen auf dieser Seite.",
+  "Showing the first lines only; refine the search.": "Es werden nur die ersten Zeilen angezeigt. Grenze die Suche weiter ein.",
+  "No recognized text available.": "Kein erkannter Text vorhanden.",
+  "Original recognized line": "Erkannte Originalzeile"
 }

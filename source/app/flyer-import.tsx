@@ -7,6 +7,7 @@ import {
  type FlyerCandidate,type FlyerPrice,type FlyerStore,
 } from '../lib/flyer-prices';
 import {readFlyerFile,flyerFileError} from '../lib/flyer-reader';
+import {groupFlyerText} from '../lib/flyer-text-view';
 type Edit=FlyerCandidate&{id:number;enabled:boolean};
 function kielToday(){
  return new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -14,6 +15,34 @@ function kielToday(){
 const nameFor=(id:string)=>FLYER_STORES.find(s=>s.id===id)?.name||id;
 function signalChange(){window.dispatchEvent(new Event(FLYER_CHANGED_EVENT));}
 function priceLabel(cents:number){return (cents/100).toFixed(2).replace('.',',')+' €'}
+function FlyerTextReview({text}:{text:string}){
+ const [query,setQuery]=useState('');
+ const [onlyPrices,setOnlyPrices]=useState(false);
+ const sections=groupFlyerText(text,query,onlyPrices,onlyPrices?170:260);
+ const matching=sections.reduce((sum,s)=>sum+s.matched,0);
+ const highlight=(line:string)=>{
+  const match=line.match(/\d{1,4}[.,]\d{2}\s*€?/);
+  if(!match||match.index===undefined)return line;
+  return <>{line.slice(0,match.index)}<b className="flyer-text-price">{match[0]}</b>{line.slice(match.index+match[0].length)}</>;
+ };
+ return <details className="flyer-raw">
+  <summary>{tr('Recognized flyer text, grouped by page')}</summary>
+  <p className="flyer-raw-description">{tr('These are unverified OCR lines. Search them or show all lines to compare against the original flyer. Only checked offers are saved.')}</p>
+  <div className="flyer-raw-controls">
+   <label>{tr('Search recognized text')}<input type="search" value={query} onChange={e=>setQuery(e.target.value)} placeholder={tr('Product or price')}/></label>
+   <label className="flyer-raw-filter"><input type="checkbox" checked={onlyPrices} onChange={e=>setOnlyPrices(e.target.checked)}/>{tr('Show only lines with prices')}</label>
+  </div>
+  <p className="flyer-raw-count" role="status">{matching} {tr('matching text lines')} · {sections.length} {tr('pages')}</p>
+  {sections.map((section,i)=><section className="flyer-text-page" key={i}>
+   <h5>{tr('Page')} {section.page} <small>({section.matched}/{section.total})</small></h5>
+   {section.lines.length
+    ? <ol>{section.lines.map((line,n)=><li key={n}>{highlight(line)}</li>)}</ol>
+    : <p className="flyer-text-empty">{tr('No matching lines on this page.')}</p>}
+   {section.matched>section.lines.length&&<small>{tr('Showing the first lines only; refine the search.')}</small>}
+  </section>)}
+  {!sections.length&&<p>{tr('No recognized text available.')}</p>}
+ </details>;
+}
 export function useLocalFlyerPrices(){
  const [prices,setPrices]=useState<FlyerPrice[]>([]);
  useEffect(()=>{
@@ -128,12 +157,13 @@ export function GermanFlyerImport(){
     <label>{tr('Product')}<input value={row.name} maxLength={110} onChange={e=>edit(row.id,{name:e.target.value})}/></label>
     <label>{tr('Price (€)')}<input value={row.price} inputMode="decimal" onChange={e=>edit(row.id,{price:e.target.value})} placeholder="1,99"/></label>
     <label>{tr('Pack size')}<input value={row.packSize} maxLength={50} onChange={e=>edit(row.id,{packSize:e.target.value})} placeholder={tr('e.g. 500 g')}/></label>
+    {row.line&&<small className="flyer-source-line">{tr('Original recognized line')}: {row.line}</small>}
    </div>)}
    <div className="flyer-import-actions">
     <button type="button" className="secondary" onClick={manual}>{tr('Add an offer manually')}</button>
     <button type="button" className="primary" onClick={save} disabled={!rows.some(r=>r.enabled)}>{tr('Save reviewed offers locally')}</button>
    </div>
-   {!!text&&<details className="flyer-raw"><summary>{tr('View recognized text to verify prices')}</summary><pre>{text.slice(0,14000)}</pre></details>}
+   {!!text&&<FlyerTextReview text={text}/>}
   </div>}
   {prices.length>0&&<div className="flyer-saved">
    <small>{tr('Active imported flyer prices on this device: ')}{prices.length}</small>
