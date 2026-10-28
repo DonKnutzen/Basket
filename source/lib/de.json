@@ -683,7 +683,8 @@
   "ALDI Nord · Kiel": "ALDI Nord · Kiel",
   "Current partial flyer matches": "Aktuelle Prospektpreise (Auswahl)",
   "No verified current flyer data": "Keine bestätigten aktuellen Prospektdaten",
-  "REWE Kiel and ALDI Nord are selected by default. ALDI Nord's limited official-page offer data is refreshed daily; REWE's currently linked week can expire unless a newly authorized flyer source is supplied. Prices are incomplete and must be checked for product and pack size.": "REWE Kiel und ALDI Nord sind standardmäßig aktiviert. Die begrenzten ALDI-Nord-Angebotsdaten werden täglich aus der offiziellen Angebotsseite aktualisiert. Beim REWE-Prospekt kann die Verbindung nach dem Wochenwechsel auslaufen, solange kein neuer zulässiger PDF-Link vorliegt. Alle Treffer sind unvollständig; Produkt und Packungsgröße müssen geprüft werden.",
   "REWE and ALDI Nord grocery categories are checked automatically where current source data is available. Missing matches do not mean no sale, and brand and package sizes can differ.": "REWE- und ALDI-Nord-Angebote werden bei verfügbaren aktuellen Quelldaten automatisch abgeglichen. Kein Treffer bedeutet nicht, dass es kein Angebot gibt. Marke und Packungsgröße können abweichen.",
-  "ALDI Nord · Verify local branch": "ALDI Nord · Filiale vor Ort prüfen"
+  "ALDI Nord · Verify local branch": "ALDI Nord · Filiale vor Ort prüfen",
+  "REWE Kiel and ALDI Nord are selected by default. For REWE, the weekly PDF link is supplied manually and Basket then automatically extracts limited matches. ALDI Nord continues daily updates. Expired prices are hidden; product and pack size must be checked.": "REWE Kiel und ALDI Nord sind standardmäßig aktiviert. Bei REWE stellst du einmal pro Woche den offiziellen PDF-Link bereit; danach werden passende Preise automatisch ausgelesen. ALDI Nord wird weiterhin täglich aktualisiert. Abgelaufene Preise bleiben verborgen; Produkt und Packungsgröße müssen geprüft werden.",
+  "New weekly REWE PDF link needed": "Neuer Wochenprospekt-PDF-Link benötigt – bitte in ChatGPT teilen"
 }
