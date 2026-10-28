@@ -17,7 +17,7 @@ function signalChange(){window.dispatchEvent(new Event(FLYER_CHANGED_EVENT));}
 function priceLabel(cents:number){return (cents/100).toFixed(2).replace('.',',')+' €'}
 function FlyerTextReview({text}:{text:string}){
  const [query,setQuery]=useState('');
- const [onlyPrices,setOnlyPrices]=useState(true);
+ const [onlyPrices,setOnlyPrices]=useState(false);
  const sections=groupFlyerText(text,query,onlyPrices,onlyPrices?170:260);
  const matching=sections.reduce((sum,s)=>sum+s.matched,0);
  const highlight=(line:string)=>{
