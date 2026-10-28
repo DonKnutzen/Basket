@@ -1,8 +1,6 @@
 name: Offer data source smoke check
 on:
-  push:
-    branches:
-      - feature/current-shopping-list-offers-2026-10
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
