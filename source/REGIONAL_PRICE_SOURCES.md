@@ -54,6 +54,30 @@ The checked responses did not include `Access-Control-Allow-Origin` (reported `n
 
 **Conclusion:** this does not close the Nova Scotia or Germany live-price requirement. The coverage probe intentionally leaves those integrations disabled instead of inventing store prices or unauthorized scraping.
 
+## User's target cities: Kiel, Halifax and Dartmouth (2026-10-28)
+
+The earlier Berlin sample was a general API coverage probe and **is not a target city**. Current private-use choices are **Kiel, Germany** and **Halifax or Dartmouth, NS**.
+
+### Halifax/Dartmouth: permitted personal-list API, not a scraper
+
+- **GroceryPulse.ca** publishes a no-key public personal shopper API with explicit third-party software use for *person-triggered* comparisons. Source: https://grocerypulse.ca/terms and https://grocerypulse.ca/agents .
+- Catalog coverage is `halifax` (not a separately defined Dartmouth city). Dartmouth shows **Halifax-area chain medians** and never claims a specific Dartmouth shelf price.
+- Six chains mapped: Walmart, No Frills, Atlantic Superstore, Sobeys, Giant Tiger, Wholesale Club. The provider covers 50 canonical reference products, not all groceries.
+- Frontend makes **one user-initiated request per explicit list comparison** to Basket's authenticated `/api/shopper-prices` endpoint, which uses the provider's documented `POST /api/shopper/plan` from the server. Browser-origin requests to the provider are disallowed; do not call it directly from GitHub Pages.
+- Each comparison is capped at 30 user-entered lines, six selected stores, 3,000 characters, with a four-hour client cache. It is never used to bulk-import product records, rebuild a database or create receipt history. Price source may rate-limit requests and return 429.
+- An explicit live smoke test for `2% milk 4L\nlarge eggs 12 pack` returned exact matches, price observations (e.g. Giant Tiger 6.77 CAD for 4 L milk and Wholesale Club 7.09 CAD), original observation dates and store links. **These are observed prices dated 2026-10-22**, not guaranteed current branch stock/checkout prices.
+- The API's `recommendation.status` and `totalScope` govern rankings; a subtotal is never relabelled a full-list total. The frontend shows individual prices only where returned, plus date, pack-size warning and sale flags.
+- Comparison is opt-in for signed-in household members. The provider receives only the **shopping list content**, `halifax` market and selected chains, not the user's account identifiers or complete postal code. Its published privacy terms say list contents are not stored.
+
+### Kiel: sparse Open Prices sightings, no live offer feed
+
+- A bounded public `Open Prices` locations query showed **18 registered price locations** in Kiel, such as REWE, Netto, EDEKA and a health-food shop (2026-10-28). This does not mean active live prices.
+- Among three sampled Kiel locations with stored records (IDs 634, 687, 773), **zero EUR prices** were found since 2026-09-28. We do not promote old prices as current or invent city-wide coverage.
+- Open Prices entries are community-submitted under ODbL and are historical observations, not a supermarket live promotional feed. A curated, read-only historic lookup would be possible with a server gateway while retaining the licence/attribution, but is not equivalent to a current REWE or ALDI scraper.
+- Further authorized direct feeds remain blocked pending acceptable reuse terms. **Personal use alone does not void a site's terms**, and this publicly hosted GitHub Pages source is not the same as a local one-off personal script.
+
+**Delivery status:** Backend `/api/shopper-prices` must be deployed to Basket's actual Cloudflare server before the public GitHub Pages client can reach it. Building the frontend by GitHub Actions does not deploy the backend. Do not advertise the feature as live until the endpoint and authentication work end-to-end.
+
 ### Next source-adapter work
 
 1. Request and document authorized local-store price feeds for Atlantic Canada, in particular Walmart Canada, No Frills / Superstore, and Sobeys.
