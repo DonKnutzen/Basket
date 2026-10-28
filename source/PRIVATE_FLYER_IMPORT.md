@@ -49,3 +49,18 @@ Basket fetches that small JSON from its own GitHub Pages origin automatically an
 - Only a few summary price facts are published, not a replacement for the entire original flyer. This is not proof of a general reuse license; ongoing redistribution or a larger service would require a rights review or permission from the retailer/rights holder.
 - The scheduled job operates centrally; shoppers are never asked to upload the flyer or pay for OCR. It does not download the 25-MB PDF to their phones.
 - No user shopping-list items are sent to REWE/Publitas. Matching takes place in the client after the limited JSON is fetched.
+
+
+## 28 Oct 2026: ALDI Nord automatic limited weekly offers (no PDF upload)
+
+**Two retailer choices are selected by default** when a shopper switches to Germany/Kiel: REWE Holtenauer Straße 69–71 (branch 561204) and ALDI Nord. Changing selection is still possible. Matching happens in the shopper's browser, without sending shopping-list contents to REWE or ALDI.
+
+ALDI Nord is checked once each morning by a small GitHub Actions job. It reads [the public official ALDI Nord offers HTML](https://www.aldi-nord.de/angebote.html) (about 622 KB on Oct 28, 2026) and parses its `__NEXT_DATA__` → `pageProps.apiData` → `OFFER_GET` → `algoliaDataMap` product information. **It does not download the 121 MB flyer PDF.** The extract includes a conservative, bounded list (max 50 records and 3 per category) of *dated, available, currently advertised grocery products* and stores only the product name, optional brand, printed selling unit, price in cents, observed date, original-page URL, and validity. No images, complete catalogue, long descriptions, household shopping items or PDF are stored.
+
+The source is independent of a specific Kiel store: **check regional availability and exact pack/brand at the physical ALDI Nord branch**. A category match is not necessarily an identical SKU. The extractor excludes prepared chicken bowls, rice sauces, snack-flavoured 'paprika', future/expired products, recall items, ambiguous multiple prices, and other non-staple merchandise. The first run of the strict Oct 28 2026 filter returned **15** selected currently advertised products, including Aubergine 0.59 EUR, Avocado 0.88 EUR, Bananen 1.19 EUR/kg, Butter 1.49 EUR/250 g and Speisekartoffeln 1.79 EUR/2 kg.
+
+The browser validates source, format, bounded row count, currencies, dates, store selection and exact generic category before showing prices. Data older than three days, out-of-week, invalid, unavailable or without a trusted page source is hidden. Missing offers **never** mean the retailer has no offer.
+
+**REWE remains selected and checked automatically**, but its original user-provided Publitas PDF is explicitly limited to week 44/2026 (Oct 26–31). We found **no publicly documented permitted source discovery API** to find new branch-specific PDFs as each week rolls over (the unattended REWE store page returned HTTP 403). The app therefore truthfully marks REWE as unavailable after expiry until an authorized current-week link is configured. It will not silently reuse week44 prices.
+
+**Rights:** Neither retailer has supplied an explicit grant for automated reuse/republication in this application. A publicly reachable HTML or PDF is not proof of a license. The lightweight daily extract and minimal summary may still be subject to copyright, database rights, and site terms. Before extending this beyond a personal pilot or publishing substantial catalogue data, obtain written permission or switch to licensed sources. A single authorized current weekly source is preferred to scraping/duplicating whole prospectuses. Use no authentication bypass, no hidden API credential, and honor access failures.
