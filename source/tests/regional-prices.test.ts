@@ -1,12 +1,12 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  DEFAULT_GROCERY_REGION, availableProviderStores, fetchQuebecPrices,
+  DEFAULT_GROCERY_REGION, availableProviderStores, halifaxProviderStores, fetchQuebecPrices,
   normalizeEpiceriesProduct, normalizePostal, readGroceryRegion, searchTerm,
   type FetchLike, type GroceryRegion,
 } from '../lib/regional-prices';
 
-const qc: GroceryRegion={country:'CA',province:'QC',postalCode:'H2X 1Y4',preferredStores:[]};
+const qc: GroceryRegion={country:'CA',province:'QC',city:'',postalCode:'H2X 1Y4',preferredStores:[]};
 const date='2026-10-26T12:00:00+00:00';
 const now=new Date('2026-10-28T12:00:00Z');
 function product(){
@@ -25,6 +25,8 @@ test('region preferences validate country, province, postal code, and store ids'
   const value=readGroceryRegion(JSON.stringify({country:'CA',province:'QC',postalCode:'h2x1y4',preferredStores:['walmart','walmart','rewe','maxi']}));
   assert.deepEqual(value.preferredStores,['walmart','maxi']);
   assert.equal(value.postalCode,'H2X 1Y4');
+  assert.equal(readGroceryRegion(JSON.stringify({country:'DE',province:'',postalCode:'24103'})).city,'kiel');
+  assert.equal(readGroceryRegion(JSON.stringify({country:'CA',province:'NS',city:'dartmouth'})).city,'dartmouth');
 });
 test('only Quebec-enabled chains are queryable; unsupported favourites do not trigger scraping',()=>{
   assert.equal(availableProviderStores(DEFAULT_GROCERY_REGION).length,0);
@@ -32,6 +34,9 @@ test('only Quebec-enabled chains are queryable; unsupported favourites do not tr
   assert.equal(availableProviderStores({...qc,preferredStores:['nofrills']}).length,0);
   assert.equal(availableProviderStores({...qc,preferredStores:['walmart']}).length,1);
   assert.equal(availableProviderStores(qc).length,6);
+  assert.equal(halifaxProviderStores(DEFAULT_GROCERY_REGION).length,6);
+  assert.equal(halifaxProviderStores({...DEFAULT_GROCERY_REGION,city:'dartmouth'}).length,6);
+  assert.equal(halifaxProviderStores({...DEFAULT_GROCERY_REGION,city:'dartmouth',preferredStores:['sobeys']}).length,1);
 });
 test('normalizes French/English/German product requests conservatively',()=>{
   assert.equal(searchTerm('Milk'),'lait');
