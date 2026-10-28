@@ -2,7 +2,7 @@ import {createRequire} from 'node:module';
 import {dirname,resolve,join} from 'node:path';
 import {readFile,writeFile,mkdir,copyFile} from 'node:fs/promises';
 const req=createRequire(import.meta.url),esbuild=req(req.resolve('esbuild',{paths:[dirname(req.resolve('vite'))]}));
-const base='/Basket/',backend='https://basket-together.airychime12.chatgpt.site';
+const base='/Basket/',backend='https://basket-together.gnoid-knutzen.chatgpt.site';
 const outArg=process.argv.indexOf('--out');
 const out=resolve(outArg>=0?process.argv[outArg+1]:'docs');await mkdir(out,{recursive:true});
 const build=await esbuild.build({entryPoints:['frontend/main.tsx'],bundle:true,write:false,platform:'browser',format:'esm',target:'es2022',minify:true,legalComments:'eof',define:{'process.env.NODE_ENV':'"production"','import.meta.env.BASE_URL':JSON.stringify(base),'import.meta.env.VITE_BASKET_API_URL':JSON.stringify(backend)},tsconfig:'tsconfig.json'});
