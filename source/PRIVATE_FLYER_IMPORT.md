@@ -24,3 +24,15 @@ Run `cd source && pnpm install --frozen-lockfile && pnpm test && pnpm exec tsc -
 Safety unit tests cover price parsing, ambiguity rejection, invalid calendar dates, expiration filtering, store selection, localStorage validation/deduplication and matching.
 
 The 25-MB PDF allowance changes validation only. It does not promise that every device can decode a graphics-heavy PDF; try a smaller screenshot if an older iPhone runs out of memory. Files and OCR text remain on-device.
+
+## Verified official-store source check (28 October 2026)
+
+The real requested REWE market is **Holtenauer Str. 69–71, 24105 Kiel**, ID `561204`. Basket's official link was corrected to its exact [weekly offer page](https://www.rewe.de/angebote/kiel/561204/rewe-holtenauer-str-69-71/?market-flyer=active). The retail page returns a **403** to ordinary unattended GitHub Actions requests, and the REWE page warns its PDF flyer viewer is unavailable. **Never bypass retailer access controls.** REWE product highlights are independently visible to a human through the website; this does not authorize harvesting them into a public app.
+
+The exact [ALDI Nord 26 October 2026 PDF](https://magazine.aldi-nord.de/aldi-nord/aldi-aktuell/2026/2026cw44mopromotionaldi-angebote-ab-montag-26-10-1//GetPDF.ashx) was successfully downloaded by one temporary verification runner via an expiring official CDN redirect. It was **120,879,735 bytes (about 121 MB), 49 pages**. Plain PDF text extraction produces product descriptions, isolated prices and unit prices in non-semantic order: for instance `1.79` appears before `ASIA GREEN GARDEN Sesam-/Erdnussöl`, and other prices are separated from nearby product names. Consequently a naïve parser must **not** claim a price belongs to the next product. The full 121 MB PDF must not be loaded into a 25-MB/iOS file importer automatically.
+
+ALDI's own [web offers page](https://www.aldi-nord.de/angebote.html) returned an ordinary HTTP 200 with visible product text, but the checks did not find an `Access-Control-Allow-Origin` permission for Basket. Browser JavaScript therefore cannot simply read that page from the separate GitHub Pages origin. Do not use a hidden browser API, stolen credentials, CORS bypass or a republishing proxy to imply a working automatic source.
+
+**Current supported functionality:** readable per-page OCR/PDF text verification with price highlighting, optional all-lines view, search and original-line context; manual locally reviewed entries become offer cards in the grocery list. The external source links are clearly labeled. **Not delivered:** unattended live official retailer scraping or automatic flyer imports. Those require explicit access/reuse permission or a compatible documented licensed feed. A merchant's visible public marketing offers alone do not prove republication rights.
+
+For ALDI use the official [lightweight live-offers page](https://www.aldi-nord.de/angebote.html) in your browser rather than importing the entire 121 MB PDF. The import cap remains 25 MiB for locally chosen PDFs.
