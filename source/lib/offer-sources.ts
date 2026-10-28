@@ -72,22 +72,25 @@ export function unitPrice(offer: Pick<LicensedOffer, 'priceCents' | 'quantity'>)
 export function matchLicensedOffers(
   name: string, pack: OfferQuantity | null, brand: string | undefined, preferences: OfferPreferences,
   offers: readonly LicensedOffer[], today: string,
+  approvedSourceIds: ReadonlySet<string> = APPROVED_FEEDS, requestedVariant?: string,
 ): OfferMatch[] {
   const matching: OfferMatch[] = [];
   for (const offer of offers) {
-    if (!APPROVED_FEEDS.has(offer.sourceId) || offer.country !== preferences.country) continue;
+    if (!approvedSourceIds.has(offer.sourceId) || offer.country !== preferences.country) continue;
     if (offer.currency !== (preferences.country === 'CA' ? 'CAD' : 'EUR')) continue;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(offer.validFrom) || !/^\d{4}-\d{2}-\d{2}$/.test(offer.validUntil) ||
         today < offer.validFrom || today > offer.validUntil) continue;
     if (!offer.nationwide && (!preferences.postalCode || !offer.postalCodes?.includes(preferences.postalCode))) continue;
     if (canonical(name) !== canonical(offer.title)) continue;
     if (brand && normalizeOfferName(brand) !== normalizeOfferName(offer.brand || '')) continue;
+    if (offer.variant && (!requestedVariant || normalizeOfferName(requestedVariant) !== normalizeOfferName(offer.variant))) continue;
     const unit = unitPrice(offer);
     if (!unit || !/^https:\/\//.test(offer.originalUrl)) continue;
     if (pack) {
       const requested = unitPrice({ priceCents: 100, quantity: pack });
-      const actual = unitPrice({ priceCents: 100, quantity: offer.quantity });
-      if (!requested || !actual || requested.unit !== actual.unit || requested.cents !== actual.cents) continue;
+      if (!requested || requested.unit !== unit.unit) continue;
+      const size = (q: OfferQuantity) => q.amount * (q.unit === 'g' || q.unit === 'ml' ? 0.001 : 1);
+      if (Math.abs(size(pack) - size(offer.quantity)) > 0.000001) continue;
     }
     matching.push({ offer, unitPriceCents: unit.cents, unit: unit.unit, confidence: brand && offer.brand ? 1 : 0.9 });
   }
