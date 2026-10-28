@@ -31,7 +31,7 @@ export function restoreOfferRegion(input:string|null):OfferRegion{
   const d=JSON.parse(input||'{}'),country:OfferCountry=d.country==='DE'?'DE':'CA';
   const province=country==='DE'?'':CA_PROVINCES.has(d.province)?d.province:'NS';
   const postal=(typeof d.postalCode==='string'?d.postalCode.trim().toUpperCase():'').slice(0,9);
-  const ids=new Set(OFFER_STORES.filter(s=>s.country===country).map(s=>s.id));
+  const ids=new Set<string>(OFFER_STORES.filter(s=>s.country===country).map(s=>s.id));
   const stores=Array.isArray(d.stores)?[...new Set<string>(d.stores.filter((s:unknown):s is string=>typeof s==='string'&&ids.has(s)))]:[];
   return {country,province,postalCode:postal,stores};
  }catch{return {...DEFAULT_OFFER_REGION};}
@@ -72,8 +72,8 @@ function listDepthOne(v:unknown):unknown[]{const o=obj(v);for(const key of ['ite
 function field(r:Record<string,unknown>,...names:string[]):unknown{for(const n of names)if(r[n]!==undefined&&r[n]!==null)return r[n];}
 function isoDay(v:unknown):string{
  const value=text(v).slice(0,10);
- if(!/^\d{4}-\d{2}-\d{2}$/.test(value)||new Date(value+'T12:00:00Z').toISOString().slice(0,10)!==value)return '';
- return value;
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return '';
+ const d=new Date(value+'T12:00:00Z');return !Number.isNaN(d.getTime())&&d.toISOString().slice(0,10)===value?value:'';
 }
 function cents(v:unknown):number|null{
  const n=typeof v==='number'?v:typeof v==='string'&&/^\d+(?:[.,]\d{1,2})?$/.test(v.trim())?Number(v.replace(',','.')):NaN;
@@ -141,7 +141,7 @@ export async function lookupActiveOffers(productName:string,region:OfferRegion,f
   const body=await pr.json();const result=list(body);
   const nested=obj(body);
   const offers=result.length?result:list(field(nested,'data','product','result'));
-  return offers.slice(0,50).map(row=>normalizeBidouDeal(row,productName,region,now)).filter((d):d is Deal=>d!==null).sort((a,b)=>a.priceCents-b.priceCents);
+  return offers.slice(0,50).map(row=>normalizeBidouDeal({...obj(row),name:field(obj(row),'name','nom','product_name','productName')||field(product,'name','nom','product_name')},productName,region,now)).filter((d):d is Deal=>d!==null).sort((a,b)=>a.priceCents-b.priceCents);
  }finally{clearTimeout(timer);}
 }
 const CACHE_PREFIX='basket-offer-lookups-v1:';
