@@ -33,7 +33,7 @@ test('NS price quotes require matching week, province, exact source retailer and
  assert.equal(matches[0].sourceUrl,AUBAINE_NS_CSV);
  assert.equal(matches[0].provider,'aubaine');
  assert.equal(matches[0].observedAt,'');
- assert.equal(matches[0].regularCents,undefined);
+ assert.equal('regularCents' in matches[0],false);
  assert.equal(selectAubaineOffers(fixture,'Milch',['sobeys'],now).length,1);
  assert.equal(selectAubaineOffers(fixture,'Milk',['walmart'],now).length,0);
  assert.equal(selectAubaineOffers(fixture,'Milk',[],new Date('2026-10-29T15:00:00Z')).length,0);
