@@ -149,3 +149,30 @@ main.auth-page{max-width:none;padding:0;margin:0;min-height:100dvh;display:grid;
 .receipt-test-modes button{flex:1;min-width:130px;white-space:normal}
 
 .price-evidence{font-size:.75rem;margin-top:.5rem}.price-evidence label{display:block;margin:.4rem 0}.price-evidence input,.price-evidence select{width:100%;min-width:0}.price-evidence small{display:block;line-height:1.4}.tile-hit small span{display:block;line-height:1.4}
+
+
+/* Official flyer links: informational only; no third-party prices or lookups. */
+.flyer-settings{margin:8px 0 12px;border:1px solid var(--line);border-radius:11px;background:#ffffffc9;font-size:calc(12px * var(--text-scale));}
+.flyer-settings>summary{list-style-position:inside;cursor:pointer;padding:10px 13px;font-weight:650;color:var(--ink);}
+.flyer-settings>summary span{float:right;font-weight:400;color:var(--muted);}
+.flyer-settings-body{padding:0 13px 13px;color:var(--muted);}
+.flyer-settings-body p{margin:7px 0 10px;line-height:1.4;}
+.flyer-settings .flyer-disclaimer{font-size:calc(11px * var(--text-scale));}
+.flyer-fields{display:flex;align-items:end;gap:12px;flex-wrap:wrap;}
+.flyer-fields label{display:flex;flex-direction:column;gap:5px;font-size:calc(11px * var(--text-scale));}
+.flyer-fields select,.flyer-fields input{border:1px solid var(--line);border-radius:7px;padding:7px 9px;min-width:110px;max-width:175px;background:white;color:var(--ink);font-size:calc(13px * var(--text-scale));}
+.flyer-fields form{display:flex;align-items:end;gap:7px;flex-wrap:wrap;}
+.flyer-fields form button{padding:8px 11px;border-radius:7px;background:#e9f0e4;color:var(--ink);}
+.flyer-error{color:#a33b2e;}
+.flyer-favourites>span{font-size:calc(11px * var(--text-scale));font-weight:600;}
+.flyer-favourites>div{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;}
+.flyer-favourites button{border:1px solid var(--line);background:white;border-radius:16px;padding:5px 9px;color:var(--ink);font-size:calc(11px * var(--text-scale));}
+.flyer-favourites button.selected{border-color:var(--green);background:#e5f0e2;color:var(--green);font-weight:650;}
+.tile.offers-tile:not(.bought) .tile-hit{height:auto;min-height:130px;padding-bottom:6px;}
+.tile-flyers{text-align:center;padding:0 8px 10px;}
+.tile-flyers>button{border:1px solid #bbcdb5;border-radius:16px;padding:5px 10px;background:#ffffff99;color:#385d3e;font-size:calc(11px * var(--text-scale));font-weight:600;line-height:1.35;}
+.tile-flyers-expanded{padding-top:8px;}
+.tile-flyers-expanded p{margin:0 0 7px;font-size:calc(10px * var(--text-scale));line-height:1.4;color:#506e54;}
+.tile-flyers-expanded nav{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;}
+.tile-flyers-expanded a{font-size:calc(11px * var(--text-scale));color:#234f3b;text-decoration:underline;text-underline-offset:2px;padding:3px 1px;}
+@media(max-width:600px){.flyer-settings>summary span{float:none;margin-left:8px}.tile-flyers-expanded nav{flex-direction:column;align-items:center}}
