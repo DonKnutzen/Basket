@@ -112,7 +112,7 @@ export function RegionalPricesForItem({name,region}: {name:string;region:Grocery
         <details>
           <summary>{tr('Compare observed prices')} ({result.prices.length})</summary>
           {result.prices.map(item=><div className="regional-price-row" key={item.storeId}>
-            <span>{item.storeName}{item.discounted?' · '+tr('Marked discounted'):''}</span>
+            <span>{item.storeName}{item.discounted?' · '+tr('Marked discounted'):''}{item.packSize && <small>{item.packSize}</small>}</span>
             <span><b>{fmtMoney(item.priceCents)}</b>{item.unitPriceCents!==undefined && <small>{fmtMoney(item.unitPriceCents)}/{item.unit}</small>}</span>
             <small>{relativeDate(item.observedAt)}</small>
           </div>)}
