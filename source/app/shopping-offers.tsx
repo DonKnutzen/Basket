@@ -52,7 +52,8 @@ function GermanAutomaticSourceStatus({stores}:{stores:readonly string[]}){
  },[storeKey]);
  const today=berlinDay();
  const reweCurrent=!!rewe&&rewe.status==='partial'&&rewe.validFrom<=today&&rewe.validUntil>=today;
- const aldiCurrent=!!aldi&&aldi.status==='partial'&&aldi.checkedAt<=today&&
+ const aldiFresh=!!aldi&&(Date.parse(today+'T12:00:00Z')-Date.parse(aldi.checkedAt+'T12:00:00Z'))/86400000<=3;
+ const aldiCurrent=!!aldi&&aldi.status==='partial'&&aldi.checkedAt<=today&&aldiFresh&&
   aldi.offers.some(x=>x.validFrom<=today&&x.validUntil>=today);
  return <div className="offer-de-feed-status">
   {(!stores.length||stores.includes('rewe'))&&<small>REWE Kiel: {reweCurrent
