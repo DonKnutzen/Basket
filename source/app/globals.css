@@ -149,3 +149,64 @@ main.auth-page{max-width:none;padding:0;margin:0;min-height:100dvh;display:grid;
 .receipt-test-modes button{flex:1;min-width:130px;white-space:normal}
 
 .price-evidence{font-size:.75rem;margin-top:.5rem}.price-evidence label{display:block;margin:.4rem 0}.price-evidence input,.price-evidence select{width:100%;min-width:0}.price-evidence small{display:block;line-height:1.4}.tile-hit small span{display:block;line-height:1.4}
+
+
+/* Regional price observations: informational data outside household receipt ledger */
+.regional-price-settings{margin:8px 0 12px;border:1px solid var(--line);border-radius:11px;background:#ffffffbf;color:var(--ink)}
+.regional-price-settings>summary{cursor:pointer;padding:10px 12px;font-size:calc(12px * var(--text-scale));font-weight:650}
+.regional-price-settings>summary span{font-weight:400;color:var(--muted);margin-left:8px}
+.regional-price-settings-body{padding:0 12px 12px;font-size:calc(12px * var(--text-scale))}
+.regional-price-settings-body p{margin:6px 0 10px;line-height:1.5;color:var(--muted)}
+.regional-price-fields{display:flex;gap:9px;align-items:end;flex-wrap:wrap;margin-top:12px}
+.regional-price-fields form{display:flex;gap:7px;align-items:end}
+.regional-price-fields label{display:flex;flex-direction:column;gap:4px;font-size:calc(11px * var(--text-scale))}
+.regional-price-fields input,.regional-price-fields select{padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:white;color:var(--ink);font-size:calc(12px * var(--text-scale));max-width:150px;min-width:85px}
+.regional-price-fields form button{padding:8px 11px;border:1px solid var(--line);border-radius:7px;background:#e5eedf;color:var(--ink);font-size:calc(12px * var(--text-scale))}
+.regional-price-settings-body .regional-price-error{color:#a1402b}
+.regional-price-storechoices{margin-top:12px}
+.regional-price-storechoices>span{font-weight:650}
+.regional-price-storechoices>span small{font-weight:400;color:var(--muted)}
+.regional-price-storechoices>div{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.regional-price-storechoices button{border:1px solid var(--line);border-radius:16px;background:white;color:var(--ink);padding:6px 9px;font-size:calc(11px * var(--text-scale))}
+.regional-price-storechoices button.selected{background:#e1ecdd;border-color:#658e60;color:#285640;font-weight:650}
+.regional-price-settings-body .regional-price-source{margin:12px 0 0;font-size:calc(11px * var(--text-scale))}
+.tile.with-regional-prices:not(.bought) .tile-hit{height:auto;min-height:135px;padding-bottom:6px}
+.regional-price-item{padding:0 7px 10px;text-align:center;min-width:0;overflow-wrap:anywhere;color:#446a4f}
+.regional-price-item>small{font-size:calc(10px * var(--text-scale));display:block;line-height:1.35}
+.regional-price-item>strong{display:block;font-size:calc(12px * var(--text-scale));line-height:1.4;margin-top:4px}
+.regional-price-item>strong span{font-weight:500}
+.regional-price-item>details{margin-top:4px}
+.regional-price-item>details>summary{cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-size:calc(10px * var(--text-scale));font-weight:600}
+.regional-price-row{padding:6px 0;border-top:1px solid #cad8c2;display:flex;flex-wrap:wrap;gap:5px;justify-content:space-between;text-align:left;font-size:calc(10px * var(--text-scale))}
+.regional-price-row>span:nth-child(2){margin-left:auto;text-align:right}
+.regional-price-row small{display:block;opacity:.85}
+.regional-price-item>details p{font-size:calc(10px * var(--text-scale));line-height:1.35;margin:6px 0}
+.regional-price-item>details a{font-size:calc(10px * var(--text-scale));text-decoration:underline}
+@media(max-width:600px){.regional-price-fields form{flex-wrap:wrap}.regional-price-fields input{max-width:130px}}
+
+
+/* Bounded private-use Halifax market comparison; not a retailer checkout quote. */
+.halifax-comparison{margin:10px 0 16px;padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--surface,#fff);color:var(--ink)}
+.halifax-comparison-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.halifax-comparison-heading>div{flex:1 1 220px}
+.halifax-comparison-heading strong{font-size:calc(13px * var(--text-scale));font-weight:750}
+.halifax-comparison p{font-size:calc(11px * var(--text-scale));line-height:1.5;color:var(--muted);margin:6px 0}
+.halifax-comparison-heading button{min-width:135px;min-height:36px}
+.halifax-comparison-results{margin-top:11px;border-top:1px solid var(--line);padding-top:9px}
+.halifax-comparison-stores{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin:10px 0}
+.halifax-comparison-store{border:1px solid var(--line);border-radius:9px;padding:9px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.halifax-comparison-store>b{font-size:calc(12px * var(--text-scale))}
+.halifax-comparison-store>strong{font-size:calc(18px * var(--text-scale));font-variant-numeric:tabular-nums;color:var(--ink)}
+.halifax-comparison-store>small{font-size:calc(10px * var(--text-scale));line-height:1.35;color:var(--muted)}
+.halifax-comparison-lines{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+.halifax-comparison-lines>strong{font-size:calc(12px * var(--text-scale))}
+.halifax-comparison-lines p{padding:4px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.halifax-comparison-lines p>span{font-weight:650;color:var(--ink)}
+.halifax-comparison-results>a{font-size:calc(11px * var(--text-scale));text-decoration:underline}
+
+.halifax-store-items{margin-top:6px;border-top:1px solid var(--line);padding-top:5px}
+.halifax-store-items>summary{cursor:pointer;font-size:calc(11px * var(--text-scale));color:var(--ink);font-weight:650}
+.halifax-store-line{display:grid;grid-template-columns:1fr auto;gap:3px 7px;padding:6px 0;border-bottom:1px solid var(--line);font-size:calc(11px * var(--text-scale))}
+.halifax-store-line>span{overflow-wrap:anywhere}
+.halifax-store-line>strong{font-variant-numeric:tabular-nums}
+.halifax-store-line>small{grid-column:1/-1;color:var(--muted);font-size:calc(10px * var(--text-scale))}
