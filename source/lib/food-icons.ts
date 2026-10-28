@@ -1,10 +1,11 @@
 import {normalize} from './types';
+import {HOUSEHOLD_ICONS,householdIcon} from './household-icons';
 export const FOOD_ICONS=[
  ['orange','Orange'],['lemon','Lemon / lime'],['apple','Apple / pear'],['banana','Banana'],['berries','Berries / tomato'],['fruit','Other fruit'],
  ['ginger','Ginger'],['carrot','Root vegetables'],['leaf','Leafy vegetables'],['vegetable','Other vegetables'],
  ['cheese','Cheese'],['milk','Milk / yogurt'],['egg','Eggs'],['meat','Meat'],['fish','Fish / seafood'],
  ['almond','Almonds'],['nut','Nuts'],['bean','Beans / lentils'],['pasta','Pasta / noodles'],['rice','Rice'],['grain','Grains / flour'],['bread','Bread / pastry'],
- ['flour','Flour / starch'],['baking','Baking ingredients'],['candy','Sweets / chocolate'],['seeds','Seeds / kernels'],['oil','Cooking oils'],['spice','Spices / seasonings'],['sauce','Sauce / tamari'],['coffee','Coffee / tea'],['drink','Drinks'],['soap','Cleaning / toiletries'],['package','Packaged goods'],['basket','Basket']
+ ['flour','Flour / starch'],['baking','Baking ingredients'],['candy','Sweets / chocolate'],['seeds','Seeds / kernels'],['oil','Cooking oils'],['spice','Spices / seasonings'],['sauce','Sauce / tamari'],['coffee','Coffee / tea'],['drink','Drinks'],...HOUSEHOLD_ICONS,['package','Packaged goods'],['basket','Basket']
 ] as const;
 export type FoodIconKey=typeof FOOD_ICONS[number][0];
 export type IconPreference={name:string;icon:FoodIconKey};
@@ -57,7 +58,6 @@ const groups: [FoodIconKey,string][]=[
  ['bread','brot|brotchen|broetchen|vollkornbrot|toast|toastbrot|brezel|brezeln'],
  ['sauce','sosse|sauce|sojasauce|sojasosse|tomatensauce|tomatensosse|senf|mayonnaise'],
  ['coffee','kaffee|tee'],['drink','wasser|saft|apfelsaft|orangensaft|bier|wein|limonade'],
- ['soap','seife|spulmittel|spuelmittel|waschmittel|zahnpasta|schwamm|schwamme|schwaemme|kuchenrolle|kuechenrolle|toilettenpapier'],
  ['package','zucker|salz|ol|oel|olivenol|olivenoel|honig|marmelade|schokolade|backpulver|butter'],
  ['ginger','marinated ginger|pickled ginger|sushi ginger|preserved ginger'],
  ['sauce','tamari sauce|tamari|soy sauce|soya sauce|fish sauce|oyster sauce|hot sauce|chili sauce|chilli sauce|tomato sauce|pasta sauce|teriyaki|ketchup|mustard|mayonnaise|sauce'],
@@ -77,12 +77,13 @@ const groups: [FoodIconKey,string][]=[
  ['almond','almond|almonds'],['nut','walnut|walnuts|cashew|cashews|hazelnut|hazelnuts|pistachio|pistachios|pecan|pecans|peanut|peanuts|peanut butter|nut|nuts'],
  ['bean','bean|beans|lentil|lentils|chickpea|chickpeas|tofu|hummus|edamame'],
  ['bread','bread|sourdough|croissant|croissants|bagel|bagels|baguette|bun|buns|roll|rolls|tortilla|tortillas|pita|naan'],
- ['coffee','coffee|tea|espresso|matcha'],['soap','tea towel|tea towels|soap|shampoo|detergent|toothpaste|cleaner|dishwashing liquid|dish soap|sponge|sponges'],
- ['package','milk chocolate|chocolate|butter|sugar|salt|oil|sauce|jam|honey|baking powder|baking soda|toilet paper|paper towel|paper towels|tissue|tissues|trash bag|trash bags']
+ ['coffee','coffee|tea|espresso|matcha'],
+ ['package','milk chocolate|chocolate|butter|sugar|salt|oil|sauce|jam|honey|baking powder|baking soda|sponge cake|sponge cakes|sponge fingers']
 ];
 const rules=groups.flatMap(([icon,words])=>words.split('|').map(word=>({icon,word:normalize(word.replace(/ß/gi,'ss'))}))).sort((a,b)=>b.word.split(' ').length-a.word.split(' ').length||b.word.length-a.word.length);
 export function foodIcon(name:string,preferences:readonly IconPreference[]=[],category?:string):FoodIconKey{
  const key=normalize(name.replace(/ß/gi,'ss'));const remembered=preferences.find(p=>(p.name===normalize(name)||p.name===key)&&isFoodIcon(p.icon));if(remembered)return remembered.icon;
+ const household=householdIcon(key);if(household)return household;
  const text=' '+key+' ';if(['haribo','milka','ritter sport','lindt','kinder bueno','ferrero','ferrero rocher','toffifee','toblerone','katjes','maoam','cadbury','hershey','hersheys','hershey s','reese','reeses','reese s','kitkat','kit kat','coffee crisp','caramilk','crunchie','oh henry','wunderbar','smarties','skittles','twix','snickers','maltesers','maynards','sour patch kids','jolly rancher'].some(brand=>text.includes(' '+brand+' ')))return 'candy';if(['coca cola','coke','cola','pepsi','red bull','redbull','fanta','sprite','schweppes','spezi','7up','7 up','gatorade','powerade','mezzo mix','club mate'].some(brand=>text.includes(' '+brand+' ')))return 'drink';const rule=rules.find(r=>text.includes(' '+r.word+' '));if(rule)return rule.icon;
  return ({'Produce':'vegetable','Dairy & eggs':'milk','Meat & fish':'meat','Bakery':'bread','Pantry':'package','Frozen':'package','Drinks':'drink','Household':'soap'} as Record<string,FoodIconKey>)[category||'']||'basket';
 }

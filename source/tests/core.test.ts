@@ -9,7 +9,7 @@ import {GET as IMAGE_GET} from '../app/api/receipt-image/route';
 import {getBasketUser} from '../lib/basket-user';
 import {budgetSpent,monthOptions} from '../lib/budgets';
 import {parseReceipt,difference} from '../lib/receipt-parser';
-import {toCents,inferCategory} from '../lib/types';
+import {toCents,inferCategory,normalize} from '../lib/types';
 import {householdSharing} from '../lib/household-display';
 const globals=globalThis as any;let sql:DatabaseSync;
 class Statement{values:any[]=[];constructor(public query:string){}bind(...v:any[]){this.values=v;return this}async first(){return sql.prepare(this.query).get(...this.values)||null}async all(){return {results:sql.prepare(this.query).all(...this.values),success:true}}async run(){return {success:true,meta:{changes:Number(sql.prepare(this.query).run(...this.values).changes)}}}}
@@ -117,7 +117,7 @@ test('food icons recognize meaningful words in descriptions, plural forms and fo
  'Ginger':'ginger','organic fresh ginger root 100g':'ginger','marinated Ginger':'ginger','A jar of pickled ginger please':'ginger',
  'Back cottage cheese':'cheese','mature cheddar cheese':'cheese','Parmigiano Reggiano':'cheese','Pancetta':'meat','smoked bacon cubes':'meat',
  'Almonds':'almond','roasted unsalted almonds 250g':'almond','Tamari':'sauce','Tamari Sauce':'sauce','We need gluten free tamari sauce for dinner':'sauce',
- 'almond milk':'milk','almond flour':'flour','cream cheese':'cheese','ginger beer':'drink','eggplant':'vegetable','tea towels':'soap','organic chickpeas':'bean',
+ 'almond milk':'milk','almond flour':'flour','cream cheese':'cheese','ginger beer':'drink','eggplant':'vegetable','tea towels':'cloth','organic chickpeas':'bean',
  'Nudeln':'pasta','Vollkornnudeln 500g':'pasta','rice noodles':'pasta','Spaghetti':'pasta','Reis':'rice','basmati rice':'rice',
  'Äpfel':'apple','frische Möhren':'carrot','Käse':'cheese','Hafermilch':'milk','Hähnchen':'meat','Lachs':'fish','Tonkabohnen':'bean'
  } as const;
@@ -239,4 +239,52 @@ test('flour, baking ingredients and sweets recognize bilingual product names and
  };
  for(const [icon,names]of Object.entries(cases))for(const name of names)assert.equal(foodIcon(name),icon,name);
  assert.equal(foodIcon('No Name Olive Oil'),'oil');assert.equal(foodIcon('Great Value Pumpkin Seeds'),'seeds');assert.equal(foodIcon('Great Value Milk'),'milk');
+});
+
+test('household illustrations recognize German and English names, plurals and scented products',async()=>{
+ const {foodIcon,iconLabel}=await import('../lib/food-icons');
+ const {shoppingGroup,shoppingCategory}=await import('../lib/food-presentation');
+ const {default:german}=await import('../lib/de.json');
+ const cases={
+  sponge:['Schwamm','Schwämme','Schwaemme','Spülschwämme','Topfschwaemme','Sponge','kitchen sponges 3 pack','lemon scouring pads'],
+  'toilet-paper':['Klopapier','Toilettenpapier','Toilettenrollen','WC-Papier','Toilet Paper','toilet rolls 12 pack','bathroom tissue'],
+  'paper-towel':['Küchenrolle','Kuechenrolle','Küchenrollen','Küchenpapier','Papierhandtücher','Paper Towels','paper towel','kitchen rolls','kitchen paper'],
+  toothpaste:['Zahnpasta','Zahncreme','Toothpaste','mint tooth paste','Sensodyne toothpaste'],
+  toothbrush:['Zahnbürste','Zahnbuersten','electric toothbrushes'],
+  tissue:['Taschentücher','Papiertaschentuecher','facial tissues','tissue box'],
+  'trash-bag':['Müllbeutel','Müllsäcke','Muellsaecke','Mülltüten','garbage bags','bin liners'],
+  'dish-soap':['Spülmittel','Spuelmittel','Zitronen-Spülmittel','Dawn dish soap','lemon dishwashing liquid','washing-up liquid'],
+  detergent:['Waschmittel','Flüssigwaschmittel','Weichspüler','laundry detergent','coconut laundry pods'],
+  cleaner:['Glasreiniger','Reinigungsspray','Scheuermilch','orange all purpose cleaner','lemon cleaning spray'],
+  shampoo:['Shampoo','Duschgel','Haarspülung','coconut shampoo','body wash','apple hair conditioner'],
+  deodorant:['Deo','Deoroller','Deospray','deodorant stick','antiperspirant'],
+  cloth:['Putztücher','Spültücher','Geschirrtücher','microfibre cloths','tea towels','dishcloths'],
+  foil:['Alufolie','Frischhaltefolie','Backpapier','aluminum foil','cling film','parchment paper'],
+  soap:['Seife','Handseife','Flüssigseife','lemon hand soap','hand wash'],
+ };
+ for(const [icon,names]of Object.entries(cases)){
+  for(const name of names){
+   assert.equal(foodIcon(name),icon,name);assert.equal(inferCategory(name),'Household',name);
+   assert.equal(shoppingGroup(name),'Household',name);assert.equal(shoppingCategory(name),'Household',name);
+  }
+  assert.ok(Object.hasOwn(german,iconLabel(icon as any)),icon);
+ }
+ assert.equal(foodIcon('Klopapier',[{name:'klopapier',icon:'package'}]),'package','explicit household corrections take precedence');
+ assert.equal(foodIcon('paperback novel'),'basket','partial words are not household matches');
+ assert.equal(foodIcon('sponge cake'),'package','cake is not a cleaning sponge');
+ assert.equal(foodIcon('bread rolls'),'bread','rolls alone are still bread');
+ assert.equal(foodIcon('lemon'),'lemon','food recognition is preserved');
+});
+
+test('household icon choices save and sync through the existing item editor API',async()=>{
+ const listId=(await get()).body.lists[0].id;
+ const {HOUSEHOLD_ICONS}=await import('../lib/household-icons');
+ for(const [icon]of HOUSEHOLD_ICONS){
+  const name='Special household '+icon;
+  await post('addItem',{id:icon,listId,name,quantity:'1'});
+  assert.equal((await post('updateItem',{id:icon,icon})).status,200,icon);
+  await post('deleteItem',{id:icon});
+  await post('addItem',{id:icon+'-again',listId,name,quantity:'1'});
+  assert.ok((await get()).body.iconPreferences.some((p:any)=>p.name===normalize(name)&&p.icon===icon),icon);
+ }
 });
