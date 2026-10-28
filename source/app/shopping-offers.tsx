@@ -1,12 +1,39 @@
 'use client';
 import React,{useEffect,useState} from 'react';
 import {locale,tr} from '../lib/i18n';
+import {isCopyOnlyOfferLinkContext} from '../lib/offer-link-navigation';
 import {
  DEFAULT_OFFER_REGION,OFFER_PROVINCES,GERMAN_OFFER_CITIES,officialGermanFlyers,checkOffers,providerAvailable,restoreOfferRegion,storeChoices,isStoreOfferConnected,
  type Deal,type OfferRegion,
 } from '../lib/current-offers';
 
 const KEY='basket-deal-region-v1';
+/**
+ * In iOS home-screen / embedded views, a new cross-origin tab can leave Basket
+ * white or unresponsive. Offer a one-tap URL copy rather than starting a
+ * second in-app WebKit page. The user can open the source in Safari manually.
+ */
+function OfferSourceLink({url,children,className,title}:{url:string;children:React.ReactNode;className?:string;title?:string}){
+ const [copyOnly,setCopyOnly]=useState(false);
+ const [copied,setCopied]=useState(false);
+ useEffect(()=>setCopyOnly(isCopyOnlyOfferLinkContext()),[]);
+ const copy=async()=>{
+  let ok=false;
+  try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(url);ok=true}}catch{}
+  if(!ok)try{
+   const el=document.createElement('textarea');
+   el.value=url;el.setAttribute('readonly','');el.style.position='fixed';el.style.opacity='0';
+   document.body.appendChild(el);el.select();ok=document.execCommand('copy');el.remove();
+  }catch{}
+  if(ok)setCopied(true);
+  else window.prompt(tr('Copy the link and open it in Safari:'),url);
+ };
+ if(copyOnly)return <button type="button" className={className} title={tr('Copy link to open in Safari')} onClick={copy}>
+  {children}<small className="offer-copy-label">{copied?tr('Copied — paste into Safari'):tr('Copy link for Safari')}</small>
+ </button>;
+ return <a href={url} className={className} title={title} target="_blank" rel="noopener noreferrer">{children}</a>;
+}
+
 export function useOfferRegion(){
  const [region,setRegion]=useState<OfferRegion>(DEFAULT_OFFER_REGION);
  const [ready,setReady]=useState(false);
@@ -78,7 +105,7 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
     ? <button type="button" className="offer-check" onClick={()=>setShowGermanFlyers(true)}>🏷️ {tr('Check official flyers')}</button>
     : <>
       <small>{tr('Automatic weekly offers for Kiel are not connected yet. Check the retailer’s current flyer; prices and availability depend on the store.')}</small>
-      <div className="offer-de-links">{links.map(l=><a key={l.id} href={l.url} target="_blank" rel="noopener noreferrer">{l.name} ↗</a>)}</div>
+      <div className="offer-de-links">{links.map(l=><OfferSourceLink key={l.id} url={l.url}>{l.name}</OfferSourceLink>)}</div>
      </>}
   </div>;
  }
@@ -91,13 +118,13 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
   {state==='error'&&<><small>{tr('Offer source unavailable')}</small><button type="button" className="offer-again" onClick={lookup}>{tr('Try again')}</button></>}
   {state==='done'&&<>
    <strong>🏷️ {deals.some(d=>d.provider==='aubaine')?tr('Weekly flyer reference prices'):tr('Current offers')} ({deals.length})</strong>
-   {deals.slice(0,3).map(d=><a key={d.id} className="offer-hit" href={d.sourceUrl} target="_blank" rel="noopener noreferrer"
+   {deals.slice(0,3).map(d=><OfferSourceLink key={d.id} className="offer-hit" url={d.sourceUrl}
      title={tr('View offer source')}>
      <span><b>{d.store}</b><small>{d.name}{d.packSize?' · '+d.packSize:''}</small></span>
      <span className="offer-money"><b>{localMoney(d.priceCents,d.currency)}</b>
       {d.regularCents!==undefined&&<small className="offer-was">{localMoney(d.regularCents,d.currency)}</small>}</span>
      <small className="offer-period">{tr('Valid')} {date(d.validFrom)} – {date(d.validUntil)}{d.observedAt?' · '+tr('Checked')+' '+date(d.observedAt):''}{d.loyalty?' · '+tr('Membership required'):''}</small>
-   </a>)}
+   </OfferSourceLink>)}
    {deals.length>3&&<small>{tr('More matching offers exist.')}</small>}
    <small>{deals.some(d=>d.provider==='aubaine') ? tr('Source: aubaine.ca · Weekly flyer reference price, not guaranteed discount. Product, size and branch may differ. Verify before buying.') : tr('Source: Bidou · Verify price and product at the retailer.')}</small>
   </>}
