@@ -36,7 +36,7 @@ export const DEFAULT_OFFER_REGION:OfferRegion={country:'CA',province:'NS',postal
 export const GERMAN_OFFER_CITIES=[{id:'Kiel',label:'Kiel (Schleswig-Holstein)'}] as const;
 /** Verified official retailer pages only. These are outbound links, never scraped into Basket. */
 const KIEL_OFFICIAL_FLYERS=[
- {id:'rewe',name:'REWE',url:'https://www.rewe.de/marktseite/kiel/830872/rewe-markt-richthofenstr-57/'},
+ {id:'rewe',name:'REWE · Holtenauer Str. 69–71',url:'https://www.rewe.de/angebote/kiel/561204/rewe-holtenauer-str-69-71/?market-flyer=active'},
  {id:'edeka',name:'EDEKA',url:'https://www.edeka.de/eh/nord/edeka-fiedler-dr.-hell-stra%C3%9Fe-1/index/'},
  {id:'lidl',name:'Lidl',url:'https://www.lidl.de/c/online-prospekte/s10005610/'},
  {id:'aldi',name:'ALDI Nord',url:'https://www.aldi-nord.de/angebote.html'},
