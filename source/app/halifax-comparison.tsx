@@ -7,7 +7,8 @@ import {HALIFAX_PROVIDER_STORES,halifaxProviderStores,type GroceryRegion} from '
 import type {Item} from '../lib/types';
 
 type PlanLine={status?:string;original?:string;input?:string;text?:string;name?:string;reason?:string;reasons?:string[];};
-type PlanStore={key:string;name:string;totalCad?:number|null;totalScope?:string;completeRequestedList?:boolean;oldest?:string;newest?:string;items?:unknown;prices?:unknown;itemPrices?:unknown;};
+type PlanPrice={itemId:number;itemName:string;priceCad:number;lineTotalCad?:number;observedAt:string;onSale?:boolean;condition?:string|null;differentSize?:boolean;pack?:{count?:number;unit?:string;shelfPriceCad?:number};};
+type PlanStore={key:string;name:string;totalCad?:number|null;totalScope?:string;completeRequestedList?:boolean;oldestPrice?:string;newestPrice?:string;items?:PlanPrice[];};
 type Plan={source:string;market:string;evaluatedOn:string;lines:PlanLine[];stores:PlanStore[];summary?:Record<string,unknown>;recommendation?:{status?:string;storeKey?:string;explanation?:string};comparisonUrl?:string;caveats?:string[];interpretation?:string[]};
 const key='basket-halifax-personal-comparison-v1:';
 const safePrice=(v:number)=>new Intl.NumberFormat(locale(),{style:'currency',currency:'CAD'}).format(v);
@@ -75,12 +76,18 @@ export function HalifaxListComparison({region,items}:{region:GroceryRegion;items
           <small>{s.totalScope==='complete_requested_list'?tr('Complete compared list'):
             s.totalScope==='observed_subtotal'?tr('Only priced items — not the full list'):
               tr('Incomplete prices — not ranked')}</small>
-          <small>{s.oldest?tr('Observed from:')+' '+s.oldest:''} {s.newest?tr('to')+' '+s.newest:''}</small>
+          <small>{s.oldestPrice?tr('Observed from:')+' '+s.oldestPrice:''} {s.newestPrice?tr('to')+' '+s.newestPrice:''}</small>
+          {Array.isArray(s.items)&&s.items.length>0&&<details className="halifax-store-items"><summary>{tr('View item prices')} ({s.items.length})</summary>
+            {s.items.filter(p=>p&&typeof p.itemName==='string'&&typeof p.priceCad==='number').map(p=><div className="halifax-store-line" key={p.itemId}>
+              <span>{p.itemName}{p.onSale?' · '+tr('Marked discounted'):''}{p.differentSize?' · '+tr('Different size'):''}{p.condition?' · '+p.condition:''}</span>
+              <strong>{safePrice(p.priceCad)}</strong><small>{p.observedAt}</small>
+            </div>)}
+          </details>}
         </div>)}
       </div>
       <div className="halifax-comparison-lines">
         <strong>{tr('List matching')}</strong>
-        {data.lines.map((line,i)=><p key={i}><span>{line.original||line.input||line.text||line.name||lines[i]||tr('Item')}</span> · {line.status==='exact'?tr('Exact match'):
+        {data.lines.map((line,i)=><p key={i}><span>{line.text||line.original||line.input||line.name||lines[i]||tr('Item')}</span> · {line.status==='exact'?tr('Exact match'):
           line.status==='closest'?tr('Different product or pack size — excluded'):
           line.status==='not_tracked'?tr('Not tracked'):tr('Not compared')}</p>)}
       </div>
