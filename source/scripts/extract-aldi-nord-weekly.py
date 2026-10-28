@@ -105,6 +105,14 @@ def extract(html: bytes, today: str) -> list[dict]:
         # staple ingredients shoppers actually wrote on their lists.
         if match=="Hähnchen" and not re.match(r"^Hähnchen(?:[- ]|$)",name,re.I):continue
         if match=="Brot" and not re.match(r"^(?:Brot|Vollkornbrot|Toastbrot|Weizenbrot|Roggenbrot)(?:[- ]|$)",name,re.I):continue
+        if match=="Reis" and not re.match(r"^(?:Reis|Sushi-Reis|Basmati.?Reis|Jasmin.?Reis|Langkorn.?Reis)(?:[- ]|$)",name,re.I):continue
+        # A flavour such as "Red Paprika" is not a fresh bell pepper.
+        produce={"Aubergine","Kartoffeln","Bananen","Äpfel","Tomaten","Gurken","Paprika","Avocado","Brokkoli","Karotten","Zwiebeln","Champignons","Spinat","Zucchini","Ingwer"}
+        if match in produce:
+            tree=item.get("hierarchicalCategories")
+            lvl0=tree.get("lvl0",[]) if isinstance(tree,dict) else []
+            if not isinstance(lvl0,list) or not any(isinstance(c,str) and "Obst & Gemüse" in c for c in lvl0):
+                continue
         promos=item.get("promotionPrices")
         if not isinstance(promos,list):continue
         active=[]
