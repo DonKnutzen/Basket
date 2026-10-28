@@ -71,14 +71,14 @@ export function OfferSettings({region,onChange}:{region:OfferRegion;onChange:Rea
     </button>;
    })}</div>
    <p className="offer-source-note">
-    {region.country==='DE'?tr('Kiel is selected. You can import a weekly flyer privately and see checked prices on your list. Automatic German price feeds are not connected.')
+    {region.country==='DE'?tr('REWE Kiel (Holtenauer Str. 69–71): Basket automatically checks a small, incomplete selection of weekly flyer prices when an accessible source exists. It does not guarantee the same brand, size or store stock. Other German stores are not connected.')
       : eligible&&region.province==='NS'
       ? tr('Nova Scotia: weekly flyer reference prices for 19 common staples from Aubaine.ca. A price may not be a discount, and pack size and branch may differ. Source: aubaine.ca.')
       : eligible
       ? tr('Offer checks use a third-party data source. Deals must include dates and a recent observation; availability can differ by branch.')
       : tr('No verified automated offer feed is connected for this region or store selection. Receipt price history still works normally.')}
    </p>
-   {region.country==='DE'&&<GermanFlyerImport/>}
+   {region.country==='DE'&&<details className="flyer-optional-import"><summary>{tr('Optional: import your own flyer')}</summary><GermanFlyerImport/></details>}
   </div>
  </details>;
 }
@@ -107,7 +107,7 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
    {!showGermanFlyers
     ? <button type="button" className="offer-check" onClick={()=>setShowGermanFlyers(true)}>🏷️ {tr('Check official flyers')}</button>
     : <>
-      <small>{tr('No automatic German feed is connected. You can import a flyer above or check the retailer’s official flyer; prices vary by branch.')}</small>
+      <small>{tr('REWE Kiel flyer prices are checked automatically when available; only a few unambiguous product categories may match. If no result appears, check the retailer’s flyer: other stores do not have a live feed.')}</small>
       <div className="offer-de-links">{links.map(l=><OfferSourceLink key={l.id} url={l.url}>{l.name}</OfferSourceLink>)}</div>
      </>}
   </div>;
