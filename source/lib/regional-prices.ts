@@ -144,9 +144,10 @@ function pickProduct(products: unknown[], query: string): ApiProduct | null {
     if (!p || typeof p !== 'object') return false;
     const name = normalizedName(getText((p as ApiProduct).name));
     // Show only candidates with the searched name, never an unrelated product.
-    const words=name.split(' ');
-    // Accept French plural endings without treating 'laitue' as the word 'lait'.
-    return words.some(word=>word===term || word===term+'s' || word===term+'es') || name.startsWith(term+' ');
+    // Match product-name prefix only: `au lait` chocolate is NOT milk.
+    // Accept French plural endings but never a loose substring such as `laitue`.
+    return name===term || name.startsWith(term+' ') ||
+      name.startsWith(term+'s ') || name.startsWith(term+'es ');
   }) as ApiProduct[];
   const ranked = matched.filter(p=>{
     const full=normalizedName(getText(p.name));
@@ -169,7 +170,7 @@ export async function fetchQuebecPrices(
   const controller = new AbortController();
   const timeout = setTimeout(()=>controller.abort(),8000);
   try {
-    const searchRes = await fetcher(base + 'search&q=' + encodeURIComponent(query) + '&limit=10', { signal:controller.signal });
+    const searchRes = await fetcher(base + 'search&q=' + encodeURIComponent(query) + '&limit=50', { signal:controller.signal });
     if (!searchRes.ok) return null;
     const searchPayload = await searchRes.json() as ApiResponse;
     if (searchPayload.ok !== true || !searchPayload.data || typeof searchPayload.data !== 'object') return null;
