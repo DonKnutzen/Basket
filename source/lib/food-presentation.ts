@@ -6,7 +6,7 @@ import {DRINK_ICONS} from './drink-icons';
 // Presentation groups do not change stored receipt or budget categories.
 export const SHOPPING_GROUPS=['Fruit','Vegetables','Bakery','Meat','Fish & seafood','Dairy & eggs','Pantry','Frozen','Drinks','Household','Other'] as const;
 export type ShoppingGroup=typeof SHOPPING_GROUPS[number];
-const iconGroups:Partial<Record<FoodIconKey,ShoppingGroup>>={orange:'Fruit',lemon:'Fruit',apple:'Fruit',banana:'Fruit',berries:'Fruit',fruit:'Fruit',ginger:'Vegetables',carrot:'Vegetables',leaf:'Vegetables',vegetable:'Vegetables',bread:'Bakery',meat:'Meat',fish:'Fish & seafood',milk:'Dairy & eggs',cheese:'Dairy & eggs',egg:'Dairy & eggs',almond:'Pantry',nut:'Pantry',bean:'Pantry',pasta:'Pantry',rice:'Pantry',grain:'Pantry',flour:'Pantry',baking:'Pantry',candy:'Pantry',seeds:'Pantry',oil:'Pantry',spice:'Pantry',sauce:'Pantry',coffee:'Drinks',drink:'Drinks',soap:'Household'};
+const iconGroups:Partial<Record<FoodIconKey,ShoppingGroup>>={orange:'Fruit',lemon:'Fruit',apple:'Fruit',banana:'Fruit',berries:'Fruit',fruit:'Fruit',ginger:'Vegetables',carrot:'Vegetables',leaf:'Vegetables',salad:'Vegetables',vegetable:'Vegetables',bread:'Bakery',meat:'Meat',fish:'Fish & seafood',milk:'Dairy & eggs',cheese:'Dairy & eggs',butter:'Dairy & eggs',egg:'Dairy & eggs',almond:'Pantry',nut:'Pantry',bean:'Pantry',pasta:'Pantry',rice:'Pantry',grain:'Pantry',flour:'Pantry',baking:'Pantry',candy:'Pantry',seeds:'Pantry',oil:'Pantry',spice:'Pantry',sauce:'Pantry',coffee:'Drinks',drink:'Drinks',soap:'Household'};
 export function shoppingGroup(name:string,preferences:readonly IconPreference[]=[],category?:string):ShoppingGroup{
  if(category==='Frozen')return 'Frozen';
  const key=foodIcon(name,preferences,category);

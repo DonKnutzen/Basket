@@ -161,9 +161,9 @@ test('icon corrections are shared, survive removing and readding an item, and re
  assert.deepEqual((await get()).body.iconPreferences,[]);
 });
 
-test('new pasta and rice icon choices are remembered after removing and readding products',async()=>{
+test('new food icon choices are remembered after removing and readding products',async()=>{
  const listId=(await get()).body.lists[0].id;
- for(const icon of ['pasta','rice']){
+ for(const icon of ['pasta','rice','butter','salad']){
   const name='Special '+icon;
   await post('addItem',{id:icon,listId,name,quantity:'1'});
   assert.equal((await post('updateItem',{id:icon,icon})).status,200);
@@ -328,4 +328,21 @@ test('drink icon choices save through the item editor and every new motif render
   const markup=renderToStaticMarkup(React.createElement(Food,{name:'',icon}));
   assert.ok(!illustrations.has(markup),'motif must be distinct: '+icon);illustrations.add(markup);
  }
+});
+
+test('butter and salad use their own bilingual illustrations without replacing other food types',async()=>{
+ const {foodIcon}=await import('../lib/food-icons');const {shoppingGroup}=await import('../lib/food-presentation');
+ for(const name of ['Butter','salted butter','unsalted butter','No Name Butter 454g','Süßrahmbutter','Suessrahmbutter','Kräuterbutter']){
+  assert.equal(foodIcon(name),'butter',name);assert.equal(shoppingGroup(name),'Dairy & eggs',name);
+  assert.equal(inferCategory(name),'Dairy & eggs',name);
+ }
+ for(const name of ['Salat','Salate','Salad','Salads','Salat / Salad','green salad','mixed salad','gemischter Salat','salad mix','Blattsalat','potato salad','pasta salad','tomato salad']){
+  assert.equal(foodIcon(name),'salad',name);assert.equal(shoppingGroup(name),'Vegetables',name);
+  assert.equal(inferCategory(name),'Produce',name);
+ }
+ const cases={'peanut butter':'nut','Erdnussbutter':'nut','almond butter':'almond','butter beans':'bean','buttermilk':'milk','Buttermilch':'milk','butter chicken':'meat','salad dressing':'sauce','Salatdressing':'sauce','Salat-Dressing':'sauce','salad sauce':'sauce','fruit salad':'fruit','Salatgurke':'vegetable'};
+ for(const [name,icon]of Object.entries(cases))assert.equal(foodIcon(name),icon,name);
+ assert.equal(foodIcon('Butter',[{name:'butter',icon:'package'}]),'package');
+ assert.equal(foodIcon('Salad',[{name:'salad',icon:'leaf'}]),'leaf');
+ assert.equal(foodIcon('Butterfly stationery'),'basket');
 });
