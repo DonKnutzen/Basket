@@ -5,7 +5,7 @@
  */
 import {AUBAINE_NS_STORE_IDS,getAubaineOffers} from './aubaine-offers';
 export type OfferCountry='CA'|'DE';
-export type OfferRegion={country:OfferCountry;province:string;postalCode:string;stores:string[]};
+export type OfferRegion={country:OfferCountry;province:string;postalCode:string;stores:string[];city?:string};
 export type Deal={id:string;name:string;storeId:string;store:string;priceCents:number;regularCents?:number;currency:'CAD'|'EUR';validFrom:string;validUntil:string;observedAt:string;sourceUrl:string;packSize:string;loyalty:boolean;provider:'bidou'|'aubaine'};
 export const OFFER_STORES=[
  {id:'walmart',name:'Walmart',country:'CA'},
@@ -33,6 +33,20 @@ export const OFFER_STORES=[
  {id:'kaufland',name:'Kaufland',country:'DE'},
 ] as const;
 export const DEFAULT_OFFER_REGION:OfferRegion={country:'CA',province:'NS',postalCode:'',stores:[]};
+export const GERMAN_OFFER_CITIES=[{id:'Kiel',label:'Kiel (Schleswig-Holstein)'}] as const;
+/** Verified official retailer pages only. These are outbound links, never scraped into Basket. */
+const KIEL_OFFICIAL_FLYERS=[
+ {id:'rewe',name:'REWE',url:'https://www.rewe.de/marktseite/kiel/830872/rewe-markt-richthofenstr-57/'},
+ {id:'edeka',name:'EDEKA',url:'https://www.edeka.de/eh/nord/edeka-fiedler-dr.-hell-stra%C3%9Fe-1/index/'},
+ {id:'lidl',name:'Lidl',url:'https://www.lidl.de/c/online-prospekte/s10005610/'},
+ {id:'aldi',name:'ALDI Nord',url:'https://www.aldi-nord.de/angebote.html'},
+ {id:'penny',name:'PENNY',url:'https://www.penny.de/angebote'},
+ {id:'kaufland',name:'Kaufland',url:'https://filiale.kaufland.de/angebote/aktuelle-woche.html'},
+] as const;
+export function officialGermanFlyers(region:OfferRegion){
+ if(region.country!=='DE'||region.city!=='Kiel')return [];
+ return KIEL_OFFICIAL_FLYERS.filter(f=>!region.stores.length||region.stores.includes(f.id));
+}
 const CA_PROVINCES=new Set(['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT']);
 export const OFFER_PROVINCES=[...CA_PROVINCES];
 export function restoreOfferRegion(input:string|null):OfferRegion{
@@ -42,7 +56,7 @@ export function restoreOfferRegion(input:string|null):OfferRegion{
   const postal=(typeof d.postalCode==='string'?d.postalCode.trim().toUpperCase():'').slice(0,9);
   const ids=new Set<string>(OFFER_STORES.filter(s=>s.country===country).map(s=>s.id));
   const stores=Array.isArray(d.stores)?[...new Set<string>(d.stores.filter((s:unknown):s is string=>typeof s==='string'&&ids.has(s)))]:[];
-  return {country,province,postalCode:postal,stores};
+  return {country,province,postalCode:postal,stores,...(country==='DE'?{city:'Kiel'}:{})};
  }catch{return {...DEFAULT_OFFER_REGION};}
 }
 export function storeChoices(region:OfferRegion){return OFFER_STORES.filter(s=>s.country===region.country);}
