@@ -1,0 +1,43 @@
+name: One-time inspect public weekly sources
+on:
+  push:
+    branches: [feature/auto-rewe-aldi-kiel-weekly-2026-10]
+    paths: [.github/workflows/inspect-weekly-sources-temporary.yml]
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect only HTML markers, not retailer full data
+        shell: bash
+        run: |
+          python -m pip install -q beautifulsoup4
+          python - <<'PY'
+          import urllib.request,urllib.error
+          from bs4 import BeautifulSoup
+          paths=[
+           'https://api.publitas.com/v1/groups/89773/publications.json',
+           'https://api.publitas.com/v1/groups/89773/publications/rewe_2026_wk44_561204_v1.json',
+           'https://view.publitas.com/89773/',
+           'https://www.aldi-nord.de/angebote.html',
+          ]
+          for url in paths:
+           try:
+            with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'BasketSinglePersonalFlyerCheck/1.0'}),timeout=25) as r:
+             data=r.read(1000000)
+             print('SOURCE',url,'STATUS',r.status,'TYPE',r.headers.get('content-type'),'BYTES_READ',len(data),'ALLOW_ORIGIN',r.headers.get('Access-Control-Allow-Origin'))
+            if 'publitas' in url:
+             print('PAYLOAD_HEAD',data.decode('utf-8','ignore')[:450])
+            else:
+             soup=BeautifulSoup(data,'html.parser')
+             print('PAGE_TITLE',soup.title.get_text(' ',strip=True) if soup.title else '')
+             for target in ('Aubergine','Bananen','Speisekartoffeln'):
+              hits=soup.find_all(string=lambda t: bool(t and target in t),limit=5)
+              for h in hits[:2]:
+               print('TARGET',target,'PARENT',h.parent.name,'CLASS',h.parent.get('class'),'ANCESTOR_2',h.parent.parent.name,h.parent.parent.get('class') if h.parent.parent else '', 'TEXT',h.parent.parent.get_text(' ',strip=True)[:420])
+               for parent in [h.parent.parent.parent, h.parent.parent.parent.parent]:
+                if parent:print('CONTAINER',parent.name,parent.get('class'),'TEXT',parent.get_text(' ',strip=True)[:460])
+             print('MAIN_HEADING',[(h.name,h.get_text(' ',strip=True)[:90]) for h in soup.select('h2,h3')[:12]])
+           except Exception as e:print('ERROR',url,type(e).__name__,str(e)[:230])
+          PY
