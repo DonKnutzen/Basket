@@ -6,7 +6,7 @@ import {
  isDay,priceCents,readPrivateFlyers,writePrivateFlyers,
  type FlyerCandidate,type FlyerPrice,type FlyerStore,
 } from '../lib/flyer-prices';
-import {readFlyerFile,MAX_FLYER_FILE} from '../lib/flyer-reader';
+import {readFlyerFile,flyerFileError} from '../lib/flyer-reader';
 type Edit=FlyerCandidate&{id:number;enabled:boolean};
 function kielToday(){
  return new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -44,7 +44,8 @@ export function GermanFlyerImport(){
   const token=++gen.current;
   setBusy(true);setRows([]);setHasRead(false);setError('');setNotice('');
   try{
-   if(file.size>MAX_FLYER_FILE)throw new Error(tr('Choose a file smaller than 12 MB.'));
+   const validation=flyerFileError(file);
+   if(validation)throw new Error(tr(validation));
    const result=await readFlyerFile(file,stage=>{if(token===gen.current)setProgress(stage)},startPage);
    if(token!==gen.current)return;
    const candidates=extractFlyerCandidates(result.text);
@@ -100,7 +101,7 @@ export function GermanFlyerImport(){
    <label>{tr('Valid from')}<input type="date" value={from} onChange={e=>setFrom(e.target.value)}/></label>
    <label>{tr('Valid until')}<input type="date" value={until} onChange={e=>setUntil(e.target.value)}/></label>
   </div>
-  <label className="flyer-file-label">{tr('Your flyer (PDF / JPG / PNG / WebP, max. 12 MB)')}
+  <label className="flyer-file-label">{tr('Your flyer (PDF up to 25 MB · photos up to 12 MB)')}
    <input type="file" accept=".pdf,application/pdf,.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
     disabled={busy} onChange={e=>{setFile(e.target.files?.[0]||null);setStartPage(1);setRows([]);setError('');setNotice('');setHasRead(false);setText('')}}/>
   </label>
