@@ -246,3 +246,8 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
 .flyer-text-page>small,.flyer-text-page>.flyer-text-empty{display:block;margin:7px 10px;color:var(--muted);font-size:calc(10px * var(--text-scale))}
 .flyer-text-price{font-weight:800;color:var(--ink);white-space:nowrap}
 .flyer-source-line{grid-column:1/-1;font-size:calc(10px * var(--text-scale));color:var(--muted);line-height:1.4;overflow-wrap:anywhere;border-top:1px solid var(--line);padding-top:6px}
+
+/* The ordinary shopper gets automatic matches; manual importing is a fallback. */
+.flyer-optional-import{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.flyer-optional-import>summary{font-size:calc(12px * var(--text-scale));font-weight:650;cursor:pointer;color:var(--ink)}
+.flyer-item-hit>small{line-height:1.4}
