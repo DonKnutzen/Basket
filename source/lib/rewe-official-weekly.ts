@@ -23,7 +23,7 @@ function day(x:unknown):x is string{
  return typeof x==='string'&&DAY.test(x)&&!Number.isNaN(Date.parse(x+'T12:00:00Z'))&&new Date(x+'T12:00:00Z').toISOString().slice(0,10)===x;
 }
 function checkSource(uri:string){
- try{const u=new URL(uri);return u.protocol==='https:'&&u.hostname===SOURCE_HOST&&u.pathname.startsWith('/89773/3478778/pdfs/')&&u.pathname.endsWith('.pdf')}catch{return false;}
+ try{const u=new URL(uri);return u.protocol==='https:'&&u.hostname===SOURCE_HOST&&/^\/89773\/\d+\/pdfs\/[a-f0-9-]{36}\.pdf$/i.test(u.pathname)}catch{return false;}
 }
 export function parseReweWeeklyData(raw:unknown):RewePartialData|null{
  if(!raw||typeof raw!=='object')return null;
