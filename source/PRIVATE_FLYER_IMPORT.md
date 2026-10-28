@@ -78,3 +78,9 @@ The repeatable operating model is **human-provided official source URL → autom
 REWE's PDF source is **not refreshed automatically on a timer**, so Basket never repeatedly downloads an old link while waiting for the person to supply a new one. ALDI Nord's separate daily price-fact updater is unchanged.
 
 This is a personal-use pilot, not legal clearance. A manually supplied URL does not automatically grant rights to extract or republish protected contents on a public GitHub Pages app. Retain minimal excerpts and obtain retailer permission or licensed data for broader public distribution.
+
+### Serving freshly processed price facts without relying on a Pages rebuild
+
+The central REWE job writes `rewe-kiel-weekly.json` to the repository default branch using `GITHUB_TOKEN`. Such machine-authored Git commits do not necessarily trigger an automatic GitHub Pages deployment. The browser now checks the **public, read-only main-branch JSON on raw.githubusercontent.com first** and uses the GitHub Pages copy as a fallback. This avoids showing a week-old Pages snapshot after the maintainer supplied a newer link. No PDF bytes, shopper input or shopping-list items are included in that request; the client still rejects expired or invalid market/week data. GitHub's raw CDN can cache briefly; the client refreshes its in-memory copy after 30 minutes. If GitHub Raw cannot be reached, the app retains the existing Pages fallback and hides expired entries.
+
+The weekly handoff still requires a manual confirmation that the current source, processing run and user-facing prices correspond to the intended flyer. Automatic fact extraction does not imply rights to republish an entire flyer or data catalogue.
