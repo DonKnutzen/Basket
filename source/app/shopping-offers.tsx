@@ -100,7 +100,7 @@ export function OfferSettings({region,onChange}:{region:OfferRegion;onChange:Rea
     </button>;
    })}</div>
    <p className="offer-source-note">
-    {region.country==='DE'?tr('REWE Kiel and ALDI Nord are selected by default. ALDI Nord's limited official-page offer data is refreshed daily; REWE's currently linked week can expire unless a newly authorized flyer source is supplied. Prices are incomplete and must be checked for product and pack size.')
+    {region.country==='DE'?tr("REWE Kiel and ALDI Nord are selected by default. ALDI Nord's limited official-page offer data is refreshed daily; REWE's currently linked week can expire unless a newly authorized flyer source is supplied. Prices are incomplete and must be checked for product and pack size.")
       : eligible&&region.province==='NS'
       ? tr('Nova Scotia: weekly flyer reference prices for 19 common staples from Aubaine.ca. A price may not be a discount, and pack size and branch may differ. Source: aubaine.ca.')
       : eligible
