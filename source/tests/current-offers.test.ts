@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {
- DEFAULT_OFFER_REGION,lookupActiveOffers,normalizeBidouDeal,offerSearchTerm,
+ DEFAULT_OFFER_REGION,GERMAN_OFFER_CITIES,officialGermanFlyers,lookupActiveOffers,normalizeBidouDeal,offerSearchTerm,
  providerAvailable,restoreOfferRegion,type OfferFetch,type OfferRegion,
 } from '../lib/current-offers';
 const now=new Date('2026-10-28T13:00:00Z');
@@ -24,7 +24,7 @@ test('no lookup outside approved regions or with unsupported selection',async()=
 test('region settings retain only selected local retailers',()=>{
  assert.deepEqual(restoreOfferRegion('bad json'),DEFAULT_OFFER_REGION);
  assert.deepEqual(restoreOfferRegion(JSON.stringify({country:'DE',province:'QC',stores:['rewe','walmart','rewe'],postalCode:'10115'})),
-  {country:'DE',province:'',postalCode:'10115',stores:['rewe']});
+  {country:'DE',province:'',postalCode:'10115',stores:['rewe'],city:'Kiel'});
 });
 test('short bilingual names map to a single, on-demand product search',()=>{
  assert.equal(offerSearchTerm('Milk'),'lait');
@@ -75,4 +75,22 @@ test('no verified current data means empty results, not guessed savings',async()
  const mock:OfferFetch=async(url)=>({ok:true,json:async()=>url.includes('/products?')?
   {products:[{name:'Lait 2%',upc:'1234567890'}]}:{prices:[{...valid,valid_until:null}]}});
  assert.deepEqual(await lookupActiveOffers('Milk',qc,mock,now),[]);
+});
+
+test('Germany is explicitly Kiel-scoped and never claims an automated deal feed',async()=>{
+ const de=restoreOfferRegion(JSON.stringify({country:'DE',city:'Hamburg',stores:[]}));
+ assert.equal(de.city,'Kiel');
+ assert.equal(GERMAN_OFFER_CITIES.length,1);
+ assert.equal(GERMAN_OFFER_CITIES[0].id,'Kiel');
+ assert.equal(providerAvailable(de),false);
+ const all=officialGermanFlyers(de);
+ assert.equal(all.length,6);
+ assert.ok(all.every(v=>v.url.startsWith('https://')));
+ assert.deepEqual(officialGermanFlyers({...de,stores:['rewe']} ).map(v=>v.id),['rewe']);
+ assert.deepEqual(officialGermanFlyers({...de,stores:['walmart']}),[]);
+ assert.deepEqual(officialGermanFlyers({...de,city:'Berlin'}),[]);
+ assert.deepEqual(officialGermanFlyers(DEFAULT_OFFER_REGION),[]);
+ let calls=0;
+ assert.deepEqual(await lookupActiveOffers('Butter',de,async()=>{calls++;throw Error('should not fetch')},now),[]);
+ assert.equal(calls,0);
 });
