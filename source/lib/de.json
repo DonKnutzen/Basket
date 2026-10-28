@@ -574,5 +574,18 @@
   "Snacks & sweets": "Snacks und Süßigkeiten",
   "Personal care": "Körperpflege und Hygiene",
   "Baby & pets": "Baby und Haustiere",
-  "Other supermarket items": "Sonstige Supermarktartikel"
+  "Other supermarket items": "Sonstige Supermarktartikel",
+  "Store flyers & region": "Prospekte & Region",
+  "Official flyer links only. Automatic offer prices are not connected yet.": "Nur Links zu offiziellen Prospekten. Automatische Angebotspreise sind noch nicht angebunden.",
+  "Country": "Land",
+  "Canada": "Kanada",
+  "Germany": "Deutschland",
+  "Postal code": "Postleitzahl",
+  "Enter a valid postal code for the selected country.": "Bitte gib eine gültige Postleitzahl für das ausgewählte Land ein.",
+  "The postal code is saved on this device. Select your local store on each retailer website; Basket does not yet check regional offers.": "Die Postleitzahl wird nur auf diesem Gerät gespeichert. Wähle deine Filiale auf der jeweiligen Händlerseite; Basket prüft regionale Angebote noch nicht automatisch.",
+  "Preferred stores (none selected = all)": "Bevorzugte Geschäfte (keine Auswahl = alle)",
+  "Check official store flyers for ": "Offizielle Prospekte prüfen für ",
+  "View store flyers": "Prospekte ansehen",
+  "No verified live offers available. These links are not product matches.": "Keine verifizierten Live-Angebote verfügbar. Diese Links sind keine Produkttreffer.",
+  "Official store flyers": "Offizielle Händlerprospekte"
 }
