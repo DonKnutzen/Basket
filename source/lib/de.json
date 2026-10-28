@@ -631,5 +631,7 @@
   "Item": "Artikel",
   "No substitutions are applied automatically. Unmatched items and incomplete store totals are not treated as savings.": "Es werden keine Produkte automatisch ersetzt. Fehlende Artikel und unvollständige Geschäftssummen zählen nicht als Ersparnis.",
   "Retailer prices may vary by branch and date; promotions may already have ended.": "Ladenpreise können je nach Filiale und Datum abweichen; Angebote können bereits abgelaufen sein.",
-  "About GroceryPulse comparisons": "Informationen zu GroceryPulse-Vergleichen"
+  "About GroceryPulse comparisons": "Informationen zu GroceryPulse-Vergleichen",
+  "View item prices": "Einzelpreise anzeigen",
+  "Different size": "Andere Packungsgröße"
 }
