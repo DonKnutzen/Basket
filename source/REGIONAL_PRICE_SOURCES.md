@@ -18,7 +18,7 @@ Basket **does not scrape** retailer websites, bypass bot protections, use undocu
 - Users can select Canada or Germany, province (Canada), a postal code and preferred store chains. Settings remain **on the device**. The code never sends the postal code to the Québec provider; the provider does **not** implement branch-specific prices.
 - Only **CA + QC** with at least one supported chain queries épiceries.ca. Nova Scotia and Germany correctly show that no permitted feed is connected; selecting Walmart in NS does **not** request Québec prices.
 - No direct retailer scraping or affiliate cookies. No paid services, accounts, keys or backend database migration.
-- One product search and at most one product detail fetch per requested list item, with sequential scheduling, a small inter-query delay and six-hour local caching. A failed request is shown as unavailable; no fictitious prices.
+- Up to two documented product searches and at most one product detail fetch per requested list item, with sequential scheduling, a small inter-query delay and six-hour local caching. A failed request is shown as unavailable; no fictitious prices.
 - Offers are **not verified live flyer specials**: the data's `discounted` field is only labelled “marked discounted”; there is no expiry date, pickup pricing, membership requirement, or guaranteed availability.
 - Stale price observations (older than 14 days) are excluded. Source metadata and observation dates are shown. Results are labelled **possible matches** with the source product's original brand and pack size; no automatic savings are asserted across incomparable products.
 - Prices are CAD only in Québec and are never mixed with EUR or saved receipt lines.
