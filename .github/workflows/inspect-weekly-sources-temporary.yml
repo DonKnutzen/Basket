@@ -39,5 +39,17 @@ jobs:
                for parent in [h.parent.parent.parent, h.parent.parent.parent.parent]:
                 if parent:print('CONTAINER',parent.name,parent.get('class'),'TEXT',parent.get_text(' ',strip=True)[:460])
              print('MAIN_HEADING',[(h.name,h.get_text(' ',strip=True)[:90]) for h in soup.select('h2,h3')[:12]])
+             html=data.decode('utf-8','ignore')
+             print('SCRIPT_COUNT',len(soup.find_all('script')))
+             for script in soup.find_all('script'):
+              txt=script.string or script.get_text()
+              if 'Aubergine' in txt:
+               print('SCRIPT TYPE',script.get('type'),'ID',script.get('id'),'LENGTH',len(txt),'START',txt[:170])
+               pos=txt.find('Aubergine')
+               print('SCRIPT NEAR AUBERGINE',repr(txt[max(0,pos-350):pos+950]))
+               break
+             for kw in ('__NEXT_DATA__','_data','application/json','application/ld+json','productPrice','originalPrice','priceValue'):
+              print('KEY',kw,html.find(kw))
+
            except Exception as e:print('ERROR',url,type(e).__name__,str(e)[:230])
           PY
