@@ -44,18 +44,6 @@
       "confidence": "category-only"
     },
     {
-      "id": "aldi:nord:1001367:2026-10-26",
-      "category": "Brot",
-      "name": "Naan-Brot",
-      "brand": "ASIA GREEN GARDEN",
-      "packSize": "260-g-Packung",
-      "priceCents": 99,
-      "validFrom": "2026-10-26",
-      "validUntil": "2026-10-31",
-      "store": "aldi",
-      "confidence": "category-only"
-    },
-    {
       "id": "aldi:nord:9362:2026-10-26",
       "category": "Butter",
       "name": "Butter",
@@ -74,18 +62,6 @@
       "brand": "",
       "packSize": "400-g-Packung",
       "priceCents": 369,
-      "validFrom": "2026-10-26",
-      "validUntil": "2026-10-31",
-      "store": "aldi",
-      "confidence": "category-only"
-    },
-    {
-      "id": "aldi:nord:1045920:2026-10-26",
-      "category": "Hähnchen",
-      "name": "Poké Bowl Hähnchen",
-      "brand": "ASIA GREEN GARDEN",
-      "packSize": "350-g-Packung",
-      "priceCents": 399,
       "validFrom": "2026-10-26",
       "validUntil": "2026-10-31",
       "store": "aldi",
