@@ -61,3 +61,7 @@ Saved receipts retain the chosen list name and additional purchases as a snapsho
 ## Product icons
 
 Product icons use small local SVG illustrations, whole-word and phrase matching for English product descriptions, and shared household corrections. Specific phrases distinguish almond milk from almonds, cream cheese from cream, while preparation words such as pickled or marinated keep the same underlying ginger icon. No external image API or paid AI service is needed. In the item editor, choose Item icon to remember a normalized item-name mapping across the household’s lists and price book, or Automatic to remove the correction. This is deterministic recognition plus explicit remembered corrections, not automatic machine learning. Unknown items fall back to their category, then the basket. The item_icons table is a schema-only, additive migration.
+
+## English and German
+
+Profile → Language switches the interface between English and German and remembers the choice on this device. Dates and money formatting follow the interface language; currency and stored category keys do not change. Household names, lists, products, receipt labels and email addresses remain as entered. Suggestions change language. German and English food names, preparation words, common beverage brands and herbs use the same coloured SVG icon system. Explicit household icon corrections still take precedence. Receipt OCR offers English, German, English + German and English + French. Recognition and review still run on the device; translations and icons need no paid API.

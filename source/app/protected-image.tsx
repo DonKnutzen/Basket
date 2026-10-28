@@ -1,4 +1,12 @@
 'use client';
-import {useEffect,useState} from 'react';
-import {basketFetch} from '../lib/supabase-browser';
-export default function ProtectedImage({receiptId,alt}:{receiptId:string;alt:string}){const [url,setUrl]=useState(''),[error,setError]=useState('');useEffect(()=>{const controller=new AbortController();let objectURL='';setError('');setUrl('');basketFetch('/api/receipt-image?id='+encodeURIComponent(receiptId),{signal:controller.signal}).then(async r=>{if(!r.ok)throw Error('The receipt photo could not be loaded.');const blob=await r.blob();if(controller.signal.aborted)return;objectURL=URL.createObjectURL(blob);setUrl(objectURL)}).catch(e=>{if(!controller.signal.aborted)setError(e.message)});return()=>{controller.abort();if(objectURL)URL.revokeObjectURL(objectURL)}},[receiptId]);return url?<img src={url} alt={alt}/>:<p className="hint">{error||'Loading receipt photo…'}</p>}
+import {tr,phrase,locale} from '../lib/i18n';
+import { useEffect, useState } from 'react';
+import { basketFetch } from '../lib/supabase-browser';
+export default function ProtectedImage({ receiptId, alt }: {
+    receiptId: string;
+    alt: string;
+}) { const [url, setUrl] = useState(''), [error, setError] = useState(''); useEffect(() => { const controller = new AbortController(); let objectURL = ''; setError(''); setUrl(''); basketFetch('/api/receipt-image?id=' + encodeURIComponent(receiptId), { signal: controller.signal }).then(async (r) => { if (!r.ok)
+    throw Error('The receipt photo could not be loaded.'); const blob = await r.blob(); if (controller.signal.aborted)
+    return; objectURL = URL.createObjectURL(blob); setUrl(objectURL); }).catch(e => { if (!controller.signal.aborted)
+    setError(e.message); }); return () => { controller.abort(); if (objectURL)
+    URL.revokeObjectURL(objectURL); }; }, [receiptId]); return url ? <img src={url} alt={alt}/> : <p className="hint">{error || tr("Loading receipt photo\u2026")}</p>; }

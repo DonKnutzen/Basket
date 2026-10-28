@@ -186,3 +186,26 @@ test('every selectable food icon renders a compact coloured illustration',async(
   assert.doesNotMatch(markup,/lucide/,icon);
  }
 });
+
+test('common beverage brands and German descriptions use the shared drink illustration',async()=>{
+ const {foodIcon}=await import('../lib/food-icons');const {shoppingGroup,shoppingCategory}=await import('../lib/food-presentation');
+ for(const name of ['Cola','Coca-Cola','Coke Zero','Cola Zero 1,5 L','Red Bull','RedBull Sugarfree 250ml','Pepsi Max','Fanta Orange Zero','Sprite','Schweppes','Apfelsaft']){
+  assert.equal(foodIcon(name),'drink',name);assert.equal(shoppingGroup(name),'Drinks',name);assert.equal(shoppingCategory(name),'Drinks',name);
+ }
+ const cases={ 'frische Äpfel':'apple','eingelegter Ingwer':'ginger','marinierter Ingwer':'ginger','Hüttenkäse':'cheese','geröstete Mandeln':'almond','Curry Leaf':'leaf','Curry Leaves':'leaf','Bay Leaf':'leaf','getrocknete Lorbeerblätter':'leaf','Curryblätter':'leaf','Soße':'sauce','Sojasoße':'sauce'};
+ for(const [name,key] of Object.entries(cases))assert.equal(foodIcon(name),key,name);
+ assert.equal(foodIcon('Red Bullish unknown'),'basket');
+});
+test('German localization preserves product names and internal category values and can return to English',async()=>{
+ const {setLanguage,tr,phrase,getLanguage}=await import('../lib/i18n');
+ const {money}=await import('../lib/types');
+ try{
+  setLanguage('de');assert.equal(getLanguage(),'de');assert.equal(tr('Shopping lists'),'Einkaufslisten');assert.equal(tr('Dairy & eggs'),'Milchprodukte und Eier');
+  assert.equal(phrase('Edit {0}','My Coke Zero'),'My Coke Zero bearbeiten');
+  assert.equal(tr('My custom product'),'My custom product');assert.match(money(1234,'CAD'),/12,34/);
+  const home=(await get()).body;await post('addItem',{id:'de-cola',listId:home.lists[0].id,name:'Cola Zero',category:'Drinks',quantity:'1,5 L'});
+  const saved=(await get()).body.items[0];assert.equal(saved.name,'Cola Zero');assert.equal(saved.category,'Drinks');assert.equal(saved.quantity,'1,5 L');
+  assert.equal(tr('The numbers add up.'),'Die Beträge stimmen überein.');
+  setLanguage('en');assert.equal(tr('Shopping lists'),'Shopping lists');assert.equal(phrase('Edit {0}','Cola Zero'),'Edit Cola Zero');
+ }finally{setLanguage('en')}
+});

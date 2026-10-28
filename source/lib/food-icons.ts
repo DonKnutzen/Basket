@@ -12,6 +12,20 @@ export function isFoodIcon(value:unknown):value is FoodIconKey{return FOOD_ICONS
 // Match complete words/phrases, not arbitrary substrings inside brands or other foods.
 // Longer phrases take precedence: cream cheese, almond milk and ginger beer, for example.
 const groups: [FoodIconKey,string][]=[
+ ['leaf','curry leaf|curry leaves|bay leaf|bay leaves|curryblatter|curryblaetter|lorbeerblatt|lorbeerblatter|lorbeerblaetter|lorbeer|basilikumblatter|basil leaves'],
+ ['drink','coca cola|coke zero|cola zero|coca cola zero|red bull|redbull|energy drink|energy drinks|energygetrank|energygetraenk|energydrink|energydrinks|cola|coke|pepsi|fanta|sprite|spezi|schweppes|7up|7 up|ginger ale|gatorade|powerade|club mate|mezzo mix|ice tea|iced tea|eistee|icetea'],
+ ['coffee','nescafe|nespresso|cappuccino|latte macchiato'],
+ ['milk','skyr|buttermilch|kondensmilch|haferdrink|mandeldrink|sojadrink'],
+ ['cheese','huttenkase|hüttenkäse|cottage cheese|bergkase|bergkaese|edamer|emmentaler|ziegenkase|ziegenkaese|schafskase|schafskaese'],
+ ['meat','hahnchenbrust|haehnchenbrust|pute|putenbrust|rinderhack|schweinehack|gehacktes|bratwurst|leberwurst|salami|pancetta'],
+ ['fish','fischstabchen|fischstaebchen|garnelen|krabben|seelachs'],
+ ['bean','kidneybohnen|weisse bohnen|schwarze bohnen|rote linsen|grune linsen|grüne linsen'],
+ ['vegetable','salatgurke|salatgurken|eisbergsalat|eisberg salat|cherrytomaten|cocktailtomaten|auberginen|zucchini'],
+ ['nut','haselnuss|haselnusse|cashewnusse|cashewkerne|erdnuss|erdnusse|walnusskerne|nussmischung|studentenfutter'],
+ ['grain','mandelmehl|kokosmehl|weizenmehl|dinkelmehl|roggenmehl|polenta'],
+ ['bread','laugenbrotchen|laugenbroetchen|baguette|knackebrot|knaeckebrot|vollkornbrotchen|vollkornbroetchen'],
+ ['sauce','tomatenmark|tomatenpassata|passierte tomaten|pesto|remoulade|barbecue sauce|bbq sauce|sriracha'],
+ ['package','nutella|oreo|marmite|chips|crisps|crackers|keks|kekse|schokoriegel|schokolade|backkakao'],
  ['pasta','pasta|noodle|noodles|nudel|nudeln|spaghetti|penne|fusilli|rigatoni|tagliatelle|macaroni|makkaroni|lasagne|lasagna|ravioli|tortellini|farfalle|linguine|udon|ramen|reisnudeln|rice noodles|egg noodles|eiernudeln|vollkornnudeln'],
  ['rice','rice|reis|basmati|jasmine rice|jasminreis|risotto|wildreis|brown rice|sushi rice|sushireis'],
  ['orange','orangen|mandarine|mandarinen|clementinen'],['lemon','zitrone|zitronen|limette|limetten'],
@@ -54,10 +68,10 @@ const groups: [FoodIconKey,string][]=[
  ['coffee','coffee|tea|espresso|matcha'],['soap','tea towel|tea towels|soap|shampoo|detergent|toothpaste|cleaner|dishwashing liquid|dish soap|sponge|sponges'],
  ['package','milk chocolate|chocolate|butter|sugar|salt|oil|sauce|jam|honey|baking powder|baking soda|toilet paper|paper towel|paper towels|tissue|tissues|trash bag|trash bags']
 ];
-const rules=groups.flatMap(([icon,words])=>words.split('|').map(word=>({icon,word}))).sort((a,b)=>b.word.split(' ').length-a.word.split(' ').length||b.word.length-a.word.length);
+const rules=groups.flatMap(([icon,words])=>words.split('|').map(word=>({icon,word:normalize(word.replace(/ß/gi,'ss'))}))).sort((a,b)=>b.word.split(' ').length-a.word.split(' ').length||b.word.length-a.word.length);
 export function foodIcon(name:string,preferences:readonly IconPreference[]=[],category?:string):FoodIconKey{
- const key=normalize(name);const remembered=preferences.find(p=>p.name===key&&isFoodIcon(p.icon));if(remembered)return remembered.icon;
- const text=' '+key+' ';const rule=rules.find(r=>text.includes(' '+r.word+' '));if(rule)return rule.icon;
+ const key=normalize(name.replace(/ß/gi,'ss'));const remembered=preferences.find(p=>(p.name===normalize(name)||p.name===key)&&isFoodIcon(p.icon));if(remembered)return remembered.icon;
+ const text=' '+key+' ';if(['coca cola','coke','cola','pepsi','red bull','redbull','fanta','sprite','schweppes','spezi','7up','7 up','gatorade','powerade','mezzo mix','club mate'].some(brand=>text.includes(' '+brand+' ')))return 'drink';const rule=rules.find(r=>text.includes(' '+r.word+' '));if(rule)return rule.icon;
  return ({'Produce':'vegetable','Dairy & eggs':'milk','Meat & fish':'meat','Bakery':'bread','Pantry':'package','Frozen':'package','Drinks':'drink','Household':'soap'} as Record<string,FoodIconKey>)[category||'']||'basket';
 }
 export function iconLabel(key:FoodIconKey){return FOOD_ICONS.find(([id])=>id===key)?.[1]||'Basket'}
