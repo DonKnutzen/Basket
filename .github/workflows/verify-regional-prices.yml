@@ -43,6 +43,10 @@ jobs:
         working-directory: source
         continue-on-error: true
         run: node scripts/check-open-prices-coverage.mjs
+      - name: Probe permitted GroceryPulse personal-list API (informational)
+        working-directory: source
+        continue-on-error: true
+        run: node scripts/check-grocerypulse.mjs
       - name: Generate GitHub Pages assets
         working-directory: source
         run: pnpm run build:pages --out ..
