@@ -17,11 +17,11 @@ from zoneinfo import ZoneInfo
 MARKET = "561204"
 CONFIG = Path("source/config/rewe-kiel-current-flyer.json")
 OUTPUT = Path(sys.argv[1] if len(sys.argv) > 1 else "rewe-kiel-weekly.json")
-SOURCE_PATTERN = re.compile(r"^/89773/\\d+/pdfs/[a-f0-9-]{36}\\.pdf$", re.I)
-FILENAME_PATTERN = re.compile(r"rewe_(?P<year>20\\d{2})_wk(?P<week>\\d{1,2})_561204_v\\d+\\.pdf", re.I)
+SOURCE_PATTERN = re.compile(r"^/89773/\d+/pdfs/[a-f0-9-]{36}\.pdf$", re.I)
+FILENAME_PATTERN = re.compile(r"rewe_(?P<year>20\d{2})_wk(?P<week>\d{1,2})_561204_v\d+\.pdf", re.I)
 
 def checked_iso_date(value: object) -> dt.date:
-    if not isinstance(value,str) or not re.fullmatch(r"20\\d{2}-\\d{2}-\\d{2}",value):
+    if not isinstance(value,str) or not re.fullmatch(r"20\d{2}-\d{2}-\d{2}",value):
         raise ValueError("Invalid ISO date")
     return dt.date.fromisoformat(value)
 
@@ -34,7 +34,7 @@ def load_source_config(path: Path = CONFIG) -> dict:
     if not isinstance(raw,dict) or raw.get("schema")!=1 or raw.get("marketId")!=MARKET or raw.get("city")!="Kiel" or raw.get("suppliedBy")!="market-link-manually-provided":
         raise ValueError("Wrong market or missing manual provenance")
     week=raw.get("week")
-    if not isinstance(week,str) or not re.fullmatch(r"20\\d{2}-W\\d{2}",week):
+    if not isinstance(week,str) or not re.fullmatch(r"20\d{2}-W\d{2}",week):
         raise ValueError("Invalid week")
     start=checked_iso_date(raw.get("validFrom"))
     end=checked_iso_date(raw.get("validUntil"))
