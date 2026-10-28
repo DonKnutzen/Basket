@@ -153,7 +153,10 @@ function pickProduct(products: unknown[], query: string): ApiProduct | null {
   }) as ApiProduct[];
   const ranked = matched.filter(p=>{
     const full=normalizedName(getText(p.name));
-    // 'pomme de terre' is a potato, not an apple.
+    // Variants are not interchangeable: generic milk is not chocolate milk,
+    // plant milk or powdered milk; generic apple is not a potato.
+    if (term.startsWith('lait') && !/chocolat|vanille|fraise|soja|soya|amande|avoine|coco|poudre/.test(term) &&
+        /\b(chocolat|chocolate|vanille|fraise|soja|soya|amande|avoine|coco|poudre|condense|aromatise|chevre|brebis)\b/.test(full)) return false;
     return !(term==='pomme' && /^pommes? de terre(?: |$)/.test(full));
   }).sort((a,b)=>{
     const score=(p:ApiProduct) => normalizedName(getText(p.name))===term ? 2 : normalizedName(getText(p.name)).startsWith(term+' ') ? 1 : 0;
