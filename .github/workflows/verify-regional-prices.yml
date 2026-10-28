@@ -6,6 +6,9 @@ on:
   pull_request:
     branches:
       - main
+concurrency:
+  group: regional-price-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: write
 jobs:
@@ -33,6 +36,10 @@ jobs:
       - name: Typecheck application
         working-directory: source
         run: pnpm exec tsc --noEmit
+      - name: Check public provider response once (informational)
+        working-directory: source
+        continue-on-error: true
+        run: node scripts/smoke-epiceries.mjs
       - name: Generate GitHub Pages assets
         working-directory: source
         run: pnpm run build:pages --out ..
