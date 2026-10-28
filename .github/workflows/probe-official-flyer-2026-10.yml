@@ -28,18 +28,8 @@ jobs:
                 pdfinfo "/tmp/$NAME" | grep -E '^Pages:|^Page size:|^File size:' | head -3
                 pdftotext -f 1 -l 2 -layout "/tmp/$NAME" /tmp/aldi-extract.txt || true
                 python -m pip install -q pypdf
-                python - <<'PY'
-                from pypdf import PdfReader
-                try:
-                    doc=PdfReader('/tmp/ALDI',strict=False)
-                    print('PYPDF pages=',len(doc.pages))
-                    for i in range(min(3,len(doc.pages))):
-                        txt=doc.pages[i].extract_text(extraction_mode='layout') or ''
-                        lines=[x.strip() for x in txt.splitlines() if x.strip()]
-                        print('PYPDF page',i+1,'chars=',len(txt),'nonempty lines=',len(lines))
-                        for ln in lines[:30]: print('PAGE'+str(i+1)+':',ln[:150])
-                except Exception as e:print('PYPDF error',repr(e))
-                PY
+                python -c 'from pypdf import PdfReader; r=PdfReader("/tmp/ALDI",strict=False); print("PYPDF pages=",len(r.pages)); [print("PYPDF PAGE",i+1,"TEXT:",(r.pages[i].extract_text() or "")[:1400]) for i in range(min(2,len(r.pages)))]' || true
+
                 echo 'PDF TEXT EXTRACT stats:'; wc -lc /tmp/aldi-extract.txt || true
                 echo 'SAMPLE TEXT (max 25 lines, 125 chars each):'
                 head -n 25 /tmp/aldi-extract.txt | cut -c1-125
