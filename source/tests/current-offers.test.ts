@@ -77,14 +77,16 @@ test('no verified current data means empty results, not guessed savings',async()
  assert.deepEqual(await lookupActiveOffers('Milk',qc,mock,now),[]);
 });
 
-test('Germany is explicitly Kiel-scoped and never claims an automated deal feed',async()=>{
+test('Germany is explicitly Kiel-scoped with two selected public-weekly sources; no Bidou feed',async()=>{
  const de=restoreOfferRegion(JSON.stringify({country:'DE',city:'Hamburg',stores:[]}));
  assert.equal(de.city,'Kiel');
  assert.equal(GERMAN_OFFER_CITIES.length,1);
  assert.equal(GERMAN_OFFER_CITIES[0].id,'Kiel');
  assert.equal(providerAvailable(de),false);
  const all=officialGermanFlyers(de);
- assert.equal(all.length,6);
+ assert.equal(all.length,2);
+ assert.deepEqual(de.stores,['rewe','aldi']);
+ assert.deepEqual(all.map(f=>f.id),['rewe','aldi']);
  assert.ok(all.every(v=>v.url.startsWith('https://')));
  assert.deepEqual(officialGermanFlyers({...de,stores:['rewe']} ).map(v=>v.id),['rewe']);
  assert.deepEqual(officialGermanFlyers({...de,stores:['walmart']}),[]);
