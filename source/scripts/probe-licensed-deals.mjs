@@ -14,6 +14,8 @@ for(const [id,url] of urls){
   if(!response.ok){console.log(JSON.stringify({id,status:response.status,contentType}));continue}
   if(!/csv|text\/plain/.test(contentType)){console.log(JSON.stringify({id,status:response.status,contentType,rejected:'non-CSV'}));continue}
   const csv=await response.text();
-  console.log(JSON.stringify({id,status:response.status,contentType,length:csv.length,cors:response.headers.get('access-control-allow-origin'),firstLines:csv.split(/\r?\n/).slice(0,6).map(clean)}));
+  const rows=csv.split(/\r?\n/).slice(1).filter(Boolean).map(line=>line.split(','));
+  const keys=[...new Set(rows.map(x=>x[7]).filter(Boolean))];const stores=[...new Set(rows.map(x=>x[6]).filter(Boolean))];
+  console.log(JSON.stringify({id,status:response.status,contentType,length:csv.length,cors:response.headers.get('access-control-allow-origin'),firstLines:csv.split(/\r?\n/).slice(0,4).map(clean),keys:id==='aubaine-NS-reuse'?keys:undefined,stores:id==='aubaine-NS-reuse'?stores:undefined}));
  }catch(e){console.log(JSON.stringify({id,error:String(e).slice(0,200)}))}
 }
