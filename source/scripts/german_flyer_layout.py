@@ -138,7 +138,14 @@ def price_anchors(boxes):
     for i,b in enumerate(boxes):
         if BASE.search(b.text):continue
         if re.search(r'\b(?:Mo|Di|Mi|Do|Fr|Sa|So)\.?\s*\d{1,2}\.\d{1,2}\.',b.text,re.I):continue
+        # A flyer may print "1,25 l" next to "1,19 €". Both match
+        # a generic decimal regex, but the first is a bottle size, not a
+        # price. Preserve separately printed sale prices in the same span.
+        size_ranges=[(match.start(),match.end()) for match in SIZE.finditer(b.text)]
+        date_ranges=[(match.start(),match.end()) for match in re.finditer(r'(?<!\d)\d{1,2}\.\d{2}\.(?:\d{2,4})?(?!\d)',b.text)]
         for m in PRICE.finditer(b.text):
+            if any(lo<=m.start() and m.end()<=hi for lo,hi in size_ranges+date_ranges):continue
+            if b.text[m.end():].lstrip().startswith('%'):continue
             nearby=[c.text for c in boxes if c is not b and abs(c.rect[0]-b.rect[0])<35 and 0<=c.rect[1]-b.rect[1]<25]
             if re.search(r'Pfand',b.text,re.I):role='deposit'
             elif 'Bonus' in nearby and b.size<20:role='bonus-credit'
@@ -191,6 +198,23 @@ def printed_date_ranges(text,year):
                 if not any(x['from']==value['from'] and x['until']==value['until'] for x in found):found.append(value)
         except ValueError:pass
     return found
+
+def product_name_fragment(text):
+    """Keep product names printed alongside a bottle size or price.
+
+    Never take a deposit, unit-price note or condition as a product name.
+    Splitting numeric evidence from product text still requires human review.
+    """
+    if BASE.search(text) or CONDITION.search(text) or re.search(r'\b(?:Pfand|UVP|bisher|statt|gültig)\b',text,re.I):
+        return ''
+    clean=SIZE.sub(' ',text)
+    clean=PRICE.sub(' ',clean)
+    clean=re.sub(r'[€%]+',' ',clean)
+    clean=re.sub(r'\s+',' ',clean).strip(' ·–—-,:;()/')
+    if re.fullmatch(r'(?i)(?:knaller|aktion|angebot|REWE|ALDI|Nord|PENNY|Bonus|App)',clean):
+        return ''
+    if len(re.findall(r'[A-Za-zÄÖÜäöüß]',clean))<2:return ''
+    return clean
 
 def analyze_page(page, valid_from, valid_until):
     boxes,images,drawings=text_boxes(page)
@@ -270,14 +294,13 @@ def analyze_page(page, valid_from, valid_until):
         if len(prices)!=1:issues.append('Mehrere Verkaufspreise / Produkte im selben Bereich')
         # A proposal in an ambiguous tile must not silently choose a price.
         cents=prices[0]['cents'] if len(prices)==1 else 0
-        raw_price_indices=set().union(*(p['indices'] for p in anchors if contains(rect,p['rect'])))
         name_parts=[]
         for b in inside:
-            if boxes.index(b) in raw_price_indices or PRICE.search(b.text) or BASE.search(b.text) or SIZE.search(b.text):continue
-            if b.size>20:continue
-            if re.fullmatch(r'[\d\W]+|knaller|aktion|angebot|REWE|ALDI|Nord',b.text,re.I):continue
-            if CONDITION.search(b.text):continue
-            if len(re.findall('[A-Za-zÄÖÜäöüß]',b.text))>=2:name_parts.append(b.text)
+            # PDF spans can contain the title, bottle size and sale price.
+            # Removing the complete span would lose names like Coca-Cola.
+            if b.size>20 and not any(re.search(r'(?<!\w)'+re.escape(brand)+r'(?!\w)',b.text,re.I) for brand in BRANDS):continue
+            fragment=product_name_fragment(b.text)
+            if fragment:name_parts.append(fragment)
         name=' '.join(name_parts).strip()[:250]
         brands=[b for b in BRANDS if re.search(r'(?<!\w)'+re.escape(b)+r'(?!\w)',name,re.I)]
         brand=brands[0] if len(brands)==1 else ''
