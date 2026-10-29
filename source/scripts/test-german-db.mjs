@@ -16,8 +16,8 @@ await db.exec(`
  grant usage on schema storage to authenticated; grant select,insert,update,delete on storage.objects to authenticated;
  insert into auth.users values('11111111-1111-4111-8111-111111111111',now()),('22222222-2222-4222-8222-222222222222',now());
 `);
-const migration=(await readdir('supabase/migrations')).find(n=>n.endsWith('_central_german_flyers.sql'));
-await db.exec(await readFile('supabase/migrations/'+migration,'utf8'));
+const migrations=(await readdir('supabase/migrations')).filter(n=>/_(central_german_flyers|allow_additional_verified_german_offers)\.sql$/.test(n)).sort();
+for(const migration of migrations)await db.exec(await readFile('supabase/migrations/'+migration,'utf8'));
 await db.exec(`insert into public.german_offer_operators values('11111111-1111-4111-8111-111111111111')`);
 const setUser=async(id='11111111-1111-4111-8111-111111111111')=>{await db.exec('reset role; set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id])};
 let checks=0;
@@ -64,12 +64,24 @@ await db.query("insert into public.german_offer_candidates(import_id,page,local_
 await setUser();
 assert.equal((await db.query('select public.offer_import_publish($1,$2) n',[id,revision])).rows[0].n,1);checks++;
 assert.equal((await db.query('select public.offer_import_publish($1,$2) n',[id,revision])).rows[0].n,1);checks++;
-await denied(()=>db.query('select public.offer_candidate_review($1,1,$2,$3)',[candidate,fields,'verified']),/not ready/);
+await denied(()=>db.query('select public.offer_candidate_review($1,1,$2,$3)',[candidate,fields,'verified']),/already published/);
 await denied(()=>db.exec("update public.german_published_offers set data='{}'"),/permission denied/);
+// Publish another reviewed candidate without changing the first snapshot.
+const snapshot=(await db.query('select data from public.german_published_offers where id=$1',[candidate])).rows[0].data;
+const next=(await db.query('select id from public.german_offer_candidates where import_id=$1 and id<>$2',[id,candidate])).rows[0].id;
+await db.query('select public.offer_candidate_review($1,0,$2,$3)',[next,{...fields,name:'Rispentomaten',brand:'',category:'Tomaten',packSize:'1 kg',priceCents:189},'verified']);
+await denied(()=>db.query('select public.offer_import_publish($1,$2)',[id,revision]),/latest review/);
+await db.query('select public.offer_import_confirm($1,$2)',[id,'TEST ONLY: subsequent release']);
+revision=(await db.query('select revision from public.german_offer_imports where id=$1',[id])).rows[0].revision;
+assert.equal((await db.query('select public.offer_import_publish($1,$2) n',[id,revision])).rows[0].n,2);checks++;
+assert.equal((await db.query('select public.offer_import_publish($1,$2) n',[id,revision])).rows[0].n,2);checks++;
+assert.deepEqual((await db.query('select data from public.german_published_offers where id=$1',[candidate])).rows[0].data,snapshot);checks++;
+await denied(()=>db.query('select public.offer_candidate_review($1,1,$2,$3)',[next,fields,'review']),/already published/);
 await setUser('22222222-2222-4222-8222-222222222222');
+await denied(()=>db.query('select public.offer_import_publish($1,$2)',[id,revision]),/Operator access required/);
 assert.equal((await db.query('select * from public.german_offer_candidates')).rows.length,0);checks++;
 assert.equal((await db.query('select * from storage.objects')).rows.length,0);checks++;
-assert.equal((await db.query('select * from public.german_published_offers')).rows.length,1);checks++;
+assert.equal((await db.query('select * from public.german_published_offers')).rows.length,2);checks++;
 await db.exec('reset role');
 await db.query('update public.german_published_offers set valid_from=$1,valid_until=$1',[new Date(Date.parse(today+'T12:00:00Z')-86400000).toISOString().slice(0,10)]);
 await setUser('22222222-2222-4222-8222-222222222222');
