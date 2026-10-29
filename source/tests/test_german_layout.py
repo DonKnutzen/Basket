@@ -2,7 +2,7 @@ import unittest
 import sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
-from german_flyer_layout import Box,price_anchors,price_column_cells,product_name_fragment,quantity,unit_check,whitespace_tiles,printed_date_ranges
+from german_flyer_layout import Box,price_anchors,price_column_cells,product_name_fragment,quantity,inferred_unit_pack,page_quality_counts,unit_check,whitespace_tiles,printed_date_ranges
 
 class LayoutTests(unittest.TestCase):
     def test_overlapping_typographic_euro_and_cent_boxes(self):
@@ -48,6 +48,42 @@ class LayoutTests(unittest.TestCase):
         pack,ambiguous=quantity('je 2 l oder 4 l')
         self.assertTrue(ambiguous);self.assertEqual(pack,'2 l / 4 l')
         self.assertEqual(quantity('je 250-g-Pckg.'),('250 g',False))
+    def test_future_flyers_infer_only_explicit_single_sales_units(self):
+        samples={
+            'SunGold Kiwi Klasse 1; Neuseeland; Stück':'1 Stück',
+            'Speise- und Schnitzkürbis; Deutschland; Stück':'1 Stück',
+            'unverpackt Bananen Lose Ware; Ecuador kg-Preis':'1 kg',
+            'Bund Radieschen; je Bund':'1 Bund',
+            'Erdbeeren Klasse I; Schale':'1 Schale',
+            'Zitronen; Netz':'1 Netz',
+            'Bio-Käse; Packung':'1 Packung',
+            '250 g Gouda':'',
+            'Bananen 1 Stück kg-Preis':'',
+            'Kinder Spielzeug Stück für Stück':'',
+            '': '',
+        }
+        for text,expected in samples.items():
+            with self.subTest(text=text):
+                self.assertEqual(inferred_unit_pack(text),expected)
+        self.assertEqual(quantity('0,5 kg'),('0,5 kg',False))
+        self.assertEqual(quantity('2 l / 4 l'),('2 l / 4 l',True))
+
+    def test_weekly_audit_counts_are_only_diagnostic(self):
+        preview={
+            'status':'done',
+            'offers':[
+                {'status':'review','data':{'priceCents':59,'packSize':'1 Stück'},
+                 'issues':['Einheit aus Produkttext erschlossen; Original prüfen']},
+                {'status':'review','data':{'priceCents':0,'packSize':''},
+                 'issues':['Mehrere Verkaufspreise / Produkte im selben Bereich']},
+                {'status':'unreadable','data':{'priceCents':0,'packSize':''},'issues':[]},
+            ],
+        }
+        self.assertEqual(page_quality_counts(preview),
+          {'regions':3,'withPrice':1,'withoutPack':2,'inferredUnit':1,'ambiguousPrice':1,'unreadable':1})
+        self.assertEqual(page_quality_counts({'status':'failed'}),{
+          'regions':0,'withPrice':0,'withoutPack':0,'inferredUnit':0,'ambiguousPrice':0,'unreadable':0})
+
     def test_real_whitespace_separates_side_by_side_regions(self):
         tiles=whitespace_tiles((0,0,400,500),[(10,20,100,80),(10,100,100,200),(250,20,350,80),(250,100,350,200)])
         self.assertGreaterEqual(len(tiles),2)
