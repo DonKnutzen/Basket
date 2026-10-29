@@ -138,7 +138,14 @@ def price_anchors(boxes):
     for i,b in enumerate(boxes):
         if BASE.search(b.text):continue
         if re.search(r'\b(?:Mo|Di|Mi|Do|Fr|Sa|So)\.?\s*\d{1,2}\.\d{1,2}\.',b.text,re.I):continue
+        # A flyer may print "1,25 l" next to "1,19 €". Both match
+        # a generic decimal regex, but the first is a bottle size, not a
+        # price. Preserve separately printed sale prices in the same span.
+        size_ranges=[(match.start(),match.end()) for match in SIZE.finditer(b.text)]
+        date_ranges=[(match.start(),match.end()) for match in re.finditer(r'(?<!\\d)\\d{1,2}\\.\\d{2}\\.(?:\\d{2,4})?(?!\\d)',b.text)]
         for m in PRICE.finditer(b.text):
+            if any(lo<=m.start() and m.end()<=hi for lo,hi in size_ranges+date_ranges):continue
+            if b.text[m.end():].lstrip().startswith('%'):continue
             nearby=[c.text for c in boxes if c is not b and abs(c.rect[0]-b.rect[0])<35 and 0<=c.rect[1]-b.rect[1]<25]
             if re.search(r'Pfand',b.text,re.I):role='deposit'
             elif 'Bonus' in nearby and b.size<20:role='bonus-credit'
