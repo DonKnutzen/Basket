@@ -130,6 +130,11 @@ export function compactGermanOfferMatches(matches:readonly GermanMatch[],maxOffe
  * Distinct prices, loyalty conditions, product variants and pack sizes
  * remain independent offers (e.g. PENNY 0,99 € App vs 1,19 € standard).
  */
+/** Product titles already containing the printed brand must not repeat it. */
+export function germanOfferDisplayName(offer:Pick<GermanOffer,'brand'|'name'>):string{
+ const brand=fold(offer.brand),name=fold(offer.name);
+ return brand&&name.startsWith(brand+' ')?offer.name:[offer.brand,offer.name].filter(Boolean).join(' · ');
+}
 export function mergeGermanOfferSources(published:readonly GermanOffer[],preview:readonly GermanOffer[]):GermanOffer[]{
  const ids=new Set<string>(),fingerprints=new Set<string>(),result:GermanOffer[]=[];
  for(const o of [...published,...preview]){
