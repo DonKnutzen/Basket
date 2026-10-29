@@ -1,21 +1,10 @@
-name: Refresh limited ALDI Nord public weekly offer facts
+name: Legacy ALDI Nord source diagnostic (no publication)
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '43 6 * * *'
-  push:
-    branches:
-      - feature/auto-rewe-aldi-kiel-weekly-2026-10
-    paths:
-      - source/scripts/extract-aldi-nord-weekly.py
-      - .github/workflows/aldi-nord-weekly.yml
 permissions:
-  contents: write
-concurrency:
-  group: basket-aldi-weekly-${{ github.ref }}
-  cancel-in-progress: false
+  contents: read
 jobs:
-  refresh:
+  inspect:
     runs-on: ubuntu-latest
     timeout-minutes: 4
     steps:
@@ -23,14 +12,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Download public offer page once and extract bounded, dated price facts
-        run: python source/scripts/extract-aldi-nord-weekly.py aldi-nord-kiel-weekly.json
-      - name: Publish limited summary only
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add aldi-nord-kiel-weekly.json
-          if ! git diff --cached --quiet; then
-            git commit -m "data: refresh ALDI Nord weekly price facts [skip ci]"
-            git push
-          fi
+      # Preserve the structured parser; replace public commits with review.
+      - run: python source/scripts/extract-aldi-nord-weekly.py "$RUNNER_TEMP/aldi-diagnostic.json"

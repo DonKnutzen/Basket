@@ -1,3 +1,5 @@
+> German implementation update: see [CENTRAL_GERMAN_OFFERS.md](CENTRAL_GERMAN_OFFERS.md) for the reviewed central import pipeline. The older German pilot descriptions below are historical. Canadian integration descriptions remain applicable.
+
 # Private German supermarket flyer import – Kiel (2026-10-28)
 
 ## Workflow

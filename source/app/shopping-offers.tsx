@@ -1,69 +1,21 @@
 'use client';
 import React,{useEffect,useState} from 'react';
 import {locale,tr} from '../lib/i18n';
-import {GermanFlyerImport,GermanFlyerMatches} from './flyer-import';
-import {fetchRewePartialData,berlinDay,type RewePartialData} from '../lib/rewe-official-weekly';
-import {fetchAldiWeeklyData,type AldiWeeklyData} from '../lib/aldi-nord-weekly';
-import {isCopyOnlyOfferLinkContext} from '../lib/offer-link-navigation';
+import {CentralGermanOfferMatches} from './german-central-offers';
+import {GermanOfferAdmin} from './german-offer-admin';
+import {OfferSourceLink} from './offer-source-link';
+import {useCentralGermanOffers,useGermanOfferDisplay} from '../lib/german-offer-store';
 import {
  DEFAULT_OFFER_REGION,OFFER_PROVINCES,GERMAN_OFFER_CITIES,officialGermanFlyers,checkOffers,providerAvailable,restoreOfferRegion,storeChoices,isStoreOfferConnected,
  type Deal,type OfferRegion,
 } from '../lib/current-offers';
 
 const KEY='basket-deal-region-v1';
-/**
- * In iOS home-screen / embedded views, a new cross-origin tab can leave Basket
- * white or unresponsive. Offer a one-tap URL copy rather than starting a
- * second in-app WebKit page. The user can open the source in Safari manually.
- */
-function OfferSourceLink({url,children,className,title}:{url:string;children:React.ReactNode;className?:string;title?:string}){
- const [copyOnly,setCopyOnly]=useState(false);
- const [copied,setCopied]=useState(false);
- useEffect(()=>setCopyOnly(isCopyOnlyOfferLinkContext()),[]);
- const copy=async()=>{
-  let ok=false;
-  try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(url);ok=true}}catch{}
-  if(!ok)try{
-   const el=document.createElement('textarea');
-   el.value=url;el.setAttribute('readonly','');el.style.position='fixed';el.style.opacity='0';
-   document.body.appendChild(el);el.select();ok=document.execCommand('copy');el.remove();
-  }catch{}
-  if(ok)setCopied(true);
-  else window.prompt(tr('Copy the link and open it in Safari:'),url);
- };
- if(copyOnly)return <button type="button" className={className} title={tr('Copy link to open in Safari')} onClick={copy}>
-  {children}<small className="offer-copy-label">{copied?tr('Copied — paste into Safari'):tr('Copy link for Safari')}</small>
- </button>;
- return <a href={url} className={className} title={title} target="_blank" rel="noopener noreferrer">{children}</a>;
-}
-
 function GermanAutomaticSourceStatus({stores}:{stores:readonly string[]}){
- const [rewe,setRewe]=useState<RewePartialData|null>(null);
- const [aldi,setAldi]=useState<AldiWeeklyData|null>(null);
- const storeKey=[...stores].sort().join(',');
- useEffect(()=>{
-  let active=true;
-  if(!stores.length||stores.includes('rewe'))void fetchRewePartialData().then(d=>{if(active)setRewe(d)});
-  else setRewe(null);
-  if(!stores.length||stores.includes('aldi'))void fetchAldiWeeklyData().then(d=>{if(active)setAldi(d)});
-  else setAldi(null);
-  return()=>{active=false};
- // eslint-disable-next-line react-hooks/exhaustive-deps
- },[storeKey]);
- const today=berlinDay();
- const reweCurrent=!!rewe&&rewe.status==='partial'&&rewe.validFrom<=today&&rewe.validUntil>=today;
- const reweExpired=!!rewe&&rewe.validUntil<today;
- const aldiFresh=!!aldi&&(Date.parse(today+'T12:00:00Z')-Date.parse(aldi.checkedAt+'T12:00:00Z'))/86400000<=3;
- const aldiCurrent=!!aldi&&aldi.status==='partial'&&aldi.checkedAt<=today&&aldiFresh&&
-  aldi.offers.some(x=>x.validFrom<=today&&x.validUntil>=today);
- return <div className="offer-de-feed-status">
-  {(!stores.length||stores.includes('rewe'))&&<small>REWE Kiel: {reweCurrent
-   ?tr('Current partial flyer matches')+' · '+rewe!.validUntil
-   :reweExpired?tr('New weekly REWE PDF link needed'):tr('No verified current flyer data')}</small>}
-  {(!stores.length||stores.includes('aldi'))&&<small>ALDI Nord: {aldiCurrent
-   ?tr('Current partial flyer matches')+' · '+aldi!.checkedAt
-   :tr('No verified current flyer data')}</small>}
- </div>;
+ const state=useCentralGermanOffers();
+ const [enabled,setEnabled]=useGermanOfferDisplay();
+ const current=state.offers.filter(o=>!stores.length||stores.includes(o.retailer==='aldi-nord'?'aldi':'rewe'));
+ return <div className="offer-de-feed-status"><label className="german-checkbox"><input type="checkbox" checked={enabled} onChange={e=>setEnabled(e.target.checked)}/>Aktuelle Prospektangebote anzeigen</label><small>{state.loading?'Angebote werden geladen …':state.error||`${current.length} zentral bestätigte Angebote · Kiel`}</small></div>;
 }
 export function useOfferRegion(){
  const [region,setRegion]=useState<OfferRegion>(DEFAULT_OFFER_REGION);
@@ -101,7 +53,7 @@ export function OfferSettings({region,onChange}:{region:OfferRegion;onChange:Rea
     </button>;
    })}</div>
    <p className="offer-source-note">
-    {region.country==='DE'?tr("REWE Kiel and ALDI Nord are selected by default. For REWE, the weekly PDF link is supplied manually and Basket then automatically extracts limited matches. ALDI Nord continues daily updates. Expired prices are hidden; product and pack size must be checked.")
+    {region.country==='DE'?tr("Confirmed REWE Kiel and ALDI Nord flyer offers appear automatically on your shopping list. Check the advertised brand, size and conditions.")
       : eligible&&region.province==='NS'
       ? tr('Nova Scotia: weekly flyer reference prices for 19 common staples from Aubaine.ca. A price may not be a discount, and pack size and branch may differ. Source: aubaine.ca.')
       : eligible
@@ -109,7 +61,7 @@ export function OfferSettings({region,onChange}:{region:OfferRegion;onChange:Rea
       : tr('No verified automated offer feed is connected for this region or store selection. Receipt price history still works normally.')}
    </p>
    {region.country==='DE'&&<GermanAutomaticSourceStatus stores={region.stores}/>}
-   {region.country==='DE'&&<details className="flyer-optional-import"><summary>{tr('Optional: import your own flyer')}</summary><GermanFlyerImport/></details>}
+   {region.country==='DE'&&<GermanOfferAdmin/>}
   </div>
  </details>;
 }
@@ -134,11 +86,11 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
  if(region.country==='DE'){
   const links=officialGermanFlyers(region);
   return <div className="offer-in-tile">
-   <GermanFlyerMatches name={name} chosenStores={region.stores}/>
+   <CentralGermanOfferMatches name={name} stores={region.stores}/>
    {!showGermanFlyers
     ? <button type="button" className="offer-check" onClick={()=>setShowGermanFlyers(true)}>🏷️ {tr('Check official flyers')}</button>
     : <>
-      <small>{tr('REWE and ALDI Nord grocery categories are checked automatically where current source data is available. Missing matches do not mean no sale, and brand and package sizes can differ.')}</small>
+      <small>{tr('Confirmed REWE Kiel and ALDI Nord flyer offers appear automatically on your shopping list. Check the advertised brand, size and conditions.')}</small>
       <div className="offer-de-links">{links.map(l=><OfferSourceLink key={l.id} url={l.url}>{l.name}</OfferSourceLink>)}</div>
      </>}
   </div>;

@@ -1,3 +1,5 @@
+> German implementation update: see [CENTRAL_GERMAN_OFFERS.md](CENTRAL_GERMAN_OFFERS.md) for the reviewed central import pipeline. The older German pilot descriptions below are historical. Canadian integration descriptions remain applicable.
+
 # German grocery offers: source audit (28 October 2026)
 
 **Target:** Kiel (Schleswig-Holstein), primarily REWE, ALDI Nord, Lidl, EDEKA, PENNY; eventual Kaufland. Personal household app, no paid subscriptions desired, and keep the legal/reuse position defensible.

@@ -1,19 +1,10 @@
-name: Process manually supplied REWE Kiel weekly PDF
+name: Legacy REWE source diagnostic (no publication)
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - source/config/rewe-kiel-current-flyer.json
-      - source/scripts/extract-rewe-kiel-weekly.py
-      - .github/workflows/rewe-kiel-weekly.yml
 permissions:
-  contents: write
-concurrency:
-  group: basket-rewe-kiel-human-supplied-source
-  cancel-in-progress: false
+  contents: read
 jobs:
-  read-supplied-file:
+  inspect:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
@@ -21,18 +12,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Validate the manually supplied REWE market PDF and week
-        run: python -m unittest discover -s source/tests -p 'test_rewe_config.py'
-      - name: Prepare open-source PDF reader
-        run: python -m pip install -q pymupdf
-      - name: Extract a limited set of price facts from the supplied week only
-        run: python source/scripts/extract-rewe-kiel-weekly.py rewe-kiel-weekly.json
-      - name: Commit only bounded dated price facts (no source PDF)
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add rewe-kiel-weekly.json
-          if ! git diff --cached --quiet; then
-            git commit -m "data: process manually supplied REWE Kiel flyer [skip ci]"
-            git push
-          fi
+      - run: python -m unittest discover -s source/tests -p 'test_rewe_config.py'
+      - run: pip install -r source/scripts/flyer_requirements.txt
+      # Line-order guesses are diagnostics, never public offer data.
+      - run: python source/scripts/extract-rewe-kiel-weekly.py "$RUNNER_TEMP/rewe-diagnostic.json"

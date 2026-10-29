@@ -1,0 +1,184 @@
+{
+  "note": "Development sample, manually checked against rendered pages. Not an independent accuracy benchmark. Source PDFs are not redistributed. Multiple variants inside one tile count as one reference region.",
+  "sources": [
+    {
+      "retailer": "rewe",
+      "filename": "rewe-2026w44.pdf",
+      "sha256": "7b172bf10ab47251819266d63e0edf6dce22f1c75d3cfaeaefde97242195efde",
+      "pages": 28,
+      "validFrom": "2026-10-26",
+      "validUntil": "2026-10-31",
+      "referencePage": 13,
+      "offers": [
+        {
+          "brand": "Kerrygold",
+          "name": "Original Irische Butter",
+          "priceCents": 159,
+          "sizes": [
+            "250 g"
+          ]
+        },
+        {
+          "brand": "Rama",
+          "name": "zum Streichen",
+          "priceCents": 149,
+          "sizes": [
+            "400 g"
+          ]
+        },
+        {
+          "brand": "Popp",
+          "name": "Brotaufstrich",
+          "priceCents": 129,
+          "sizes": [
+            "150 g"
+          ]
+        },
+        {
+          "brand": "YFood",
+          "name": "Trinkmahlzeit",
+          "priceCents": 299,
+          "sizes": [
+            "500 ml"
+          ]
+        },
+        {
+          "brand": "Müller",
+          "name": "Grießpudding",
+          "priceCents": 49,
+          "sizes": [
+            "160 g",
+            "200 g"
+          ]
+        },
+        {
+          "brand": "Danone",
+          "name": "YoPro Drink",
+          "priceCents": 111,
+          "sizes": [
+            "270 g"
+          ]
+        },
+        {
+          "brand": "Danone",
+          "name": "Activia Joghurt",
+          "priceCents": 149,
+          "sizes": [
+            "4 x 115 g"
+          ]
+        },
+        {
+          "brand": "Weihenstephan",
+          "name": "Cremig & Quarkig",
+          "priceCents": 169,
+          "sizes": [
+            "500 g"
+          ]
+        },
+        {
+          "brand": "Müller",
+          "name": "Reine Buttermilch",
+          "priceCents": 59,
+          "sizes": [
+            "500 g"
+          ]
+        }
+      ],
+      "sourceUrl": "https://view.publitas.com/89773/3478778/pdfs/61827fae-6411-4697-a44c-0fca78d9da08.pdf?response-content-disposition=attachment%3B+filename%2A%3DUTF-8%27%27REWE%2520Markt%2520GmbH%2520-%2520rewe_2026_wk44_561204_v1.pdf"
+    },
+    {
+      "retailer": "aldi-nord",
+      "filename": "aldi-nord-2026w44.pdf",
+      "sha256": "392089f91d76c62f30507a47da6d7fd120ab7622c80a9492080e0d0df8adb8a8",
+      "pages": 49,
+      "validFrom": "2026-10-26",
+      "validUntil": "2026-10-30",
+      "referencePage": 8,
+      "offers": [
+        {
+          "brand": "Gut drei Eichen",
+          "name": "Koch Hinterschinken",
+          "priceCents": 149,
+          "sizes": [
+            "250 g"
+          ]
+        },
+        {
+          "brand": "Leerdammer",
+          "name": "Käsescheiben",
+          "priceCents": 129,
+          "sizes": [
+            "125 g",
+            "140 g"
+          ]
+        },
+        {
+          "brand": "Wiltmann",
+          "name": "Genießerteller",
+          "priceCents": 129,
+          "sizes": [
+            "70 g",
+            "80 g"
+          ]
+        },
+        {
+          "brand": "Güldenhof",
+          "name": "Geflügelfrikadellen",
+          "priceCents": 299,
+          "sizes": [
+            "600 g"
+          ]
+        },
+        {
+          "brand": "Alpenhain",
+          "name": "Back Camembert",
+          "priceCents": 199,
+          "sizes": [
+            "200 g"
+          ]
+        },
+        {
+          "brand": "Rougette",
+          "name": "Ofenkäse",
+          "priceCents": 399,
+          "sizes": [
+            "320 g"
+          ]
+        },
+        {
+          "brand": "Arla",
+          "name": "Finello Reibekäse",
+          "priceCents": 129,
+          "sizes": [
+            "150 g"
+          ]
+        },
+        {
+          "brand": "Weihenstephan",
+          "name": "Butter Die Streichzarte",
+          "priceCents": 149,
+          "sizes": [
+            "250 g"
+          ]
+        },
+        {
+          "brand": "Ferrero",
+          "name": "Kinder Maxi King",
+          "priceCents": 149,
+          "sizes": [
+            "3x35 g"
+          ]
+        },
+        {
+          "brand": "Danone",
+          "name": "Actimel XXL",
+          "priceCents": 299,
+          "sizes": [
+            "12x100 g"
+          ]
+        }
+      ],
+      "sourceUrl": "https://magazine.aldi-nord.de/aldi-nord/aldi-aktuell/2026/2026cw44mopromotionaldi-angebote-ab-montag-26-10-1//GetPDF.ashx"
+    }
+  ]
+}
