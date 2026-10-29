@@ -102,7 +102,7 @@ export function GermanOfferAdmin(){
     {pages.find(p=>p.page===page)?.date_hints?.map((h,i)=><p key={i}>Gedruckter Seitenzeitraum: {h.from} – {h.until}{h.yearFromImport?' · Jahr aus Import übernommen; bestätigen.':''}</p>)}
     {['review','published'].includes(job.status)&&<button type="button" disabled={busy} onClick={()=>void action(async()=>{await rpc('offer_candidate_add',{target:job.id,page_number:page});setFilter('pending');await load(selected)})}>Produkt auf dieser Seite manuell ergänzen</button>}
     <datalist id="german-offer-categories">{[...new Set([...PRODUCT_CATALOG.map(x=>x.de),...GERMAN_STAPLE_CATEGORIES])].map(name=><option key={name} value={name}/>)}</datalist>
-    {shown.map(row=>job.status==='published'&&row.status==='verified'?<p key={row.id}>{row.data.brand} {row.data.name} · {row.data.packSize} · {(row.data.priceCents/100).toFixed(2)} € · {row.status}</p>:<ReviewRow key={row.id+':'+row.revision} row={row} busy={busy} onSave={async(fields,decision)=>action(async()=>{await rpc('offer_candidate_review',{target:row.id,expected_revision:row.revision,fields,decision});await load(selected)})}/>)}
+    {shown.map(row=>job.status==='published'&&row.status==='verified'?<p key={row.id}>{row.data.brand} {row.data.name} · {row.data.packSize} · {(row.data.priceCents/100).toFixed(2)} € · {row.status}</p>:<ReviewRow key={row.id+':'+row.revision} row={row} busy={busy} onSave={async(fields,decision)=>action(async()=>{await rpc('offer_candidate_review',{target:row.id,expected_revision:row.revision,fields,decision});await load(selected);await refreshGermanOffers()})}/>)}
     {!shown.length&&<p>Keine Einträge in dieser Ansicht. Die Originalseite kann auf fehlende Produkte geprüft werden.</p>}
    </>}
    {['review','published'].includes(job.status)&&<div className="german-publish">
@@ -124,3 +124,4 @@ export function GermanOfferAdmin(){
   </>}
  </div></details>;
 }
+
