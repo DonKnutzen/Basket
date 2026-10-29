@@ -32,6 +32,18 @@ class LayoutTests(unittest.TestCase):
         mixed=price_anchors([Box('1,25 l Flasche, 1,19 €',(10,20,180,38),15)])
         self.assertEqual([x['cents'] for x in mixed],[119])
 
+    def test_red_bull_bottle_size_is_not_a_25_cent_sale_price(self):
+        # ALDI page 9. The imported 0.25 L can was falsely read as
+        # a 25-cent price; the €/l base price is 3.56, not a sale badge.
+        spans=[
+            Box('0,25-L-Dose',(170,780,204,788),9),
+            Box('(Liter = 3.56)',(170,792,221,804),9),
+            Box('zzgl. Pfand = 0.25',(170,766,223,778),9),
+        ]
+        found=price_anchors(spans)
+        self.assertEqual([(p['cents'],p['role']) for p in found],[(25,'deposit')])
+        self.assertEqual(price_anchors([Box('0,25-L-Dose',(170,780,204,788),9)]),[])
+
     def test_penny_name_is_preserved_when_pdf_puts_size_and_price_in_one_span(self):
         self.assertEqual(product_name_fragment('Coca-Cola Erfrischungsgetränk 1,25 l 1,19 €'),'Coca-Cola Erfrischungsgetränk')
         self.assertEqual(product_name_fragment('Coca-Cola Zero 1,25 l'),'Coca-Cola Zero')
