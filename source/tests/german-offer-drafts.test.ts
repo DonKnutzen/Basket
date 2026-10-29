@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {matchGermanDrafts,parseGermanDraft,searchGermanDraftCatalogue} from '../lib/german-offer-drafts';
+import {matchGermanDrafts,parseGermanDraft,searchGermanDraftCatalogue,unverifiedOfferCount} from '../lib/german-offer-drafts';
 
 const job={id:'a-1',retailer:'aldi-nord',region:'Kiel',filename:'aldi.pdf',source_url:'https://magazine.aldi-nord.de/2026/sample/GetPDF.ashx',valid_from:'2026-10-26',valid_until:'2026-10-30'};
 const raw=(name:string,changes:Record<string,unknown>={})=>({
@@ -53,4 +53,20 @@ test('cross-page operator catalogue finds identified and as-yet uncategorized it
  assert.ok(milk&&cheese);
  assert.deepEqual(searchGermanDraftCatalogue('Gouda',[milk,cheese],[],now).map(x=>x.id),['cheese']);
  assert.deepEqual(searchGermanDraftCatalogue('Milch',[milk,cheese],['penny'],now).map(x=>x.id),['milk']);
+});
+
+test('user-facing labels are singular/plural and never call an unchecked region a confirmed offer',()=>{
+ assert.equal(unverifiedOfferCount(1,true),'1 ungeprüftes Angebot');
+ assert.equal(unverifiedOfferCount(2,true),'2 ungeprüfte Angebote');
+ assert.equal(unverifiedOfferCount(1,false),'1 unverified offer');
+ assert.equal(unverifiedOfferCount(3,false),'3 unverified offers');
+});
+test('Kiwi with a recognizable product but uncertain price remains searchable without a confirmed price',()=>{
+ const candidate=parseGermanDraft(raw('Große Früchte Kl. 1 Neuseeland SunGold Kiwi',{id:'kiwi',page:1,
+  issues:['Marke nicht eindeutig als Text erkannt','Keine eindeutige Packungsgröße erkannt'],
+  data:{...raw('').data,brand:'',packSize:'',priceCents:0}}),job);
+ assert.ok(candidate);
+ assert.equal(candidate.priceUsable,false);
+ assert.equal(candidate.name.includes('Kiwi'),true);
+ assert.deepEqual(searchGermanDraftCatalogue('Kiwi',[candidate],[],now).map(d=>d.id),['kiwi']);
 });
