@@ -66,6 +66,7 @@ export function germanPack(raw:string):{amount:number;unit:GermanPackUnit}|null{
  * "Stück", "kg-Preis" etc. Never guess typical supermarket package sizes. */
 export function inferGermanExplicitPack(name:string):string{
  const text=name.replace(/\s+/g,' ').trim();
+ if (/\bStück\s+für\s+Stück\b/i.test(text))return '';
  const kilo=/\b(?:kg[\s-]*Preis|Preis\s*(?:je|pro)\s*kg|je\s+kg)\b/i.test(text);
  const piece=/\b(?:Stück|Stk\.?)\b/i.test(text);
  if(kilo&&piece)return '';
