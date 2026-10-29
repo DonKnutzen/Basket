@@ -1,0 +1,31 @@
+name: Verify central German offers
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feature/central-kiel-flyer-review]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: corepack enable && corepack prepare pnpm@11.25.0 --activate
+      - run: pnpm install --frozen-lockfile
+        working-directory: source
+      - run: pnpm test && node scripts/test-german-db.mjs && pnpm exec tsc --noEmit && pnpm run build:pages --out ../.ci-pages
+        working-directory: source
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s source/tests -p 'test_*.py'
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.5.6
+      - run: deno check --no-config --node-modules-dir=none index.ts && deno test --no-config --node-modules-dir=none workload-policy_test.ts
+        working-directory: source/supabase/functions/german-flyer-worker

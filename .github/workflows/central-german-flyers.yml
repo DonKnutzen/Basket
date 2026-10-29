@@ -1,0 +1,30 @@
+name: Central German flyer queue
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/15 * * * *'
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: central-german-flyer-worker
+  cancel-in-progress: false
+jobs:
+  process:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install free OCR and pinned PDF parser
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-deu
+          pip install -r source/scripts/flyer_requirements.txt
+      - name: Process queued imports (private data never becomes a workflow artifact)
+        env:
+          FLYER_WORKER_URL: https://wrmlkpuhyqxkehbvzoxx.supabase.co/functions/v1/german-flyer-worker
+        run: python source/scripts/process-german-flyers.py

@@ -1,3 +1,5 @@
+> German implementation update: see [CENTRAL_GERMAN_OFFERS.md](CENTRAL_GERMAN_OFFERS.md) for the reviewed central import pipeline. The older German pilot descriptions below are historical. Canadian integration descriptions remain applicable.
+
 # Basket – targeted, on-demand supermarket offers (28 October 2026)
 
 ## What the shopping list does

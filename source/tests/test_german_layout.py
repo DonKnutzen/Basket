@@ -1,0 +1,36 @@
+import unittest
+import sys
+from pathlib import Path
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
+from german_flyer_layout import Box,price_anchors,quantity,unit_check,whitespace_tiles,printed_date_ranges
+
+class LayoutTests(unittest.TestCase):
+    def test_overlapping_typographic_euro_and_cent_boxes(self):
+        boxes=[Box('1.',(175,396,199,437),41),Box('79',(190,399,215,428),29)]
+        found=price_anchors(boxes)
+        self.assertEqual(len(found),1);self.assertEqual(found[0]['cents'],179)
+    def test_distant_cent_block_not_joined(self):
+        boxes=[Box('1.',(10,10,30,50),41),Box('99',(200,12,225,45),29)]
+        self.assertEqual(price_anchors(boxes),[])
+    def test_old_price_bonus_credit_and_deposit_are_not_sale_prices(self):
+        found=price_anchors([Box('2,29',(0,0,50,15),12,True),Box('0,10 €',(100,0,145,15),14),Box('Bonus',(100,15,140,26),11),Box('zzgl. 0.25 Pfand',(0,60,80,72),9)])
+        self.assertEqual([x['role'] for x in found],['regular','bonus-credit','deposit'])
+    def test_base_prices_are_separate(self):
+        self.assertEqual(price_anchors([Box('(1 kg = 7.16)',(0,0,80,15),10)]),[])
+        self.assertTrue(unit_check(179,'250 g','(1 kg = 7.16)'))
+        self.assertFalse(unit_check(179,'250 g','(1 kg = 9.99)'))
+    def test_alternative_quantities_preserved(self):
+        pack,ambiguous=quantity('je 2 l oder 4 l')
+        self.assertTrue(ambiguous);self.assertEqual(pack,'2 l / 4 l')
+        self.assertEqual(quantity('je 250-g-Pckg.'),('250 g',False))
+    def test_real_whitespace_separates_side_by_side_regions(self):
+        tiles=whitespace_tiles((0,0,400,500),[(10,20,100,80),(10,100,100,200),(250,20,350,80),(250,100,350,200)])
+        self.assertGreaterEqual(len(tiles),2)
+        self.assertTrue(any(t[2]<=250 for t in tiles));self.assertTrue(any(t[0]>=100 for t in tiles))
+    def test_real_aldi_holiday_range_is_friday_not_guessed_saturday(self):
+        hints=printed_date_ranges('Gültig von Mo. 26.10. bis Fr. 30.10.',2026)
+        self.assertEqual(hints[0]['until'],'2026-10-30');self.assertTrue(hints[0]['yearFromImport'])
+        self.assertEqual(printed_date_ranges('31.02. bis 32.02.',2026),[])
+        self.assertEqual(printed_date_ranges('28.12. bis 02.01.',2026)[0]['until'],'2027-01-02')
+
+if __name__=='__main__':unittest.main()
