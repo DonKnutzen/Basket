@@ -18,7 +18,7 @@ import io
 import datetime as dt
 import shutil
 
-VERSION = 'geometry-review-v2-explicit-units'
+VERSION = 'geometry-review-v3-row-boundaries'
 PRICE = re.compile(r'(?<![\d.,])(\d{1,3})[.,](\d{2})(?!\d)')
 SIZE = re.compile(r'\b(?:\d+\s*[x×]\s*)?\d+(?:[.,]\d+)?[\s-]*(?:kg|g|ml|cl|l|Stück|St\.?|Packungen?)\b', re.I)
 BASE = re.compile(r'(?:\b(?:kg|liter|l)\s*=|/\s*(?:kg|l)\b|je\s*(?:kg|liter)\b)', re.I)
@@ -49,8 +49,30 @@ def price_cents(text):
 def quantity(text):
     """Keep the printed alternatives; never turn 2 l / 4 l into one size."""
     found=[re.sub(r'(?<=\d)-(?=[a-zA-Z])',' ',m.group(0)) for m in SIZE.finditer(text)]
-    unique=list(dict.fromkeys(found))
+    unique=[];seen=set()
+    for raw in found:
+        # The same pack can be printed twice as e.g. 900 g and 5 x 180 g.
+        # Equivalent totals are not alternative sizes; retain the first wording.
+        m=re.fullmatch(r'(?:(\d+)\s*[x×]\s*)?(\d+(?:[.,]\d+)?)\s*(kg|g|ml|cl|l)',raw,re.I)
+        key=raw
+        if m:
+            unit=m[3].lower();value=Decimal(m[1] or '1')*Decimal(m[2].replace(',','.'))
+            if unit in ('g','ml'):value/=1000
+            if unit=='cl':value/=100
+            key=('kg' if unit in ('g','kg') else 'l',value)
+        if key not in seen:unique.append(raw);seen.add(key)
     return ' / '.join(unique), len(unique)>1
+
+def panel_row_cell(panel, cell, anchor, selling):
+    """A lone price in a panel row uses the full row, not an empty half-cell.
+
+    Restrict expansion to a printed enclosing panel and the same grid row.
+    Adjacent rows and other products' price badges must remain outside it.
+    """
+    row=(panel[0],max(panel[1],cell[1]),panel[2],min(panel[3],cell[3]))
+    if not contains(row,anchor['rect']):return cell
+    occupants=[p for p in selling if contains(row,p['rect'])]
+    return row if len(occupants)==1 else cell
 
 def inferred_unit_pack(name):
     """Infer only units explicitly printed with the product description.
@@ -88,14 +110,22 @@ def page_quality_counts(result):
 
 def unit_check(cents, pack, printed):
     """Compare explicitly printed €/kg or €/l; no historical imputation."""
-    m=re.fullmatch(r'(\d+(?:[.,]\d+)?)\s*(kg|g|ml|l)',pack.strip(),re.I)
-    p=PRICE.search(printed)
-    if not m or not p:return None
+    m=re.fullmatch(r'(\d+(?:[.,]\d+)?)\s*(kg|g|ml|cl|l)',pack.strip(),re.I)
+    matches=list(re.finditer(r'(?<![\w\d])(?:(\d+(?:[.,]\d+)?)\s*)?(kg|g|ml|cl|liter|l)\s*=\s*(\d{1,4})[.,](\d{2})(?!\d)',printed,re.I))
+    if not m or len(matches)!=1:return None
+    p=matches[0]
+    mass=lambda unit:unit.lower() in ('g','kg')
+    if mass(m[2])!=mass(p[2]):return False
     value=Decimal(m[1].replace(',','.'))
     if value<=0:return False
     if m[2].lower() in ('g','ml'):value/=1000
-    expected=(Decimal(cents)/value).quantize(Decimal('1'),rounding=ROUND_HALF_UP)
-    return abs(int(expected)-(int(p[1])*100+int(p[2])))<=2
+    elif m[2].lower()=='cl':value/=100
+    denominator=Decimal((p[1] or '1').replace(',','.'))
+    if denominator<=0:return False
+    if p[2].lower() in ('g','ml'):denominator/=1000
+    elif p[2].lower()=='cl':denominator/=100
+    expected=(Decimal(cents)*denominator/value).quantize(Decimal('1'),rounding=ROUND_HALF_UP)
+    return abs(int(expected)-(int(p[3])*100+int(p[4])))<=2
 
 def text_boxes(page):
     drawings=page.get_drawings()
@@ -250,6 +280,40 @@ def product_name_fragment(text):
     if len(re.findall(r'[A-Za-zÄÖÜäöüß]',clean))<2:return ''
     return clean
 
+def panel_has_product(rect, boxes):
+    """A rectangle around price digits/discount is a badge, not a product tile."""
+    return any(contains(rect,b.rect) and b.size<=20 and product_name_fragment(b.text)
+               for b in boxes)
+
+def recover_lateral_description(rect, anchor, boxes, selling, page_width):
+    """Recover an isolated price badge only with unique arithmetic corroboration.
+
+    Require a separate aligned description column, one explicit size and unit
+    price, matching arithmetic and no competing selling price in the crop.
+    Never pick a nearby name merely because it is closest.
+    """
+    groups=[]
+    for b in sorted(boxes,key=lambda b:(b.rect[0],b.rect[1])):
+        if b.size>20 or b.rect[2]>rect[0]+2 or b.rect[1]<rect[1]-20 or b.rect[3]>rect[3]+20:continue
+        group=next((g for g in groups if abs(g[0].rect[0]-b.rect[0])<6),None)
+        if group is None:groups.append([b])
+        else:group.append(b)
+    candidates=[]
+    for group in groups:
+        group=sorted(group,key=lambda b:b.rect[1])
+        if len(group)<3 or any(b.rect[1]-a.rect[3]>8 for a,b in zip(group,group[1:])):continue
+        bounds=union([b.rect for b in group])
+        if not 0<=rect[0]-bounds[2]<=page_width*.1:continue
+        text=' '.join(b.text for b in group)
+        pack,ambiguous=quantity(' '.join(b.text.split('(')[0] for b in group))
+        base='; '.join(b.text for b in group if BASE.search(b.text))
+        if ambiguous or not base or unit_check(anchor['cents'],pack,base) is not True:continue
+        if not any(product_name_fragment(b.text) for b in group):continue
+        crop=union([rect,bounds])
+        if sum(contains(crop,p['rect']) for p in selling)!=1:continue
+        candidates.append(crop)
+    return candidates[0] if len(candidates)==1 else None
+
 def analyze_page(page, valid_from, valid_until):
     boxes,images,drawings=text_boxes(page)
     letters=''.join(b.text for b in boxes)
@@ -303,6 +367,7 @@ def analyze_page(page, valid_from, valid_until):
             if sum(contains(r,a['rect']) for a in selling)>1:
                 cell=next((cell for cell in grid if contains(cell,anchor['rect'])),None)
                 if cell:
+                    cell=panel_row_cell(r,cell,anchor,selling)
                     r=(max(r[0],cell[0]),max(r[1],cell[1]),min(r[2],cell[2]),min(r[3],cell[3]))
                 else:
                     column=next((cell for cell in price_column_cells(r,selling) if contains(cell,anchor['rect'])),None)
@@ -316,10 +381,15 @@ def analyze_page(page, valid_from, valid_until):
     # Text-only / unreadable pages are still accounted for and shown in admin.
     offers=[]
     for rect,region in regions.items():
+        recovered=False
+        if not ocr and len(region['anchors'])==1 and not panel_has_product(rect,boxes):
+            expanded=recover_lateral_description(rect,region['anchors'][0],boxes,selling,page.rect.width)
+            if expanded:rect=expanded;recovered=True
         inside=sorted([b for b in boxes if contains(rect,b.rect)],key=lambda b:(round(b.rect[1]/4),b.rect[0]))
         text='\n'.join(b.text for b in inside)
         prices=region['anchors']
         issues=[]
+        if recovered:issues.append('Seitlicher Produkttext über Menge und Grundpreis zugeordnet; Original prüfen')
         if not region['segmented']:issues.append('Keine eindeutige Kachelgrenze; Originalbereich prüfen')
         if rect not in panels and any(contains(panel,rect) for panel in panels):issues.append('Preisspalte nur als Prüfbereich getrennt; Produkt und Preis am Original bestätigen')
         if rect in grid:issues.append('Kachelgrenze aus wiederholtem Preisraster vorgeschlagen')

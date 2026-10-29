@@ -49,3 +49,13 @@ Neue Flyerlayouts können zusätzliche Korrekturen benötigen. Diese Prozedur ma
 
 The existing GitHub Actions workflows already run the application/database/Python checks and the pinned real-PDF regression. New weekly uploads use the same parser automatically; no hardcoded 2026-W44 offer is needed.
 
+
+## Measurable recognition target and mobile verification (29 October 2026)
+
+The engineering target is >=99% recognition with correct product/price/quantity associations, while also counting missed products, duplicates and unrelated matches. A processed page is never a success score. `scripts/check-german-reference.py` now covers **44 manually checked development examples across five REWE/ALDI pages**, including deli cream versus salmon, frozen foods, multipacks, drinks and the formerly missed REWE pudding. It fails on any newly wrong price, loss of a baseline product-price pair or loss of its printed quantities. The original fixture checksums remain pinned.
+
+Run `python scripts/check-german-reference.py --pdf-dir PRIVATE_FIXTURE_DIRECTORY --out PRIVATE_REPORT.json`. Its optional `--require-target` gate deliberately fails for this development dataset. It requires at least 100 independently labelled examples on completely annotated pages and >=99% name/price/quantity recall plus >=99% precision for the labelled fields, with no observed wrong price pairs. `target99SamplePassed` refers only to that evaluation set; it does not establish production accuracy or a statistical confidence bound. This sample does not yet measure complete weekly coverage, all PENNY layouts, variant/condition/date extraction or all brands. Add new weeks and retailer layouts as independently labelled fixtures before claiming general 99% performance.
+
+The normal application test runner discovers every `tests/*.test.ts` file, so the existing draft-offer and flyer-link regressions can no longer be silently omitted. The new shared category exclusions reject ingredient-only matches such as salmon cream cheese or salmon sushi under plain salmon. The source remains searchable under its actual food identity.
+
+Per-item offers now open in a native modal outside the shopping grid, with a full-width mobile sheet, keyboard focus containment, Escape/close handling and scroll restoration. Product, size, unverified price, conditions and expiry/page stay visible; technical reasons remain collapsed. Direct PDF shortcuts are compact. Representative application-component fixtures were checked at 390px light and 320px dark without horizontal overflow. This is browser QA with fixture data, not an independent live shopper-account test or a physical iPhone test.

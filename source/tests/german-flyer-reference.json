@@ -1,5 +1,5 @@
 {
-  "note": "Development sample, manually checked against rendered pages. Not an independent accuracy benchmark. Source PDFs are not redistributed. Multiple variants inside one tile count as one reference region.",
+  "note": "Manually checked development pages, not held out and not a whole-flyer accuracy claim. Combined advertised alternatives count as one region. Missing products and wrong prices must count against recall.",
   "sources": [
     {
       "retailer": "rewe",
@@ -84,7 +84,144 @@
           ]
         }
       ],
-      "sourceUrl": "https://view.publitas.com/89773/3478778/pdfs/61827fae-6411-4697-a44c-0fca78d9da08.pdf?response-content-disposition=attachment%3B+filename%2A%3DUTF-8%27%27REWE%2520Markt%2520GmbH%2520-%2520rewe_2026_wk44_561204_v1.pdf"
+      "sourceUrl": "https://view.publitas.com/89773/3478778/pdfs/61827fae-6411-4697-a44c-0fca78d9da08.pdf?response-content-disposition=attachment%3B+filename%2A%3DUTF-8%27%27REWE%2520Markt%2520GmbH%2520-%2520rewe_2026_wk44_561204_v1.pdf",
+      "extraPages": [
+        {
+          "page": 11,
+          "offers": [
+            {
+              "name": "Schinkenbraten",
+              "brand": "",
+              "priceCents": 169,
+              "sizes": [
+                "100 g"
+              ]
+            },
+            {
+              "name": "Gutsaufschnitt",
+              "brand": "",
+              "priceCents": 139,
+              "sizes": [
+                "100 g"
+              ]
+            },
+            {
+              "name": "Moorschinken",
+              "brand": "",
+              "priceCents": 199,
+              "sizes": [
+                "100 g"
+              ]
+            },
+            {
+              "name": "Kasseler",
+              "brand": "",
+              "priceCents": 159,
+              "sizes": [
+                "100 g"
+              ]
+            },
+            {
+              "name": "Danbo",
+              "brand": "",
+              "priceCents": 169,
+              "sizes": [
+                "100 g"
+              ]
+            },
+            {
+              "name": "Old oder Royaal",
+              "brand": "",
+              "priceCents": 159,
+              "sizes": [
+                "100 g"
+              ]
+            },
+            {
+              "name": "Frischkäsecreme",
+              "brand": "",
+              "priceCents": 149,
+              "sizes": [
+                "100 g"
+              ]
+            }
+          ]
+        },
+        {
+          "page": 14,
+          "offers": [
+            {
+              "name": "Ofen-Backfisch",
+              "brand": "",
+              "priceCents": 279,
+              "sizes": [
+                "240 g",
+                "380 g"
+              ]
+            },
+            {
+              "name": "Suprema Salame",
+              "brand": "",
+              "priceCents": 399,
+              "sizes": [
+                "487 g",
+                "520 g"
+              ]
+            },
+            {
+              "name": "Vegane Filetstreifen",
+              "brand": "",
+              "priceCents": 249,
+              "sizes": [
+                "175 g",
+                "200 g"
+              ]
+            },
+            {
+              "name": "Gnocchi",
+              "brand": "",
+              "priceCents": 189,
+              "sizes": [
+                "500 g"
+              ]
+            },
+            {
+              "name": "Eiscreme",
+              "brand": "",
+              "priceCents": 399,
+              "sizes": [
+                "460 ml"
+              ]
+            },
+            {
+              "name": "Bio-Graved Lachs",
+              "brand": "",
+              "priceCents": 369,
+              "sizes": [
+                "80 g"
+              ]
+            },
+            {
+              "name": "Gemüse-Ideen",
+              "brand": "",
+              "priceCents": 239,
+              "sizes": [
+                "400 g",
+                "500 g"
+              ]
+            },
+            {
+              "name": "Pasta Carbonara",
+              "brand": "",
+              "priceCents": 299,
+              "sizes": [
+                "425 g",
+                "450 g"
+              ]
+            }
+          ]
+        }
+      ]
     },
     {
       "retailer": "aldi-nord",
@@ -178,7 +315,98 @@
           ]
         }
       ],
-      "sourceUrl": "https://magazine.aldi-nord.de/aldi-nord/aldi-aktuell/2026/2026cw44mopromotionaldi-angebote-ab-montag-26-10-1//GetPDF.ashx"
+      "sourceUrl": "https://magazine.aldi-nord.de/aldi-nord/aldi-aktuell/2026/2026cw44mopromotionaldi-angebote-ab-montag-26-10-1//GetPDF.ashx",
+      "extraPages": [
+        {
+          "page": 9,
+          "minimumCorrectProductPricePairs": 10,
+          "offers": [
+            {
+              "name": "Eis Versch. Sorten",
+              "brand": "Mövenpick",
+              "priceCents": 159,
+              "sizes": [
+                "850 ml"
+              ]
+            },
+            {
+              "name": "LOTUS BISCOFF Eis",
+              "brand": "",
+              "priceCents": 229,
+              "sizes": [
+                "3 x 90 ml",
+                "4 x 80 ml"
+              ]
+            },
+            {
+              "name": "Fertiggericht XXL",
+              "brand": "",
+              "priceCents": 449,
+              "sizes": [
+                "800 g"
+              ]
+            },
+            {
+              "name": "Currywurst XXL",
+              "brand": "",
+              "priceCents": 499,
+              "sizes": [
+                "900 g"
+              ]
+            },
+            {
+              "name": "Sushi Maki-Mix",
+              "brand": "",
+              "priceCents": 199,
+              "sizes": [
+                "120 g"
+              ]
+            },
+            {
+              "name": "Crêpes",
+              "brand": "",
+              "priceCents": 199,
+              "sizes": [
+                "300 g"
+              ]
+            },
+            {
+              "name": "Mentos Kaudragees",
+              "brand": "",
+              "priceCents": 199,
+              "sizes": [
+                "187,5 g",
+                "190 g"
+              ]
+            },
+            {
+              "name": "Pico-Balla",
+              "brand": "",
+              "priceCents": 89,
+              "sizes": [
+                "160 g",
+                "175 g"
+              ]
+            },
+            {
+              "name": "RED BULL Energydrink",
+              "brand": "",
+              "priceCents": 89,
+              "sizes": [
+                "0,25 l"
+              ]
+            },
+            {
+              "name": "Krönung Filterkaffee",
+              "brand": "",
+              "priceCents": 649,
+              "sizes": [
+                "500 g"
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }

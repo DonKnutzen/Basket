@@ -29,7 +29,7 @@ test('ambiguous prices and unreadable crops never display tentative amounts',()=
  const unreadable=parseGermanDraft(raw('Cola Original',{status:'unreadable'}),job);
  assert.ok(unreadable);
  assert.equal(unreadable.priceUsable,false);
- const unknownPack=parseGermanDraft(raw('Cola Original',{data:{...raw('').data,packSize:'2 l / 1 l'}}),job);
+ const unknownPack=parseGermanDraft(raw('Cola Original',{data:{...raw('Cola Original').data,packSize:'2 l / 1 l'}}),job);
  assert.ok(unknownPack);
  assert.equal(unknownPack.priceUsable,false);
  assert.equal(parseGermanDraft(raw('Cola Original'),{...job,region:'Hamburg'}),null);
@@ -42,7 +42,7 @@ test('ambiguous prices and unreadable crops never display tentative amounts',()=
 });
 test('do not match cola candy, unrelated brands or wrong pack sizes',()=>{
  const soda=parseGermanDraft(raw('Coca-Cola Zero'),job);
- const mentos=parseGermanDraft(raw('Mentos Kaudragees, z. B. Cola',{id:'mentos',data:{...raw('').data,brand:'Mentos',packSize:'190 g'}}),job);
+ const mentos=parseGermanDraft(raw('Mentos Kaudragees, z. B. Cola',{id:'mentos',data:{...raw('Mentos Kaudragees, z. B. Cola').data,brand:'Mentos',packSize:'190 g'}}),job);
  assert.ok(soda&&mentos);
  assert.deepEqual(matchGermanDrafts('Cola',[soda,mentos],[],now).map(x=>x.id),['cand-1']);
  assert.deepEqual(matchGermanDrafts('Coke Zero 2 l',[soda,mentos],[],now).map(x=>x.id),['cand-1']);
@@ -65,7 +65,7 @@ test('user-facing labels are singular/plural and never call an unchecked region 
 test('Kiwi with a recognizable product but uncertain price remains searchable without a confirmed price',()=>{
  const candidate=parseGermanDraft(raw('Große Früchte Kl. 1 Neuseeland SunGold Kiwi',{id:'kiwi',page:1,
   issues:['Marke nicht eindeutig als Text erkannt','Keine eindeutige Packungsgröße erkannt'],
-  data:{...raw('').data,brand:'',packSize:'',priceCents:0}}),job);
+  data:{...raw('Große Früchte Kl. 1 Neuseeland SunGold Kiwi').data,brand:'',packSize:'',priceCents:0}}),job);
  assert.ok(candidate);
  assert.equal(candidate.priceUsable,false);
  assert.equal(candidate.name.includes('Kiwi'),true);
@@ -133,6 +133,7 @@ test('loose bananas are per kg, not per item, and misassigned prices are blocked
  assert.ok(safe);
  assert.equal(safe.packSize,'1 kg');
  assert.equal(safe.priceUsable,true);
+ assert.equal(matchGermanDrafts('Bananen',[safe],[],now).length,1);
  const ambiguous=parseGermanDraft(raw(base.name,{data:base,issues:['Mehrere Verkaufspreise / Produkte im selben Bereich']}),job);
  assert.ok(ambiguous);
  assert.equal(ambiguous.priceUsable,false);
@@ -194,4 +195,21 @@ test('base-price calculations are deterministic and reject conflicting or unsupp
  assert.ok(clean);
  assert.equal(clean.priceFromBase,false);
  assert.equal(clean.displayPriceCents,119);
+});
+
+test('Lachs never matches cream cheese, sushi or salmon-flavoured prepared foods',()=>{
+ const draft=(name:string,id:string)=>parseGermanDraft(raw(name,{id,data:{...raw('').data,name,brand:'',packSize:'100 g',priceCents:149}}),job)!;
+ const fish=draft('Meine Lieblinge Bio-Graved Lachs oder Bio-Lachs','fish');
+ const cream=draft('Eigene Herstellung Frischkäsecreme mit Lachs und Dill','cream');
+ const sushi=draft('Sushi Maki-Mix Lachs oder Avocado','sushi');
+ assert.equal(cream.categoryHint,'Frischkäse');
+ assert.deepEqual(matchGermanDrafts('Lachs',[fish,cream,sushi],[],now).map(x=>x.id),['fish']);
+ assert.deepEqual(matchGermanDrafts('Salmon',[fish,cream,sushi],[],now).map(x=>x.id),['fish']);
+ assert.deepEqual(matchGermanDrafts('Frischkäse',[cream],[],now).map(x=>x.id),['cream']);
+});
+test('shared prepared-food exclusions reject raw ingredient false positives',()=>{
+ for(const [query,title] of [['Paprika','Kartoffelchips mit Paprika'],['Tomaten','Tomaten Suppe'],['Kartoffeln','Kartoffeln Püree'],['Butter','Butter Blätterteig']]){
+  const d=parseGermanDraft(raw(title,{data:{...raw('').data,name:title,brand:'',packSize:'250 g'}}),job)!;
+  assert.equal(matchGermanDrafts(query,[d],[],now).length,0,query+' vs '+title);
+ }
 });

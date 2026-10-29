@@ -21,7 +21,7 @@ export const GERMAN_STAPLE_CATEGORIES=['Milch','Joghurt','Käse'];
 const staples:Record<string,string>={milch:'Milch',milk:'Milch',joghurt:'Joghurt',jogurt:'Joghurt',yogurt:'Joghurt',kase:'Käse',kaese:'Käse',cheese:'Käse',tomate:'Tomaten'};
 const productCategoryWords:Record<string,string>={rispentomate:'Tomaten',rispentomaten:'Tomaten'};
 export function germanCategoryExact(name:string){const staple=staples[fold(name)];return staple?{de:staple}:catalogExactProduct(name)}
-export function suggestGermanCategory(name:string){return germanCategoryExact(name)||(/\b(?:cola|coke|pepsi)\b/.test(fold(name))?{de:'Cola'}:undefined)||(/\b(?:red bull|redbull)\b/.test(fold(name))?{de:'Energydrink'}:undefined)||catalogProduct(name)||fold(name).split(' ').map(w=>staples[w]||productCategoryWords[w]).filter(Boolean).map(de=>({de}))[0]}
+export function suggestGermanCategory(name:string){return germanCategoryExact(name)||(/\bfrischk(?:a|ae)se(?:creme|zubereitung)?\b/.test(fold(name))?{de:'Frischkäse'}:undefined)||(/\b(?:cola|coke|pepsi)\b/.test(fold(name))?{de:'Cola'}:undefined)||(/\b(?:red bull|redbull)\b/.test(fold(name))?{de:'Energydrink'}:undefined)||catalogProduct(name)||fold(name).split(' ').map(w=>staples[w]||productCategoryWords[w]).filter(Boolean).map(de=>({de}))[0]}
 function categoryParent(name:string){if(['Naturjoghurt','Griechischer Joghurt','Fruchtjoghurt'].includes(name))return 'Joghurt';if(['Vollmilch','H-Milch','Fettarme Milch'].includes(name))return 'Milch';return name}
 export function germanDay(value:unknown):value is string{
  if(typeof value!=='string'||!/^20\d{2}-\d{2}-\d{2}$/.test(value))return false;
@@ -86,7 +86,16 @@ const categoryExclusions:Record<string,RegExp>={
  Tomaten:/sauce|sosse|mark|ketchup|suppe/,
  Kartoffeln:/chips|puffer|puree|snack/,
  Käse:/cracker|sosse|kuchen/,
+ Lachs:/frischkase|frischkaese|creme|aufstrich|salat|sushi|pasta|pizza|suppe|futter/,
+ Thunfisch:/creme|aufstrich|salat|pizza|sauce|sosse|futter/,
+ Hähnchen:/salat|aufstrich|suppe|futter/,
+ Bananen:/brot|chips|kuchen|joghurt|shake|\beis\b|bananeneis|eiscreme/,
 };
+/** Ingredient words alone must not turn a prepared food into a staple offer.
+ * Shared by published offers and unverified suggestions. */
+export function germanCategoryCompatible(category:string,identity:string):boolean{
+ return !categoryExclusions[category]?.test(fold(identity));
+}
 const removeSize=(s:string)=>s.replace(/(?:\d+\s*[x×]\s*)?\d+(?:[.,]\d+)?\s*(?:kg|g|ml|cl|l|stück|st\.?)\b/gi,'').trim();
 export function matchCentralGermanOffers(name:string,offers:readonly GermanOffer[],stores:readonly string[]=[],now=new Date()):GermanMatch[]{
  const query=fold(name);if(!query||forbidden.test(query))return [];
@@ -103,7 +112,7 @@ export function matchCentralGermanOffers(name:string,offers:readonly GermanOffer
    const variant=requestedDrinkVariant(name);
    if(variant&&!fold([offer.brand,offer.name,offer.variant].filter(Boolean).join(' ')).split(' ').includes(variant))continue;
   }
-  if(forbidden.test(fold(offer.name))||categoryExclusions[category.de]?.test(fold(offer.name)))continue;
+  if(forbidden.test(fold(offer.name))||!germanCategoryCompatible(category.de,offer.name))continue;
   if(exactCategory){result.push({offer,kind:'category'});continue}
   // A specific brand/variant query must be present word-for-word in evidence.
   // This deliberately avoids fuzzy matches for unrelated foods and brands.
