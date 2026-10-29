@@ -15,7 +15,7 @@ function GermanAutomaticSourceStatus({stores}:{stores:readonly string[]}){
  const state=useCentralGermanOffers();
  const [enabled,setEnabled]=useGermanOfferDisplay();
  const current=state.offers.filter(o=>!stores.length||stores.includes(o.retailer==='aldi-nord'?'aldi':o.retailer));
- return <div className="offer-de-feed-status"><label className="german-checkbox"><input type="checkbox" checked={enabled} onChange={e=>setEnabled(e.target.checked)}/>Aktuelle Prospektangebote anzeigen</label><small>{state.loading?'Angebote werden geladen …':state.error||`${current.length} zentral bestätigte Angebote · Kiel`}</small></div>;
+ return <div className="offer-de-feed-status"><label className="german-checkbox"><input type="checkbox" checked={enabled} onChange={e=>setEnabled(e.target.checked)}/>Aktuelle Prospektangebote anzeigen</label><small>{state.loading?'Angebote werden geladen …':state.error||`${current.length} veröffentlichte Angebote · Kiel${state.previewOffers.length?` · ${state.previewOffers.length} interne Testvorschau`:''}`}</small></div>;
 }
 export function useOfferRegion(){
  const [region,setRegion]=useState<OfferRegion>(DEFAULT_OFFER_REGION);
@@ -123,3 +123,4 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
   </>}
  </div>;
 }
+

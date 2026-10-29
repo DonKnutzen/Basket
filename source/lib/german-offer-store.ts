@@ -2,8 +2,8 @@
 import {useSyncExternalStore} from 'react';
 import {browserAuth} from './supabase-browser';
 import {parseGermanOffer,untilBerlinMidnight,type GermanOffer} from './german-central-offers';
-type Snapshot={offers:GermanOffer[];loading:boolean;error:string;updated:number};
-const initial:Snapshot={offers:[],loading:true,error:'',updated:0};
+type Snapshot={offers:GermanOffer[];previewOffers:GermanOffer[];loading:boolean;error:string;updated:number};
+const initial:Snapshot={offers:[],previewOffers:[],loading:true,error:'',updated:0};
 let current=initial,pending:Promise<void>|null=null;
 const listeners=new Set<()=>void>();
 let stop:(()=>void)|undefined;
@@ -20,8 +20,31 @@ export async function refreshGermanOffers(){
     for(const row of data){const parsed=parseGermanOffer(row.data);if(parsed)offers.push(parsed)}
     if(data.length<1000)break;
    }
-   set({offers,loading:false,error:'',updated:Date.now()});
-  }catch{set({offers:[],loading:false,error:'Zentrale Angebote derzeit nicht erreichbar.',updated:Date.now()})}
+   const previewOffers:GermanOffer[]=[];
+   // Candidate and import RLS expose this view only to the signed-in operator.
+   // It is deliberately kept separate from the published offer collection.
+   const operator=await db.from('german_offer_operators').select('user_id').limit(1);
+   if(!operator.error&&operator.data.length){
+    try{
+     const jobs=await db.from('german_offer_imports').select('id,retailer,region,market_id,filename,status').eq('status','review');
+     if(jobs.error)throw jobs.error;
+     const byId=new Map(jobs.data.map(job=>[job.id,job]));
+     for(let offset=0;;offset+=1000){
+      const result=await db.from('german_offer_candidates').select('id,import_id,page,bbox,data').eq('status','verified').order('id').range(offset,offset+999);
+      if(result.error)throw result.error;
+      for(const row of result.data){
+       const job=byId.get(row.import_id);if(!job)continue;
+       const parsed=parseGermanOffer({...row.data,id:row.id,importId:row.import_id,retailer:job.retailer,
+        region:job.region,marketId:job.market_id,page:row.page,bbox:row.bbox,sourceUrl:'',
+        sourceStatus:'unavailable',sourceCheckedAt:null,sourceFilename:job.filename,validationStatus:'verified'});
+       if(parsed)previewOffers.push(parsed);
+      }
+      if(result.data.length<1000)break;
+     }
+    }catch{previewOffers.length=0}
+   }
+   set({offers,previewOffers,loading:false,error:'',updated:Date.now()});
+  }catch{set({offers:[],previewOffers:[],loading:false,error:'Zentrale Angebote derzeit nicht erreichbar.',updated:Date.now()})}
   finally{pending=null}
  })();return pending;
 }
@@ -50,3 +73,4 @@ export function useGermanOfferDisplay(){
  const enabled=useSyncExternalStore(subscribeDisplay,displayEnabled,()=>true);
  return [enabled,(value:boolean)=>{try{localStorage.setItem(displayKey,String(value))}catch{}window.dispatchEvent(new Event(displayEvent))}] as const;
 }
+
