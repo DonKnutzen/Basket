@@ -46,10 +46,14 @@ def source_available(url):
     """Check an operator URL only on official source hosts; no arbitrary SSRF."""
     if not url:return False
     # cdn.ipaper.io was observed on the ordinary official ALDI PDF redirect.
-    trusted={'view.publitas.com','magazine.aldi-nord.de','www.aldi-nord.de','www.rewe.de','cdn.ipaper.io'}
+    trusted={'view.publitas.com','magazine.aldi-nord.de','www.aldi-nord.de','www.rewe.de','cdn.ipaper.io','penny-publish.blaetterkatalog.de'}
     def allowed(u):
         try:
             p=urllib.parse.urlparse(u)
+            if p.hostname=='penny-publish.blaetterkatalog.de':
+                return (p.scheme=='https' and p.port in (None,443) and not p.username and not p.password
+                    and not p.query and not p.fragment
+                    and re.fullmatch(r'/frontend/catalogs/[0-9]{1,12}/[0-9]{1,3}/pdf/complete[.]pdf',p.path,re.I) is not None)
             return p.scheme=='https' and p.hostname in trusted and p.port in (None,443) and not p.username and not p.password
         except ValueError:return False
     if not allowed(url):return False
