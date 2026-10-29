@@ -1,8 +1,7 @@
 'use client';
 import React,{useState} from 'react';
 import {getLanguage} from '../lib/i18n';
-import {germanStoreName} from '../lib/german-central-offers';
-import {matchGermanDrafts,searchGermanDraftCatalogue,unverifiedOfferCount,type GermanDraft} from '../lib/german-offer-drafts';
+import {matchGermanDrafts,searchGermanDraftCatalogue,unverifiedOfferCount,compactGermanDraftTitle,type GermanDraft} from '../lib/german-offer-drafts';
 import {useCentralGermanOffers} from '../lib/german-offer-store';
 import {OfferSourceLink} from './offer-source-link';
 
@@ -10,16 +9,16 @@ const eur=(n:number)=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'
 
 function DraftRow({draft:d}:{draft:GermanDraft}){
  const de=getLanguage()==='de',unreadable=d.status==='unreadable';
- const identity=d.brand&&d.name.toLocaleLowerCase('de').startsWith(d.brand.toLocaleLowerCase('de'))?d.name:
-  [d.brand,d.name].filter(Boolean).join(' · ');
+ const title=compactGermanDraftTitle(d.name,d.brand);
+ const shop=d.retailer==='aldi-nord'?'ALDI Nord':d.retailer==='rewe'?'REWE':'PENNY';
  return <article className={'german-draft-card '+d.retailer+(unreadable?' is-unreadable':'')}>
   <div className="german-draft-head">
-   <span className="german-draft-shop">{germanStoreName(d.retailer)}</span>
+   <span className="german-draft-shop">{shop}</span>
    <span className="german-draft-status">{unreadable?(de?'Nicht eindeutig':'Unclear'):(de?'Ungeprüft':'Unverified')}</span>
   </div>
   <div className="german-draft-main">
    <div className="german-draft-info">
-    <strong className="german-draft-name">{identity}</strong>
+    <strong className="german-draft-name" title={title.full}>{title.title}</strong>
     <span className="german-draft-size">{d.packSize|| (de?'Packungsgröße unklar':'Pack size unclear')}{d.variant?' · '+d.variant:''}</span>
    </div>
    <div className="german-draft-money">
@@ -27,6 +26,10 @@ function DraftRow({draft:d}:{draft:GermanDraft}){
      <span>{de?'Preis prüfen':'Check price'}</span>}
    </div>
   </div>
+  {title.truncated&&<details className="german-draft-description">
+   <summary>{de?'Vollständigen Produkttext anzeigen':'Show full product description'}</summary>
+   <p>{title.full}</p>
+  </details>}
   <div className="german-draft-foot">
    <span>{de?'Prospekt S. ':'Flyer p. '}{d.page}</span>
    {d.sourceUrl&&<OfferSourceLink url={d.sourceUrl}>{de?'Original ansehen':'View original'}</OfferSourceLink>}
@@ -39,7 +42,7 @@ function DraftRow({draft:d}:{draft:GermanDraft}){
 }
 /** Operator-only candidate preview: no draft ever enters the verified badge price. */
 export function GermanDraftMatches({name,stores}:{name:string;stores:readonly string[]}){
- const state=useCentralGermanOffers(),[showAll,setShowAll]=useState(false),de=getLanguage()==='de';
+ const state=useCentralGermanOffers(),[visibleCount,setVisibleCount]=useState(2),de=getLanguage()==='de';
 
  const matches=matchGermanDrafts(name,state.drafts,stores);
  if(!matches.length)return null;
@@ -48,9 +51,9 @@ export function GermanDraftMatches({name,stores}:{name:string;stores:readonly st
   <div className="german-draft-list">
    {state.draftError&&<small role="status">{de?state.draftError:'Unverified offers are currently unavailable.'}</small>}
    <p className="german-draft-disclaimer">{de?'Noch nicht bestätigt · Preise nicht im offiziellen Vergleich enthalten.':'Not verified · prices excluded from confirmed comparisons.'}</p>
-   {(showAll?matches.slice(0,40):matches.slice(0,4)).map(d=><DraftRow key={d.id} draft={d}/>)}
-   {matches.length>4&&<button type="button" className="german-draft-more" onClick={()=>setShowAll(!showAll)}>{showAll?(de?'Weniger anzeigen':'Show fewer'):(de?`Weitere Angebote ansehen (${matches.length-4})`:`More offers (${matches.length-4})`)}</button>}
-   {showAll&&matches.length>40&&<small>{de?'Maximal 40 Treffer sichtbar; alle übrigen im Angebotskatalog.':'Showing at most 40; see the offer catalogue for the rest.'}</small>}
+   {matches.slice(0,visibleCount).map(d=><DraftRow key={d.id} draft={d}/>)}
+   {matches.length>visibleCount&&visibleCount<8&&<button type="button" className="german-draft-more" onClick={()=>setVisibleCount(n=>Math.min(n+3,8))}>{de?`Weitere Angebote anzeigen (${Math.min(3,matches.length-visibleCount)})`:`Show more offers (${Math.min(3,matches.length-visibleCount)})`}</button>}
+   {matches.length>8&&visibleCount>=8&&<small>{de?`Weitere ${matches.length-8} Angebote unter „Wöchentliche Angebote“ durchsuchen.`:`Search ${matches.length-8} more in Weekly offers.`}</small>}
   </div>
  </details>;
 }
