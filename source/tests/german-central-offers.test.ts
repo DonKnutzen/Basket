@@ -84,7 +84,7 @@ test('PENNY pilot facts remain identifiable and still require verified evidence'
  assert.equal(parseGermanOffer({...penny,testOnly:'yes'}),null);
  assert.deepEqual(new Set(matchCentralGermanOffers('Cola',[penny,app],['penny'],now).map(x=>x.offer.priceCents)),new Set([99,119]));
  assert.equal(matchCentralGermanOffers('Cola',[penny,app],['aldi'],now).length,0);
- assert.equal(matchCentralGermanOffers('Cola',[penny,app],[],new Date('2026-10-31T02:00:00Z')).length,0);
+ assert.equal(matchCentralGermanOffers('Cola',[penny,app],[],new Date('2026-11-01T02:00:00Z')).length,0);
 });
 
 test('generic drink requests include variants while named variants require printed evidence',()=>{
