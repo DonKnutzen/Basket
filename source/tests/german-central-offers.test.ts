@@ -73,3 +73,18 @@ test('PENNY regional offers coexist with REWE and ALDI and respect retailer filt
  assert.equal(germanSourceUrl('https://evil.example/frontend/catalogs/1408356/3/pdf/complete.pdf'),null);
  assert.equal(germanSourceUrl('https://penny-publish.blaetterkatalog.de/frontend/catalogs/1408356/3/pdf/complete.pdf?url=https://evil.example'),null);
 });
+test('generic drink requests include variants while named variants require printed evidence',()=>{
+ const regular:GermanOffer={...offer,id:'cola',retailer:'penny',marketId:null,brand:'Coca-Cola',name:'Cola Original',category:'Cola',packSize:'1,25 l',priceCents:119};
+ const zero:GermanOffer={...regular,id:'zero',name:'Cola Zero',priceCents:99,priceKind:'loyalty',conditions:'Mit PENNY App'};
+ const cherry:GermanOffer={...regular,id:'cherry',name:'Cola Cherry'};
+ assert.deepEqual(new Set(matchCentralGermanOffers('Cola',[regular,zero,cherry],[],now).map(x=>x.offer.id)),new Set(['cola','zero','cherry']));
+ assert.deepEqual(new Set(matchCentralGermanOffers('Coca cola',[regular,zero,cherry],[],now).map(x=>x.offer.id)),new Set(['cola','zero','cherry']));
+ for(const query of ['Cola Zero','Coca Cola Zero','Coke Zero'])
+  assert.deepEqual(matchCentralGermanOffers(query,[regular,zero,cherry],[],now).map(x=>x.offer.id),['zero']);
+ assert.deepEqual(matchCentralGermanOffers('Cola Cherry',[regular,zero,cherry],[],now).map(x=>x.offer.id),['cherry']);
+ assert.equal(matchCentralGermanOffers('Coke Zero',[regular],[],now).length,0);
+ const redBull:GermanOffer={...regular,id:'red-bull',brand:'Red Bull',name:'Energy Drink',category:'Energydrink',packSize:'250 ml'};
+ const redBullZero:GermanOffer={...redBull,id:'red-bull-zero',name:'Energy Drink Zero'};
+ assert.equal(matchCentralGermanOffers('Red Bull',[redBull,redBullZero],[],now).length,2);
+ assert.deepEqual(matchCentralGermanOffers('Red Bull Zero',[redBull,redBullZero],[],now).map(x=>x.offer.id),['red-bull-zero']);
+});
