@@ -17,7 +17,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import fitz
-from german_flyer_layout import analyze_page, save_evidence, VERSION
+from german_flyer_layout import analyze_page, save_evidence, page_quality_counts, VERSION
 
 CHUNK=8*1024*1024
 
@@ -87,7 +87,13 @@ def local(pdf_path,out,valid_from,valid_until):
             except Exception as e:result={'status':'failed','error':type(e).__name__+': '+str(e)[:200]}
             result['page']=number;report['pages'].append(result)
             print('PAGE',number,result['status'],'candidates',len(result.get('offers',[])))
+    # The local QA summary is derived from each page, not a claim that all
+    # products in the printed flyer were recognized. No guessed prices.
+    keys=('regions','withPrice','withoutPack','inferredUnit','ambiguousPrice','unreadable')
+    report['quality']={k:sum(page_quality_counts(p)[k] for p in report['pages']) for k in keys}
+    report['quality']['failedPages']=[p['page'] for p in report['pages'] if p['status']!='done']
     (out/'analysis.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+    print('REVIEW COUNTS',json.dumps(report['quality'],sort_keys=True))
 
 def process(api,job):
     with tempfile.TemporaryDirectory(prefix='basket-flyer-') as tmp:
@@ -103,6 +109,7 @@ def process(api,job):
             if pdf.needs_pass or not 1<=len(pdf)<=1000:raise ValueError('Encrypted or unsupported PDF page count')
             metadata=api.call('metadata',job,{'totalPages':len(pdf),'sourceAvailable':source_available(job['source_url'])})
             done={p['page'] for p in metadata['pages'] if p['status']=='done'}
+            quality={key:0 for key in ('regions','withPrice','withoutPack','inferredUnit','ambiguousPrice','unreadable')}
             for number in range(1,len(pdf)+1):
                 if number in done:continue
                 page=pdf[number-1]
@@ -118,12 +125,20 @@ def process(api,job):
                         # Evidence text is private and never included in public snapshots.
                         c['data']['evidence']=c.pop('evidence')
                     api.call('page',job,{'page':number,'payload':result})
-                    print('PAGE',number,'of',len(pdf),'checkpointed')
+                    metrics=page_quality_counts(result)
+                    for key in quality:quality[key]+=metrics[key]
+                    print('PAGE',number,'of',len(pdf),'checkpointed',
+                          'proposals',metrics['regions'],'needs-unit',metrics['withoutPack'],
+                          'price-ambiguous',metrics['ambiguousPrice'])
                 except Exception as error:
                     # DB/lease errors must abort; only extraction errors are marked
                     # as page failures. A lost lease cannot be written around.
                     if isinstance(error,urllib.error.HTTPError):raise
                     api.call('page',job,{'page':number,'payload':{'status':'failed','error':type(error).__name__+': '+str(error)[:200],'offers':[]}})
+        # These counts cover newly processed pages only; resumed pages were
+        # checkpointed earlier and must never be mistaken for zero candidates.
+        print('REVIEW SUMMARY (new pages only)',json.dumps(quality,sort_keys=True),
+              'resumed-pages',len(done))
         print('FINISH',api.call('finish',job))
 
 def main():

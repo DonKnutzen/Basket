@@ -107,3 +107,46 @@ test('the brand is only added when missing from the printed title',()=>{
  assert.equal(compactGermanDraftTitle('Coca-Cola Original Taste','Coca-Cola').full,'Coca-Cola Original Taste');
  assert.equal(compactGermanDraftTitle('Original Taste','Coca-Cola').full,'Coca-Cola · Original Taste');
 });
+
+test('Kiwi with printed Stück and 59-cent price is a clearly unverified price suggestion',()=>{
+ const proposal=parseGermanDraft(raw('SunGold Kiwi Klasse 1; Neuseeland; Stück',{
+  id:'kiwi-per-piece',page:1,issues:[
+   'Marke nicht eindeutig als Text erkannt',
+   'Keine eindeutige Packungsgröße erkannt',
+   'Angebotszeitraum mit dem Prospekt abgleichen',
+  ],
+  data:{...raw('').data,brand:'',name:'SunGold Kiwi Klasse 1; Neuseeland; Stück',
+   packSize:'',priceCents:59,priceKind:'standard'}
+ }),job);
+ assert.ok(proposal);
+ assert.equal(proposal.packSize,'1 Stück');
+ assert.equal(proposal.unitInferred,true);
+ assert.equal(proposal.priceCents,59);
+ assert.equal(proposal.priceUsable,true);
+ assert.equal(proposal.status,'review');
+ assert.ok(proposal.issues.includes('Einheit aus Produkttext erschlossen; Original prüfen'));
+});
+test('loose bananas are per kg, not per item, and misassigned prices are blocked',()=>{
+ const base={...raw('').data,brand:'',name:'unverpackt Bananen; Ecuador kg-Preis',packSize:'',priceCents:119,priceKind:'standard'};
+ const safe=parseGermanDraft(raw(base.name,{data:base,issues:['Keine eindeutige Packungsgröße erkannt']}),job);
+ assert.ok(safe);
+ assert.equal(safe.packSize,'1 kg');
+ assert.equal(safe.priceUsable,true);
+ const ambiguous=parseGermanDraft(raw(base.name,{data:base,issues:['Mehrere Verkaufspreise / Produkte im selben Bereich']}),job);
+ assert.ok(ambiguous);
+ assert.equal(ambiguous.priceUsable,false);
+ const ocr=parseGermanDraft(raw(base.name,{data:base,issues:['Niedrige OCR-Zuverlässigkeit']}),job);
+ assert.ok(ocr);
+ assert.equal(ocr.priceUsable,false);
+ const mixed=parseGermanDraft(raw('Bananen; Stück und kg-Preis',{data:{...base,name:'Bananen; Stück und kg-Preis'},issues:[]}),job);
+ assert.ok(mixed);
+ assert.equal(mixed.packSize,'');
+ assert.equal(mixed.priceUsable,false);
+});
+test('a food category never inherits misleading unit guesses from promotional text',()=>{
+ const title='Bio-Frischkäse mit Rezeptvorschlag und vielen Stück für Stück Ideen';
+ const candidate=parseGermanDraft(raw(title,{data:{...raw('').data,name:title,brand:'',packSize:'',priceCents:149}}),job);
+ assert.ok(candidate);
+ assert.equal(candidate.packSize,'');
+ assert.equal(candidate.priceUsable,false);
+});

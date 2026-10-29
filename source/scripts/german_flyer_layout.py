@@ -18,7 +18,7 @@ import io
 import datetime as dt
 import shutil
 
-VERSION = 'geometry-review-v1'
+VERSION = 'geometry-review-v2-explicit-units'
 PRICE = re.compile(r'(?<![\d.,])(\d{1,3})[.,](\d{2})(?!\d)')
 SIZE = re.compile(r'\b(?:\d+\s*[x×]\s*)?\d+(?:[.,]\d+)?[\s-]*(?:kg|g|ml|cl|l|Stück|St\.?|Packungen?)\b', re.I)
 BASE = re.compile(r'(?:\b(?:kg|liter|l)\s*=|/\s*(?:kg|l)\b|je\s*(?:kg|liter)\b)', re.I)
@@ -51,6 +51,40 @@ def quantity(text):
     found=[re.sub(r'(?<=\d)-(?=[a-zA-Z])',' ',m.group(0)) for m in SIZE.finditer(text)]
     unique=list(dict.fromkeys(found))
     return ' / '.join(unique), len(unique)>1
+
+def inferred_unit_pack(name):
+    """Infer only units explicitly printed with the product description.
+
+    Never guess an amount from familiar supermarket packaging.
+    This is an unverified suggestion until an operator checks the original.
+    """
+    text=re.sub(r'\s+',' ',name).strip()
+    if not text:return ''
+    if re.search(r'\bStück\s+für\s+Stück\b',text,re.I):return ''
+    kilo=bool(re.search(r'\b(?:kg[\s-]*Preis|Preis\s*(?:je|pro)\s*kg|je\s+kg)\b',text,re.I))
+    piece=bool(re.search(r'\b(?:Stück|Stk\.?)\b',text,re.I))
+    if kilo and piece:return ''
+    if kilo:return '1 kg'
+    found=re.search(r'(?:^|[,;]|\s)\s*(Stück|Stk\.?|Bund|Schale|Netz|Packung)\s*[.;]?\s*\Z',text,re.I)
+    if not found:return ''
+    unit=found[1].lower().strip('.')
+    return '1 '+{'stk':'Stück','stück':'Stück','bund':'Bund','schale':'Schale',
+                 'netz':'Netz','packung':'Packung'}[unit]
+
+def page_quality_counts(result):
+    """Counts are review signals, NOT a product-recall or correctness score."""
+    proposals=result.get('offers',[])
+    if result.get('status')!='done':
+        return {'regions':0,'withPrice':0,'withoutPack':0,'inferredUnit':0,
+                'ambiguousPrice':0,'unreadable':0}
+    return {
+        'regions':len(proposals),
+        'withPrice':sum(bool(o['data'].get('priceCents')) for o in proposals),
+        'withoutPack':sum(not o['data'].get('packSize') for o in proposals),
+        'inferredUnit':sum('Einheit aus Produkttext erschlossen; Original prüfen' in o['issues'] for o in proposals),
+        'ambiguousPrice':sum('Mehrere Verkaufspreise / Produkte im selben Bereich' in o['issues'] for o in proposals),
+        'unreadable':sum(o['status']=='unreadable' for o in proposals),
+    }
 
 def unit_check(cents, pack, printed):
     """Compare explicitly printed €/kg or €/l; no historical imputation."""
@@ -313,6 +347,9 @@ def analyze_page(page, valid_from, valid_until):
         pack_text='\n'.join(b.text[:BASE.search(b.text).start()].rstrip(' (') if BASE.search(b.text) else b.text for b in inside)
         pack,ambiguous=quantity(pack_text)
         if ambiguous:issues.append('Mehrere Mengen / Größen: Preiszuordnung bestätigen')
+        if not pack and not ambiguous:
+            pack=inferred_unit_pack(name)
+            if pack:issues.append('Einheit aus Produkttext erschlossen; Original prüfen')
         base='; '.join(b.text for b in inside if BASE.search(b.text))
         regular=[p['cents'] for p in anchors if p['role']=='regular' and contains(rect,p['rect'])]
         conditions='; '.join(b.text for b in inside if CONDITION.search(b.text))[:500]

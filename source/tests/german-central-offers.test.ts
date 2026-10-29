@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {parseGermanOffer,matchCentralGermanOffers,compactGermanOfferMatches,mergeGermanOfferSources,germanOfferDisplayName,germanPack,germanSourceUrl,untilBerlinMidnight,suggestGermanCategory,type GermanOffer} from '../lib/german-central-offers';
+import {parseGermanOffer,matchCentralGermanOffers,compactGermanOfferMatches,mergeGermanOfferSources,germanOfferDisplayName,germanPack,inferGermanExplicitPack,germanSourceUrl,untilBerlinMidnight,suggestGermanCategory,type GermanOffer} from '../lib/german-central-offers';
 const now=new Date('2026-10-28T12:00:00Z');
 const offer:GermanOffer={id:'one',importId:'import',name:'Original Irische Butter',brand:'Kerrygold',variant:'',category:'Butter',packSize:'250 g',
  priceCents:159,currency:'EUR',conditions:'',priceKind:'standard',minQuantity:1,validFrom:'2026-10-26',validUntil:'2026-10-31',
@@ -141,4 +141,29 @@ test('published prices win over private previews; only distinct standard/app off
  assert.equal(merged.find(o=>o.id==='penny-standard')?.priceCents,119);
  assert.equal(matchCentralGermanOffers('Coca-Cola Zero',merged,[],now).map(x=>x.offer.id).join(' '),'aldi-cola');
  assert.equal(matchCentralGermanOffers('Cola',merged,[],now).length,3);
+});
+
+test('weekly imports recognize explicitly printed food sales units only',()=>{
+ const cases:[string,string][]=[
+  ['SunGold Kiwi Klasse 1; Neuseeland; Stück','1 Stück'],
+  ['unverpackt Bananen; Costa Rica; kg-Preis','1 kg'],
+  ['Speise- und Schnitzkürbis; Deutschland; Stück','1 Stück'],
+  ['Bio Radieschen; Bund','1 Bund'],
+  ['Erdbeeren Klasse I; Schale','1 Schale'],
+  ['Zitronen; Netz','1 Netz'],
+  ['Gouda; Packung','1 Packung'],
+  ['Pringles verschiedene Sorten 165 g',''],
+  ['unverpackt Bananen; Stück und kg-Preis',''],
+  ['Kinder Spielzeug Stück für Stück',''],
+  ['',''],
+ ];
+ for(const [printed,expected] of cases)
+  assert.equal(inferGermanExplicitPack(printed),expected,printed);
+ assert.deepEqual(germanPack('1 Stück'),{amount:1,unit:'piece'});
+ assert.deepEqual(germanPack('1 kg'),{amount:1,unit:'kg'});
+ assert.deepEqual(germanPack('1 Bund'),{amount:1,unit:'bundle'});
+ assert.deepEqual(germanPack('1 Schale'),{amount:1,unit:'tray'});
+ assert.deepEqual(germanPack('1 Netz'),{amount:1,unit:'net'});
+ assert.deepEqual(germanPack('1 Packung'),{amount:1,unit:'pack'});
+ assert.equal(germanPack('2 l oder 4 l'),null);
 });

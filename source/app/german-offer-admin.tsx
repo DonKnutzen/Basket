@@ -6,7 +6,7 @@ import {uploadGermanFlyer,uploadGermanFlyerFromPennyUrl} from '../lib/german-off
 import {refreshGermanOffers} from '../lib/german-offer-store';
 import {berlinDay} from '../lib/rewe-official-weekly';
 import {PRODUCT_CATALOG} from '../lib/product-catalog';
-import {germanStoreName,germanCategoryExact,suggestGermanCategory,GERMAN_STAPLE_CATEGORIES,type GermanProduct} from '../lib/german-central-offers';
+import {germanStoreName,germanCategoryExact,suggestGermanCategory,inferGermanExplicitPack,GERMAN_STAPLE_CATEGORIES,type GermanProduct} from '../lib/german-central-offers';
 type Import={id:string;retailer:'rewe'|'aldi-nord'|'penny';filename:string;status:string;valid_from:string;valid_until:string;total_pages:number|null;revision:number;error:string|null;rights_confirmed:boolean;dates_confirmed:boolean;source_url:string;rights_note:string};
 type Page={page:number;status:string;image_key:string;error:string|null;date_hints:{from:string;until:string;yearFromImport:boolean}[]};
 type Candidate={id:string;page:number;data:GermanProduct;status:string;crop_key:string;issues:string[];revision:number};
@@ -20,7 +20,10 @@ function Evidence({path,label}:{path:string;label:string}){
  return url?<a href={url} target="_blank" rel="noopener noreferrer" title="Original vergrößern"><img src={url} alt={label} className="german-evidence"/></a>:<small role="status">{error||'Originalausschnitt wird geladen …'}</small>;
 }
 function ReviewRow({row,busy,onSave}:{row:Candidate;busy:boolean;onSave:(fields:GermanProduct,decision:string)=>Promise<void>}){
- const [fields,setFields]=useState({...row.data,category:row.data.category||suggestGermanCategory([row.data.brand,row.data.name].filter(Boolean).join(' '))?.de||''}),[price,setPrice]=useState((row.data.priceCents/100).toFixed(2).replace('.',','));
+ const [fields,setFields]=useState({...row.data,
+    category:row.data.category||suggestGermanCategory([row.data.brand,row.data.name].filter(Boolean).join(' '))?.de||'',
+    packSize:row.data.packSize||inferGermanExplicitPack(row.data.name)
+   }),[price,setPrice]=useState((row.data.priceCents/100).toFixed(2).replace('.',','));
  const edit=(key:keyof GermanProduct,value:string|number)=>setFields(x=>({...x,[key]:value}));
  const save=(decision:string)=>{
   const parsed=/^\d{1,4}(?:[.,]\d{1,2})?$/.test(price)?Math.round(Number(price.replace(',','.'))*100):0;
@@ -34,7 +37,8 @@ function ReviewRow({row,busy,onSave}:{row:Candidate;busy:boolean;onSave:(fields:
    <label className="wide">Vollständiger Produktname<input value={fields.name} maxLength={250} onChange={e=>edit('name',e.target.value)}/></label>
    <label>Variante<input value={fields.variant||''} onChange={e=>edit('variant',e.target.value)}/></label>
    <label>Kategorie<input list="german-offer-categories" value={fields.category} onChange={e=>edit('category',e.target.value)}/></label>
-   <label>Packungsgröße / Varianten<input value={fields.packSize} onChange={e=>edit('packSize',e.target.value)}/></label>
+   <label>Packungsgröße / Varianten<input value={fields.packSize} onChange={e=>edit('packSize',e.target.value)}/>
+    {!row.data.packSize&&fields.packSize&&<small>Einheit aus Produkttext vorgeschlagen – am Original kontrollieren.</small>}</label>
    <label>Verkaufspreis / Gesamtpreis (€)<input inputMode="decimal" value={price} onChange={e=>setPrice(e.target.value)}/></label>
    <label>Grundpreis (mit Einheit)<input value={fields.basePrice||''} onChange={e=>edit('basePrice',e.target.value)}/></label>
    <label>Belegter Vergleichspreis (€)<input value={fields.regularPrice||''} onChange={e=>edit('regularPrice',e.target.value)}/></label>
@@ -72,10 +76,17 @@ export function GermanOfferAdmin(){
  async function action(work:()=>Promise<void>){setBusy(true);setError('');setNotice('');try{await work()}catch(e){setError(message(e))}finally{setBusy(false);setProgress('')}}
  if(!operator)return null;
  const ready=rows.filter(r=>r.status==='verified').length,pending=rows.filter(r=>['review','unreadable'].includes(r.status)).length;
+  const pendingRows=rows.filter(r=>['review','unreadable'].includes(r.status));
+  const missingPack=pendingRows.filter(r=>!r.data.packSize).length;
+  const canSuggestPack=pendingRows.filter(r=>!r.data.packSize&&!!inferGermanExplicitPack(r.data.name)).length;
+  const unsafePrice=pendingRows.filter(r=>r.issues.some(issue=>/Mehrere Verkaufspreise|Preisspalte nur|Keine eindeutige Kachelgrenze|Niedrige OCR/i.test(issue))).length;
  const searchTerm=search.trim().toLocaleLowerCase('de');
  const shown=rows.filter(r=>searchTerm?
   [r.data.name,r.data.brand,r.data.variant||'',r.data.category].join(' ').toLocaleLowerCase('de').includes(searchTerm):
-  r.page===page&&(filter==='all'||filter==='pending'&&['review','unreadable'].includes(r.status)||r.status===filter));
+  r.page===page&&(filter==='all'||filter==='pending'&&['review','unreadable'].includes(r.status)||
+    filter==='unit-check'&&['review','unreadable'].includes(r.status)&&!r.data.packSize||
+    filter==='price-check'&&['review','unreadable'].includes(r.status)&&r.issues.some(issue=>/Mehrere Verkaufspreise|Preisspalte nur|Keine eindeutige Kachelgrenze|Niedrige OCR/i.test(issue))||
+    r.status===filter));
  return <details className="german-offer-admin"><summary>Prospekte verwalten · Betreiberbereich</summary><div className="german-admin-body">
   <p>REWE Kiel 561204 / ALDI Nord / PENNY (regionale Ausgabe prüfen). Originale bleiben privat. Der zentrale Runner startet gewöhnlich innerhalb von 15 Minuten; GitHub kann geplante Läufe verzögern.</p>
   <div className="german-admin-form">
@@ -95,14 +106,16 @@ export function GermanOfferAdmin(){
   {progress&&<p role="status">{progress}</p>}{error&&<p className="flyer-error" role="alert">{error}</p>}{notice&&<p role="status">{notice}</p>}
   <label>Import<select value={selected} disabled={busy} onChange={e=>chooseImport(e.target.value)}><option value="">Import auswählen</option>{imports.map(i=><option key={i.id} value={i.id}>{germanStoreName(i.retailer)} · {i.valid_from} · {labels[i.status]}</option>)}</select></label>
   {job&&<>
-   <div className="german-import-stats"><strong>{labels[job.status]}</strong><span>{pages.filter(p=>p.status==='done').length} / {job.total_pages??'?'} Seiten verarbeitet</span><span>{rows.length} Angebotsbereiche erkannt</span><span>{ready} bestätigt · {pending} offen · {rows.filter(r=>r.status==='unreadable').length} nicht eindeutig</span></div>
+   <div className="german-import-stats"><strong>{labels[job.status]}</strong><span>{pages.filter(p=>p.status==='done').length} / {job.total_pages??'?'} Seiten verarbeitet</span><span>{rows.length} Angebotsbereiche erkannt</span><span>{ready} bestätigt · {pending} offen · {rows.filter(r=>r.status==='unreadable').length} nicht eindeutig</span>
+    <span>{missingPack} ohne Mengeneinheit · {canSuggestPack} aus gedrucktem Text vorschlagbar</span>
+    <span>{unsafePrice} mit kritischer Preis-/Kachelzuordnung; separat kontrollieren</span></div>
     {job.status==='review'&&ready>0&&<p role="status">{ready} bestätigte Angebote sind derzeit nur in der privaten Betreibervorschau sichtbar. Erst nach dokumentierter Freigabe und Veröffentlichung erscheinen sie auch bei anderen Haushalten im Warenkorb.</p>}
    {job.error&&<p className="flyer-error">{job.error}</p>}
    {pages.filter(p=>p.status==='failed').map(p=><p key={p.page} className="flyer-error">Seite {p.page}: {p.error}</p>)}
    {job.status==='failed'&&<button type="button" disabled={busy} onClick={()=>void action(async()=>{await rpc('offer_import_queue',{target:job.id});await load(selected)})}>Fehlgeschlagene Seiten erneut verarbeiten</button>}
    {['review','published'].includes(job.status)&&<>
     <label>Produkt oder Marke auf allen Prospektseiten suchen<input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="z. B. Coca-Cola, Butter, Kaffee"/></label>
-    <div className="german-admin-form"><label>Seite<select value={page} onChange={e=>setPage(Number(e.target.value))}>{pages.map(p=><option key={p.page} value={p.page}>Seite {p.page} · {rows.filter(r=>r.page===p.page).length} Bereiche</option>)}</select></label><label>Anzeige<select value={filter} onChange={e=>setFilter(e.target.value)}><option value="pending">Prüfung erforderlich</option><option value="verified">Bestätigt</option><option value="all">Alle</option><option value="rejected">Ausgeschlossen</option></select></label></div>
+    <div className="german-admin-form"><label>Seite<select value={page} onChange={e=>setPage(Number(e.target.value))}>{pages.map(p=><option key={p.page} value={p.page}>Seite {p.page} · {rows.filter(r=>r.page===p.page).length} Bereiche</option>)}</select></label><label>Anzeige<select value={filter} onChange={e=>setFilter(e.target.value)}><option value="pending">Prüfung erforderlich</option><option value="verified">Bestätigt</option><option value="all">Alle</option><option value="rejected">Ausgeschlossen</option><option value="unit-check">Einheiten prüfen</option><option value="price-check">Preiszuordnung prüfen</option></select></label></div>
     <details><summary>Originalseite ansehen · fehlende Produkte ergänzen</summary>{pages.find(p=>p.page===page)?.image_key&&<Evidence path={pages.find(p=>p.page===page)!.image_key} label={`Prospektseite ${page}`}/>}</details>
     {pages.find(p=>p.page===page)?.date_hints?.map((h,i)=><p key={i}>Gedruckter Seitenzeitraum: {h.from} – {h.until}{h.yearFromImport?' · Jahr aus Import übernommen; bestätigen.':''}</p>)}
     {['review','published'].includes(job.status)&&<button type="button" disabled={busy} onClick={()=>void action(async()=>{await rpc('offer_candidate_add',{target:job.id,page_number:page});setFilter('pending');await load(selected)})}>Produkt auf dieser Seite manuell ergänzen</button>}

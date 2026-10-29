@@ -19,7 +19,7 @@ function DraftRow({draft:d}:{draft:GermanDraft}){
   <div className="german-draft-main">
    <div className="german-draft-info">
     <strong className="german-draft-name" title={title.full}>{title.title}</strong>
-    <span className="german-draft-size">{d.packSize|| (de?'Packungsgröße unklar':'Pack size unclear')}{d.variant?' · '+d.variant:''}</span>
+    <span className="german-draft-size">{d.packSize|| (de?'Packungsgröße unklar':'Pack size unclear')}{d.unitInferred?' · '+(de?'aus Prospekttext':'from flyer text'):''}{d.variant?' · '+d.variant:''}</span>
    </div>
    <div className="german-draft-money">
     {d.priceUsable?<><small>{de?'Preisvorschlag':'Possible price'}</small><strong>{eur(d.priceCents)}</strong></>:
