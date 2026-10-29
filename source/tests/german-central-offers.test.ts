@@ -154,6 +154,7 @@ test('weekly imports recognize explicitly printed food sales units only',()=>{
   ['Gouda; Packung','1 Packung'],
   ['Pringles verschiedene Sorten 165 g',''],
   ['unverpackt Bananen; Stück und kg-Preis',''],
+  ['Kinder Spielzeug Stück für Stück',''],
   ['',''],
  ];
  for(const [printed,expected] of cases)
