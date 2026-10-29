@@ -68,7 +68,7 @@ python scripts/check-german-reference.py --pdf-dir /private --out /private/metri
 
 The small reference manifest records source SHA-256 hashes and manually checked facts, not source PDFs or complete brochure text. The PDF downloader/worker never automatically discovers new retailer sources.
 
-Measured locally on 28 October 2026:
+Measured locally and on GitHub Actions on 28 October 2026 (Halifax):
 
 | Check | Actual result |
 | --- | --- |
@@ -80,7 +80,7 @@ Measured locally on 28 October 2026:
 | New files lint | Passed |
 | Full repository lint | Failed on existing files/rules; not claimed green |
 | REWE supplied week-44 PDF, 25,035,706 bytes | All 28 pages processed; 231 tentative review regions |
-| ALDI Nord week-44 PDF, 120,879,735 bytes | 48/49 pages processed locally; 319 tentative review regions; page 44 requires missing local native Tesseract |
+| ALDI Nord week-44 PDF, 120,879,735 bytes | All 49 pages processed on GitHub Actions; 319 tentative review regions; native OCR completed on page 44. Local Windows lacks native Tesseract. |
 | Labelled REWE development sample, page 13 | 8/9 names, brands, quantities and correct product-price pairs; Müller Grießpudding region unresolved |
 | Labelled ALDI development sample, page 8 | 10/10 names, brands, quantities and correct product-price pairs |
 | Wrong product-price pairs within recognized labelled regions | 0/18; **not a whole-flyer accuracy estimate** |
@@ -90,4 +90,6 @@ Measured locally on 28 October 2026:
 
 The 19-region sample was used during development and is not a held-out or statistically representative benchmark. Total review-region counts are not product recall. Whole-brochure false assignments, missed products, OCR precision and variant extraction have **not** been comprehensively labelled. There is no measured production false-publication rate: no real publication occurred.
 
-Outstanding acceptance checks: complete native OCR on ALDI page 44; a real signed-in operator upload → GitHub OIDC worker → review → authorized publication → independent shopper session; actual Pages deployment content; and physical Safari/iOS navigation. Mock visual data and signed-token unit tests do not establish that complete production round trip. Keep these limits visible until those checks have run.
+[The native real-PDF CI run](https://github.com/DonKnutzen/Basket/actions/runs/40792684586/job/123181808430) passed all 77 pages, including ALDI page 44. The application, database, Python, Deno and build CI jobs also passed at code revision `06219cd`.
+
+Outstanding acceptance checks: a real signed-in operator upload → GitHub OIDC worker → review → authorized publication → independent shopper session; actual Pages deployment content; and physical Safari/iOS navigation. Mock visual data and signed-token unit tests do not establish that complete production round trip. Keep these limits visible until those checks have run.
