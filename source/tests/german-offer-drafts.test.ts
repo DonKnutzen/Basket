@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {matchGermanDrafts,parseGermanDraft,searchGermanDraftCatalogue,unverifiedOfferCount} from '../lib/german-offer-drafts';
+import {matchGermanDrafts,parseGermanDraft,searchGermanDraftCatalogue,unverifiedOfferCount,compactGermanDraftTitle} from '../lib/german-offer-drafts';
 
 const job={id:'a-1',retailer:'aldi-nord',region:'Kiel',filename:'aldi.pdf',source_url:'https://magazine.aldi-nord.de/2026/sample/GetPDF.ashx',valid_from:'2026-10-26',valid_until:'2026-10-30'};
 const raw=(name:string,changes:Record<string,unknown>={})=>({
@@ -91,4 +91,19 @@ test('authenticated read-only flyer projection remains a searchable unverified K
  assert.equal(item.status,'unreadable');
  assert.equal(item.priceUsable,false);
  assert.equal(searchGermanDraftCatalogue('Kiwi',[item],[],now).length,1);
+});
+
+test('long Red Bull OCR text is compact but the full original stays available',()=>{
+ const long='IM AUFSTELLER RED BULL Energydrink Koffein- und taurinhaltig; verschiedene Sorten, z. B. Classic oder Winter Edition, Pistachio & Berries; 0,25 l';
+ const out=compactGermanDraftTitle(long,'',84);
+ assert.equal(out.truncated,true);
+ assert.ok(out.title.length<=84);
+ assert.ok(out.title.includes('RED BULL'));
+ assert.equal(out.full,long);
+ assert.ok(out.title.endsWith('…'));
+ assert.equal(compactGermanDraftTitle('SunGold Kiwi','').truncated,false);
+});
+test('the brand is only added when missing from the printed title',()=>{
+ assert.equal(compactGermanDraftTitle('Coca-Cola Original Taste','Coca-Cola').full,'Coca-Cola Original Taste');
+ assert.equal(compactGermanDraftTitle('Original Taste','Coca-Cola').full,'Coca-Cola · Original Taste');
 });

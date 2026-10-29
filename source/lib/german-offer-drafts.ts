@@ -81,3 +81,16 @@ export function unverifiedOfferCount(count:number,de:boolean):string{
  return de?(count===1?'1 ungeprüftes Angebot':count+' ungeprüfte Angebote'):
   (count===1?'1 unverified offer':count+' unverified offers');
 }
+
+/** A readable headline drawn ONLY from printed product text.
+ * Long OCR descriptions remain accessible in the expand-on-demand details.
+ */
+export function compactGermanDraftTitle(name:string,brand:string,maxLength=84):{title:string;full:string;truncated:boolean}{
+ const cleanName=name.replace(/\s+/g,' ').trim(),cleanBrand=brand.replace(/\s+/g,' ').trim();
+ const full=cleanBrand&& !cleanName.toLocaleLowerCase('de').startsWith(cleanBrand.toLocaleLowerCase('de'))
+  ? cleanBrand+' · '+cleanName:cleanName;
+ if(full.length<=maxLength)return {title:full,full,truncated:false};
+ const edge=full.lastIndexOf(' ',maxLength-1);
+ const cutoff=edge>=Math.max(24,Math.floor(maxLength*.55))?edge:maxLength-1;
+ return {title:full.slice(0,cutoff).trimEnd()+'…',full,truncated:true};
+}

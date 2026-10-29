@@ -317,3 +317,139 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
 .tile .german-direct-flyer-links{grid-template-columns:minmax(0,1fr)}
 @media(max-width:700px){.german-direct-flyer-links{grid-template-columns:minmax(0,1fr)}.german-flyer-link{min-height:45px;gap:3px}}
 @media(prefers-color-scheme:dark){.german-direct-flyers,.german-flyer-link{background:#21382b;color:#edf3e9;border-color:#45614d}.german-flyer-link.is-pdf{background:#2e4836;border-color:#668567}}
+
+/* Mobile basket: an expanded offer is not a third-column product tile.
+ * Give the expanded item a complete row, rather than forcing OCR text into
+ * a 70px wide card and letting letters stack vertically. */
+@media (max-width: 850px) {
+ .tile-grid>.tile.with-offer-check:has(.german-item-offers) {
+  grid-column:1 / -1;
+  width:100%;
+  min-width:0;
+  align-self:start;
+  transform:none;
+ }
+ .tile-grid>.tile.with-offer-check:has(.german-item-offers) .tile-hit {
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr);
+  grid-template-rows:auto auto;
+  column-gap:12px;
+  row-gap:3px;
+  align-items:center;
+  text-align:left;
+  width:100%;
+  height:auto;
+  min-height:76px;
+  padding:12px 44px 8px 13px;
+ }
+ .tile-grid>.tile.with-offer-check:has(.german-item-offers) .tile-hit>svg {
+  grid-column:1;
+  grid-row:1 / span 2;
+  width:38px;
+  height:38px;
+  margin:0;
+ }
+ .tile-grid>.tile.with-offer-check:has(.german-item-offers) .tile-hit>b {
+  grid-column:2;
+  grid-row:1;
+  margin:0;
+  min-width:0;
+  font-size:calc(14px * var(--text-scale));
+  text-align:left;
+ }
+ .tile-grid>.tile.with-offer-check:has(.german-item-offers) .tile-hit>small {
+  grid-column:2;
+  grid-row:2;
+  min-width:0;
+  margin:0;
+  font-size:calc(11px * var(--text-scale));
+  line-height:1.4;
+  text-align:left;
+ }
+ .tile-grid>.tile.with-offer-check:has(.german-item-offers) .tile-hit>small span {display:inline;line-height:1.4}
+ .tile-grid>.tile.with-offer-check:has(.german-item-offers) .offer-in-tile {
+  width:100%;
+  min-width:0;
+  padding:0 12px 12px;
+ }
+ .tile-grid>.tile.with-offer-check:has(.german-item-offers) .german-item-offers {
+  width:100%;
+  min-width:0;
+ }
+ .tile-grid>.tile.with-offer-check:has(.german-item-offers) .german-draft-list {
+  min-width:0;
+  width:100%;
+ }
+ .tile-grid>.tile.with-offer-check:has(.german-item-offers) .german-draft-head {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+ }
+ .tile-grid>.tile.with-offer-check:has(.german-item-offers) .german-draft-main {
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:start;
+  gap:10px;
+ }
+ .tile-grid>.tile.with-offer-check:has(.german-item-offers) .german-draft-money {
+  justify-items:end;
+  text-align:right;
+  max-width:112px;
+ }
+ .tile-grid>.tile.with-offer-check:has(.german-item-offers) .german-direct-flyer-links {
+  grid-template-columns:repeat(3,minmax(0,1fr));
+ }
+ .tile-grid>.tile.with-offer-check:has(.german-item-offers) .german-flyer-link {
+  font-size:calc(11px * var(--text-scale));
+  min-height:50px;
+  padding:8px;
+ }
+}
+@media (max-width: 400px) {
+ .tile-grid>.tile.with-offer-check:has(.german-item-offers) .german-draft-main {
+  grid-template-columns:minmax(0,1fr);
+ }
+ .tile-grid>.tile.with-offer-check:has(.german-item-offers) .german-draft-money {
+  justify-items:start;
+  text-align:left;
+  max-width:none;
+ }
+}
+.german-draft-description {
+ min-width:0;
+ font-size:calc(11px * var(--text-scale));
+ line-height:1.55;
+ border-top:1px solid var(--line);
+ padding-top:6px;
+}
+.german-draft-description>summary {
+ cursor:pointer;
+ font-weight:600;
+ text-decoration:underline;
+ text-underline-offset:2px;
+}
+.german-draft-description>p {
+ margin:7px 0 2px;
+ white-space:normal;
+ overflow-wrap:break-word;
+ word-break:normal;
+}
+.german-draft-card .german-draft-shop,
+.german-draft-card .german-draft-name {
+ word-break:normal;
+ overflow-wrap:break-word;
+ hyphens:auto;
+}
+.german-draft-card .german-draft-head,
+.german-draft-card .german-draft-info {
+ min-width:0;
+}
+.german-draft-card .german-draft-name{
+ display:-webkit-box;
+ -webkit-box-orient:vertical;
+ -webkit-line-clamp:3;
+ line-clamp:3;
+ overflow:hidden;
+}
+.german-draft-card .german-draft-status{max-width:50%;text-align:center}
+.german-draft-card .german-draft-foot{min-width:0}
