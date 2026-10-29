@@ -199,6 +199,23 @@ def printed_date_ranges(text,year):
         except ValueError:pass
     return found
 
+def product_name_fragment(text):
+    """Keep product names printed alongside a bottle size or price.
+
+    Never take a deposit, unit-price note or condition as a product name.
+    Splitting numeric evidence from product text still requires human review.
+    """
+    if BASE.search(text) or CONDITION.search(text) or re.search(r'\b(?:Pfand|UVP|bisher|statt|gültig)\b',text,re.I):
+        return ''
+    clean=SIZE.sub(' ',text)
+    clean=PRICE.sub(' ',clean)
+    clean=re.sub(r'[€%]+',' ',clean)
+    clean=re.sub(r'\s+',' ',clean).strip(' ·–—-,:;()/')
+    if re.fullmatch(r'(?i)(?:knaller|aktion|angebot|REWE|ALDI|Nord|PENNY|Bonus|App)',clean):
+        return ''
+    if len(re.findall(r'[A-Za-zÄÖÜäöüß]',clean))<2:return ''
+    return clean
+
 def analyze_page(page, valid_from, valid_until):
     boxes,images,drawings=text_boxes(page)
     letters=''.join(b.text for b in boxes)
@@ -277,14 +294,13 @@ def analyze_page(page, valid_from, valid_until):
         if len(prices)!=1:issues.append('Mehrere Verkaufspreise / Produkte im selben Bereich')
         # A proposal in an ambiguous tile must not silently choose a price.
         cents=prices[0]['cents'] if len(prices)==1 else 0
-        raw_price_indices=set().union(*(p['indices'] for p in anchors if contains(rect,p['rect'])))
         name_parts=[]
         for b in inside:
-            if boxes.index(b) in raw_price_indices or PRICE.search(b.text) or BASE.search(b.text) or SIZE.search(b.text):continue
-            if b.size>20:continue
-            if re.fullmatch(r'[\d\W]+|knaller|aktion|angebot|REWE|ALDI|Nord',b.text,re.I):continue
-            if CONDITION.search(b.text):continue
-            if len(re.findall('[A-Za-zÄÖÜäöüß]',b.text))>=2:name_parts.append(b.text)
+            # PDF spans can contain the title, bottle size and sale price.
+            # Removing the complete span would lose names like Coca-Cola.
+            if b.size>20 and not any(re.search(r'(?<!\w)'+re.escape(brand)+r'(?!\w)',b.text,re.I) for brand in BRANDS):continue
+            fragment=product_name_fragment(b.text)
+            if fragment:name_parts.append(fragment)
         name=' '.join(name_parts).strip()[:250]
         brands=[b for b in BRANDS if re.search(r'(?<!\w)'+re.escape(b)+r'(?!\w)',name,re.I)]
         brand=brands[0] if len(brands)==1 else ''
