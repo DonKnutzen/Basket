@@ -1,0 +1,27 @@
+name: Inspect supplied official Penny Kiel flyer (one time)
+on:
+  push:
+    branches: [feature/penny-kiel-central-flyer-2026-10]
+    paths: [.github/workflows/inspect-penny-flyer-temporary.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Probe PDF and extract limited text metadata
+        shell: bash
+        run: |
+          set +e
+          URL='https://penny-publish.blaetterkatalog.de/frontend/catalogs/1408356/3/pdf/complete.pdf'
+          curl -sSLI --max-time 25 -H 'Origin: https://donknutzen.github.io' "$URL" | grep -Ei '^HTTP/|content-length:|content-type:|location:|access-control-allow-origin:' | tail -15
+          curl -sSL --max-time 120 -o /tmp/penny.pdf -w 'DOWNLOAD status=%{http_code} bytes=%{size_download} contentType=%{content_type}\n' "$URL"
+          file /tmp/penny.pdf
+          pdfinfo /tmp/penny.pdf | grep -E '^Pages:|^File size:|^Page size:|^Title:' | head -6
+          pdftotext -f 1 -l 3 -layout /tmp/penny.pdf /tmp/penny-first.txt
+          echo 'TEXT PAGE1-3 SAMPLE:'
+          head -n 35 /tmp/penny-first.txt | cut -c1-140
+          echo 'VALIDITY/REGION EVIDENCE:'
+          pdftotext -f 1 -l 8 -layout /tmp/penny.pdf /tmp/penny-check.txt
+          grep -iE 'Kiel|Filiale|Region|26\.10\.|31\.10\.|01\.11\.|01/11|Gültig|Angebote' /tmp/penny-check.txt | head -18 | cut -c1-160
