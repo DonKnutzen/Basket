@@ -18,10 +18,15 @@ jobs:
           curl -sSLI --max-time 25 -H 'Origin: https://donknutzen.github.io' "$URL" | grep -Ei '^HTTP/|content-length:|content-type:|location:|access-control-allow-origin:' | tail -15
           curl -sSL --max-time 120 -o /tmp/penny.pdf -w 'DOWNLOAD status=%{http_code} bytes=%{size_download} contentType=%{content_type}\n' "$URL"
           file /tmp/penny.pdf
-          pdfinfo /tmp/penny.pdf | grep -E '^Pages:|^File size:|^Page size:|^Title:' | head -6
-          pdftotext -f 1 -l 3 -layout /tmp/penny.pdf /tmp/penny-first.txt
-          echo 'TEXT PAGE1-3 SAMPLE:'
-          head -n 35 /tmp/penny-first.txt | cut -c1-140
-          echo 'VALIDITY/REGION EVIDENCE:'
-          pdftotext -f 1 -l 8 -layout /tmp/penny.pdf /tmp/penny-check.txt
-          grep -iE 'Kiel|Filiale|Region|26\.10\.|31\.10\.|01\.11\.|01/11|Gültig|Angebote' /tmp/penny-check.txt | head -18 | cut -c1-160
+          python -m pip install -q pymupdf
+          python - <<'PY'
+          import fitz,os,re
+          p=fitz.open("/tmp/penny.pdf")
+          print("PDF pages",len(p),"bytes",os.path.getsize("/tmp/penny.pdf"))
+          for i in [0,1,2,3,len(p)-1]:
+            if i>=len(p):continue
+            page=p[i];t=page.get_text(sort=True)
+            print("PAGE",i+1,"text chars",len(t),"lines",len(t.splitlines()))
+            print("PAGE_TEXT",i+1,repr(t[:1000]))
+            print("PAGE_DATES",i+1,re.findall(r".{0,50}(?:26\\.10|31\\.10|30\\.10|01\\.11|Kiel|Region|Gültig).{0,70}",t,re.I)[:5])
+          PY
