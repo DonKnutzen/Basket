@@ -7,17 +7,40 @@ import {useCentralGermanOffers} from '../lib/german-offer-store';
 import {OfferSourceLink} from './offer-source-link';
 
 const eur=(n:number)=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(n/100);
+
+/** Human readable count; a candidate stays unverified and is never a confirmed price. */
+export function unverifiedOfferCount(count:number,de:boolean):string{
+ return de?(count===1?'1 ungeprüftes Angebot':count+' ungeprüfte Angebote'):
+  (count===1?'1 unverified offer':count+' unverified offers');
+}
 function DraftRow({draft:d}:{draft:GermanDraft}){
- const de=getLanguage()==='de';
- return <div className="central-offer-detail german-draft-row">
-  <strong>{germanStoreName(d.retailer)} · {d.brand?d.brand+' · ':''}{d.name}</strong>
-  <small>{d.packSize|| (de?'Menge unklar':'Unknown pack size')} · {de?'PDF-Seite':'PDF page'} {d.page}</small>
-  <small><b>{de?'Ungeprüfter PDF-Treffer':'Unverified PDF match'}</b> · {d.status==='unreadable'?(de?'Lesbarkeit unzureichend':'Unreadable'):(de?'Produktzuordnung zu prüfen':'Product match needs review')}</small>
-  {d.priceUsable?<span>{de?'Preisvorschlag (nicht bestätigt): ':'Tentative price (not verified): '}{eur(d.priceCents)}</span>:
-   <small>{de?'Preis nicht zuverlässig zugeordnet – Original prüfen.':'Price cannot be safely linked – inspect original.'}</small>}
-  {d.issues.length>0&&<small>{d.issues.slice(0,2).join(' · ')}</small>}
-  {d.sourceUrl&&<OfferSourceLink url={d.sourceUrl}>{de?'Originalprospekt prüfen':'Inspect original flyer'}</OfferSourceLink>}
- </div>;
+ const de=getLanguage()==='de',unreadable=d.status==='unreadable';
+ const identity=d.brand&&d.name.toLocaleLowerCase('de').startsWith(d.brand.toLocaleLowerCase('de'))?d.name:
+  [d.brand,d.name].filter(Boolean).join(' · ');
+ return <article className={'german-draft-card '+d.retailer+(unreadable?' is-unreadable':'')}>
+  <div className="german-draft-head">
+   <span className="german-draft-shop">{germanStoreName(d.retailer)}</span>
+   <span className="german-draft-status">{unreadable?(de?'Nicht eindeutig':'Unclear'):(de?'Ungeprüft':'Unverified')}</span>
+  </div>
+  <div className="german-draft-main">
+   <div className="german-draft-info">
+    <strong className="german-draft-name">{identity}</strong>
+    <span className="german-draft-size">{d.packSize|| (de?'Packungsgröße unklar':'Pack size unclear')}{d.variant?' · '+d.variant:''}</span>
+   </div>
+   <div className="german-draft-money">
+    {d.priceUsable?<><small>{de?'Preisvorschlag':'Possible price'}</small><strong>{eur(d.priceCents)}</strong></>:
+     <span>{de?'Preis prüfen':'Check price'}</span>}
+   </div>
+  </div>
+  <div className="german-draft-foot">
+   <span>{de?'Prospekt S. ':'Flyer p. '}{d.page}</span>
+   {d.sourceUrl&&<OfferSourceLink url={d.sourceUrl}>{de?'Original ansehen':'View original'}</OfferSourceLink>}
+  </div>
+  {d.issues.length>0&&<details className="german-draft-notes">
+   <summary>{de?'Warum ungeprüft?':'Why unverified?'}</summary>
+   <ul>{d.issues.map((issue,i)=><li key={i}>{issue}</li>)}</ul>
+  </details>}
+ </article>;
 }
 /** Operator-only candidate preview: no draft ever enters the verified badge price. */
 export function GermanDraftMatches({name,stores}:{name:string;stores:readonly string[]}){
@@ -26,29 +49,40 @@ export function GermanDraftMatches({name,stores}:{name:string;stores:readonly st
  const matches=matchGermanDrafts(name,state.drafts,stores);
  if(!matches.length)return null;
  return <details className="german-draft-matches">
-  <summary>{de?`${matches.length} weitere PDF-Treffer zur Kontrolle (ungeprüft)`:`${matches.length} additional PDF matches to review (unverified)`}</summary>
-  <small>{de?'Diese Produkte/Preise sind nicht bestätigt und werden nicht in den Preisvergleich eingerechnet.':'These items/prices are unverified and excluded from confirmed comparisons.'}</small>
-  {(showAll?matches.slice(0,40):matches.slice(0,4)).map(d=><DraftRow key={d.id} draft={d}/>)}
-  {matches.length>4&&<button type="button" className="offer-again" onClick={()=>setShowAll(!showAll)}>{showAll?(de?'Weniger zeigen':'Show less'):(de?'Weitere PDF-Treffer':'More PDF matches')}</button>}
+  <summary>{unverifiedOfferCount(matches.length,de)}</summary>
+  <div className="german-draft-list">
+   <p className="german-draft-disclaimer">{de?'Noch nicht bestätigt · Preise nicht im offiziellen Vergleich enthalten.':'Not verified · prices excluded from confirmed comparisons.'}</p>
+   {(showAll?matches.slice(0,40):matches.slice(0,4)).map(d=><DraftRow key={d.id} draft={d}/>)}
+   {matches.length>4&&<button type="button" className="german-draft-more" onClick={()=>setShowAll(!showAll)}>{showAll?(de?'Weniger anzeigen':'Show fewer'):(de?`Weitere Angebote ansehen (${matches.length-4})`:`More offers (${matches.length-4})`)}</button>}
+   {showAll&&matches.length>40&&<small>{de?'Maximal 40 Treffer sichtbar; alle übrigen im Angebotskatalog.':'Showing at most 40; see the offer catalogue for the rest.'}</small>}
+  </div>
  </details>;
 }
-/** A searchable listing of all interpretable draft regions from the 3 PDFs. */
+/** Private searchable listing of candidate regions, not a verified prices feed. */
 export function GermanDraftCatalogue({stores}:{stores:readonly string[]}){
- const state=useCentralGermanOffers(),[search,setSearch]=useState(''),[limit,setLimit]=useState(24),de=getLanguage()==='de';
+ const state=useCentralGermanOffers(),[search,setSearch]=useState(''),[limit,setLimit]=useState(24),[filter,setFilter]=useState<'all'|'price'|'unclear'>('all'),de=getLanguage()==='de';
  if(!state.isOperator)return null;
- const candidates=searchGermanDraftCatalogue(search,state.drafts,stores);
+ const matched=searchGermanDraftCatalogue(search,state.drafts,stores);
+ const candidates=matched.filter(d=>filter==='all'||filter==='price'&&d.priceUsable||filter==='unclear'&&!d.priceUsable);
  const count=state.drafts.filter(d=>!stores.length||stores.includes(d.retailer==='aldi-nord'?'aldi':d.retailer)).length;
- return <details className="german-offer-admin">
-  <summary>{de?`Ungeprüfte Prospekt-Treffer durchsuchen (${count})`:`Search unverified flyer matches (${count})`}</summary>
+ return <details className="german-offer-admin german-draft-catalogue">
+  <summary>{de?`Ungeprüfte Angebote durchsuchen (${count})`:`Search unverified offers (${count})`}</summary>
   <div className="german-admin-body">
-   <p>{de?'Nur für den Betreiber sichtbar. Der Katalog enthält erkannte Prüfausschnitte, nicht notwendigerweise einzelne Lebensmittel. Preise sind unverbindliche PDF-Vorschläge; unlesbare Zuordnungen werden ohne Preis angezeigt.':'Operator only. Regions may mix products and are not confirmed offers. Prices are provisional; unreadable matches show no price.'}</p>
-   <label>{de?'Suche nach Marke, Lebensmittel, Sorte oder Menge':'Search brand, food, variant or size'}
-    <input type="search" value={search} onChange={e=>{setSearch(e.target.value);setLimit(24)}} placeholder="z. B. Butter, Joghurt, Coca-Cola, 250 g"/>
+   <p className="german-draft-disclaimer">{de?'Nur für den Betreiber · Erkannte Prospektbereiche sind noch nicht bestätigt. Ein Preis wird nur als Vorschlag angezeigt, wenn die Zuordnung plausibel ist.':'Operator only · PDF regions are not verified. Prices appear as suggestions only when the assignment seems plausible.'}</p>
+   <label>{de?'Produkt, Marke oder Menge suchen':'Search product, brand or pack size'}
+    <input type="search" value={search} onChange={e=>{setSearch(e.target.value);setLimit(24)}} placeholder={de?'z. B. Butter, Joghurt, Coca-Cola':'e.g. Butter, yogurt, Coca-Cola'}/>
    </label>
-   <small>{de?`${candidates.length} mögliche Treffer aus ausgewählten Märkten`:`${candidates.length} possible matches in selected stores`}</small>
-   {candidates.slice(0,limit).map(d=><DraftRow key={d.id} draft={d}/>)}
-   {!candidates.length&&<p>{de?'Keine erkannten Bereiche passend zur Suche. Die PDF kann trotzdem unerkannte Produkte enthalten.':'No parsed regions matched; the original PDF may contain additional products.'}</p>}
-   {candidates.length>limit&&<button type="button" className="offer-again" onClick={()=>setLimit(n=>n+24)}>{de?'Weitere 24 Treffer anzeigen':'Show 24 more matches'}</button>}
+   <label>{de?'Ergebnisfilter':'Result filter'}
+    <select value={filter} onChange={e=>{setFilter(e.target.value as 'all'|'price'|'unclear');setLimit(24)}}>
+     <option value="all">{de?'Alle ungeprüften Angebote':'All unverified offers'}</option>
+     <option value="price">{de?'Mit Preisvorschlag':'With possible price'}</option>
+     <option value="unclear">{de?'Preis nicht eindeutig':'Price unclear'}</option>
+    </select>
+   </label>
+   <small className="german-draft-count">{unverifiedOfferCount(candidates.length,de)}</small>
+   <div className="german-draft-list">{candidates.slice(0,limit).map(d=><DraftRow key={d.id} draft={d}/>)}</div>
+   {!candidates.length&&<p>{de?'Keine Treffer für diese Suche. Auch nicht erkannte Produkte können im Prospekt stehen.':'No matches. The flyer may still contain products that were not recognized.'}</p>}
+   {candidates.length>limit&&<button type="button" className="german-draft-more" onClick={()=>setLimit(n=>n+24)}>{de?'Weitere 24 Angebote':'Show 24 more offers'}</button>}
   </div>
  </details>;
 }
