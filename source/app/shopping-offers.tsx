@@ -18,7 +18,7 @@ export function GermanOfferTileBadge({name,region}:{name:string;region:OfferRegi
  const state=useCentralGermanOffers(),[enabled]=useGermanOfferDisplay();
  if(region.country!=='DE'||!enabled)return null;
  const matches=matchCentralGermanOffers(name,mergeGermanOfferSources(state.offers,state.previewOffers),region.stores);
- const pending=state.isOperator?matchGermanDrafts(name,state.drafts,region.stores).length:0;
+ const pending=matchGermanDrafts(name,state.drafts,region.stores).length;
  if(!matches.length)return pending?<span> · {unverifiedOfferCount(pending,getLanguage()==='de')}</span>:null;
  const available=compactGermanOfferMatches(matches);
  const eur=new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
