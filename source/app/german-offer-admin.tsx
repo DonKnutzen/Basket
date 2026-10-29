@@ -5,8 +5,8 @@ import {browserAuth} from '../lib/supabase-browser';
 import {uploadGermanFlyer} from '../lib/german-offer-upload';
 import {refreshGermanOffers} from '../lib/german-offer-store';
 import {berlinDay} from '../lib/rewe-official-weekly';
-import {catalogExactProduct,catalogProduct,PRODUCT_CATALOG} from '../lib/product-catalog';
-import {germanStoreName,type GermanProduct} from '../lib/german-central-offers';
+import {PRODUCT_CATALOG} from '../lib/product-catalog';
+import {germanStoreName,germanCategoryExact,suggestGermanCategory,GERMAN_STAPLE_CATEGORIES,type GermanProduct} from '../lib/german-central-offers';
 type Import={id:string;retailer:'rewe'|'aldi-nord';filename:string;status:string;valid_from:string;valid_until:string;total_pages:number|null;revision:number;error:string|null;rights_confirmed:boolean;dates_confirmed:boolean;source_url:string;rights_note:string};
 type Page={page:number;status:string;image_key:string;error:string|null;date_hints:{from:string;until:string;yearFromImport:boolean}[]};
 type Candidate={id:string;page:number;data:GermanProduct;status:string;crop_key:string;issues:string[];revision:number};
@@ -20,11 +20,11 @@ function Evidence({path,label}:{path:string;label:string}){
  return url?<a href={url} target="_blank" rel="noopener noreferrer" title="Original vergrößern"><img src={url} alt={label} className="german-evidence"/></a>:<small role="status">{error||'Originalausschnitt wird geladen …'}</small>;
 }
 function ReviewRow({row,busy,onSave}:{row:Candidate;busy:boolean;onSave:(fields:GermanProduct,decision:string)=>Promise<void>}){
- const [fields,setFields]=useState({...row.data,category:row.data.category||catalogProduct(row.data.name)?.de||''}),[price,setPrice]=useState((row.data.priceCents/100).toFixed(2).replace('.',','));
+ const [fields,setFields]=useState({...row.data,category:row.data.category||suggestGermanCategory(row.data.name)?.de||''}),[price,setPrice]=useState((row.data.priceCents/100).toFixed(2).replace('.',','));
  const edit=(key:keyof GermanProduct,value:string|number)=>setFields(x=>({...x,[key]:value}));
  const save=(decision:string)=>{
   const parsed=/^\d{1,4}(?:[.,]\d{1,2})?$/.test(price)?Math.round(Number(price.replace(',','.'))*100):0;
-  if(decision==='verified'&&!catalogExactProduct(fields.category)){window.alert('Eine Kategorie aus der Liste auswählen.');return}
+  if(decision==='verified'&&!germanCategoryExact(fields.category)){window.alert('Eine Kategorie aus der Liste auswählen.');return}
   void onSave({...fields,priceCents:parsed},decision);
  };
  return <article className={'german-review-row '+row.status}>
@@ -94,7 +94,7 @@ export function GermanOfferAdmin(){
     <details><summary>Originalseite ansehen · fehlende Produkte ergänzen</summary>{pages.find(p=>p.page===page)?.image_key&&<Evidence path={pages.find(p=>p.page===page)!.image_key} label={`Prospektseite ${page}`}/>}</details>
     {pages.find(p=>p.page===page)?.date_hints?.map((h,i)=><p key={i}>Gedruckter Seitenzeitraum: {h.from} – {h.until}{h.yearFromImport?' · Jahr aus Import übernommen; bestätigen.':''}</p>)}
     {job.status==='review'&&<button type="button" disabled={busy} onClick={()=>void action(async()=>{await rpc('offer_candidate_add',{target:job.id,page_number:page});setFilter('pending');await load(selected)})}>Produkt auf dieser Seite manuell ergänzen</button>}
-    <datalist id="german-offer-categories">{PRODUCT_CATALOG.map(x=><option key={x.de} value={x.de}/>)}</datalist>
+    <datalist id="german-offer-categories">{[...new Set([...PRODUCT_CATALOG.map(x=>x.de),...GERMAN_STAPLE_CATEGORIES])].map(name=><option key={name} value={name}/>)}</datalist>
     {shown.map(row=>job.status==='published'?<p key={row.id}>{row.data.brand} {row.data.name} · {row.data.packSize} · {(row.data.priceCents/100).toFixed(2)} € · {row.status}</p>:<ReviewRow key={row.id+':'+row.revision} row={row} busy={busy} onSave={async(fields,decision)=>action(async()=>{await rpc('offer_candidate_review',{target:row.id,expected_revision:row.revision,fields,decision});await load(selected)})}/>)}
     {!shown.length&&<p>Keine Einträge in dieser Ansicht. Die Originalseite kann auf fehlende Produkte geprüft werden.</p>}
    </>}

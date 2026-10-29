@@ -41,3 +41,11 @@ test('existing lists expire at Berlin midnight, including the 23 and 25 hour day
  assert.equal(untilBerlinMidnight(new Date('2026-03-28T23:00:00Z')),23*3600000);
  assert.equal(untilBerlinMidnight(new Date('2026-10-24T22:00:00Z')),25*3600000);
 });
+test('generic German milk, yogurt and cheese remain supported when the shared catalogue only lists subtypes',()=>{
+ const yogurt={...offer,id:'yogurt',brand:'Danone',name:'Activia Joghurt',category:'Joghurt'};
+ assert.ok(parseGermanOffer(yogurt));
+ assert.equal(matchCentralGermanOffers('Joghurt',[yogurt],[],now).length,1);
+ assert.equal(matchCentralGermanOffers('Yogurt',[yogurt],[],now).length,1);
+ const milk={...offer,id:'milk',name:'Vollmilch',category:'Milch'};
+ assert.ok(parseGermanOffer(milk));assert.equal(matchCentralGermanOffers('Milch',[milk],[],now).length,1);
+});
