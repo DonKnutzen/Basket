@@ -16,7 +16,6 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-import fitz
 from german_flyer_layout import analyze_page, save_evidence, page_quality_counts, VERSION
 
 CHUNK=8*1024*1024
@@ -74,10 +73,16 @@ def source_available(url):
     return False
 
 def local(pdf_path,out,valid_from,valid_until):
+    import fitz
     out.mkdir(parents=True,exist_ok=True)
-    report={'parser':VERSION,'pages':[]}
+    digest=hashlib.sha256()
+    with pdf_path.open('rb') as source:
+        for chunk in iter(lambda:source.read(CHUNK),b''):digest.update(chunk)
+    report={'schemaVersion':1,'parser':VERSION,'sha256':digest.hexdigest(),
+            'validFrom':valid_from,'validUntil':valid_until,'pages':[]}
     with fitz.open(pdf_path) as pdf:
-        if pdf.needs_pass:raise ValueError('Password-protected PDF')
+        if pdf.needs_pass or not 1<=len(pdf)<=1000:raise ValueError('Encrypted or unsupported PDF page count')
+        report['totalPages']=len(pdf)
         for number,page in enumerate(pdf,1):
             try:
                 result=analyze_page(page,valid_from,valid_until)
@@ -92,10 +97,23 @@ def local(pdf_path,out,valid_from,valid_until):
     keys=('regions','withPrice','withoutPack','inferredUnit','ambiguousPrice','unreadable')
     report['quality']={k:sum(page_quality_counts(p)[k] for p in report['pages']) for k in keys}
     report['quality']['failedPages']=[p['page'] for p in report['pages'] if p['status']!='done']
+    report['quality']['emptyPages']=[p['page'] for p in report['pages']
+        if p['status']=='done' and not p.get('offers')]
+    report['quality']['reviewPages']=[p['page'] for p in report['pages']
+        if p['status']!='done' or not p.get('offers') or any(
+            o.get('issues') or o.get('status')=='unreadable' or
+            not o['data'].get('priceCents') or not o['data'].get('packSize')
+            for o in p.get('offers',[]))]
+    report['processingStatus']='failed' if report['quality']['failedPages'] else 'processed'
+    # Processing every page is NOT proof of recognizing every food product.
+    # Keep this explicit even when no parser issue was detected.
+    report['requiresOriginalReview']=True
     (out/'analysis.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
     print('REVIEW COUNTS',json.dumps(report['quality'],sort_keys=True))
+    return 1 if report['quality']['failedPages'] else 0
 
 def process(api,job):
+    import fitz
     with tempfile.TemporaryDirectory(prefix='basket-flyer-') as tmp:
         folder=Path(tmp);path=folder/'flyer.pdf';digest=hashlib.sha256();size=0
         with path.open('wb') as file:
@@ -146,8 +164,16 @@ def main():
     parser.add_argument('--from',dest='start');parser.add_argument('--until')
     args=parser.parse_args()
     if args.pdf:
-        dt.date.fromisoformat(args.start);dt.date.fromisoformat(args.until)
+        if not all((args.out,args.start,args.until)):
+            parser.error('--pdf requires --out, --from and --until')
+        try:
+            start=dt.date.fromisoformat(args.start);end=dt.date.fromisoformat(args.until)
+        except ValueError:parser.error('Dates must use YYYY-MM-DD')
+        if end<start:parser.error('--until must not precede --from')
+        if not args.pdf.is_file():parser.error('--pdf must refer to an existing file')
         return local(args.pdf,args.out,args.start,args.until)
+    if args.out or args.start or args.until:
+        parser.error('--out, --from and --until require --pdf; queue mode takes no local arguments')
     api=Gateway();started=time.monotonic()
     for source in api.call('sources'):
         api.call('source-status',body={'id':source['id'],'available':source_available(source['source_url'])})
@@ -160,4 +186,5 @@ def main():
             print('IMPORT FAILED',type(error).__name__)
             api.call('fail',job,{'error':type(error).__name__+': '+str(error)[:200]})
 
-if __name__=='__main__':main()
+if __name__=='__main__':raise SystemExit(main())
+
