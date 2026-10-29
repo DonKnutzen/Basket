@@ -2,7 +2,7 @@ import unittest
 import sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
-from german_flyer_layout import Box,price_anchors,price_column_cells,quantity,unit_check,whitespace_tiles,printed_date_ranges
+from german_flyer_layout import Box,price_anchors,price_column_cells,product_name_fragment,quantity,unit_check,whitespace_tiles,printed_date_ranges
 
 class LayoutTests(unittest.TestCase):
     def test_overlapping_typographic_euro_and_cent_boxes(self):
@@ -31,6 +31,14 @@ class LayoutTests(unittest.TestCase):
             (119,'selling'),(99,'selling'),(25,'deposit')])
         mixed=price_anchors([Box('1,25 l Flasche, 1,19 €',(10,20,180,38),15)])
         self.assertEqual([x['cents'] for x in mixed],[119])
+
+    def test_penny_name_is_preserved_when_pdf_puts_size_and_price_in_one_span(self):
+        self.assertEqual(product_name_fragment('Coca-Cola Erfrischungsgetränk 1,25 l 1,19 €'),'Coca-Cola Erfrischungsgetränk')
+        self.assertEqual(product_name_fragment('Coca-Cola Zero 1,25 l'),'Coca-Cola Zero')
+        self.assertEqual(product_name_fragment('1,25 l'),'')
+        self.assertEqual(product_name_fragment('zzgl. 0,25 € Pfand'),'')
+        self.assertEqual(product_name_fragment('Nur mit PENNY App'),'')
+        self.assertEqual(product_name_fragment('1 l = 0,95 €'),'')
 
     def test_base_prices_are_separate(self):
         self.assertEqual(price_anchors([Box('(1 kg = 7.16)',(0,0,80,15),10)]),[])
