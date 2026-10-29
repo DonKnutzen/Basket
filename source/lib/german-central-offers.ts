@@ -105,3 +105,19 @@ export function matchCentralGermanOffers(name:string,offers:readonly GermanOffer
   return a.offer.retailer.localeCompare(b.offer.retailer)||a.offer.name.localeCompare(b.offer.name);
  });
 }
+
+export function compactGermanOfferMatches(matches:readonly GermanMatch[],maxOffers=5):GermanMatch[]{
+ // A single cheapest-price badge hides bigger packs and other retailers.
+ // Show one regular and one conditional offer per store instead; every badge
+ // includes pack size so a 1.25 L bottle is not mistaken for a 2 L bottle.
+ const ordered:GermanMatch[]=[];
+ const stores=[...new Set(matches.map(m=>m.offer.retailer))];
+ for(const store of stores){
+  const group=matches.filter(m=>m.offer.retailer===store);
+  const regular=group.find(m=>m.offer.priceKind==='standard');
+  const conditional=group.find(m=>m.offer.priceKind!=='standard');
+  if(regular)ordered.push(regular);
+  if(conditional)ordered.push(conditional);
+ }
+ return ordered.slice(0,maxOffers);
+}

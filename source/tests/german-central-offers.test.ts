@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {parseGermanOffer,matchCentralGermanOffers,germanPack,germanSourceUrl,untilBerlinMidnight,suggestGermanCategory,type GermanOffer} from '../lib/german-central-offers';
+import {parseGermanOffer,matchCentralGermanOffers,compactGermanOfferMatches,germanPack,germanSourceUrl,untilBerlinMidnight,suggestGermanCategory,type GermanOffer} from '../lib/german-central-offers';
 const now=new Date('2026-10-28T12:00:00Z');
 const offer:GermanOffer={id:'one',importId:'import',name:'Original Irische Butter',brand:'Kerrygold',variant:'',category:'Butter',packSize:'250 g',
  priceCents:159,currency:'EUR',conditions:'',priceKind:'standard',minQuantity:1,validFrom:'2026-10-26',validUntil:'2026-10-31',
@@ -101,4 +101,23 @@ test('generic drink requests include variants while named variants require print
  const redBullZero:GermanOffer={...redBull,id:'red-bull-zero',name:'Energy Drink Zero'};
  assert.equal(matchCentralGermanOffers('Red Bull',[redBull,redBullZero],[],now).length,2);
  assert.deepEqual(matchCentralGermanOffers('Red Bull Zero',[redBull,redBullZero],[],now).map(x=>x.offer.id),['red-bull-zero']);
+});
+test('ALDI 2 l Original Taste and Zero compete fairly with PENNY 1,25 l prices',()=>{
+ const aldi:GermanOffer={...offer,id:'aldi-cola-2l',retailer:'aldi-nord',marketId:null,brand:'Coca-Cola',
+   name:'Coca-Cola Erfrischungsgetränk',variant:'Original Taste / Zero',category:'Cola',
+   packSize:'2 l',priceCents:129,regularPrice:'2,19',testOnly:true,sourceUrl:'https://magazine.aldi-nord.de/aldi-nord/aldi-aktuell/2026/2026cw44mopromotionaldi-angebote-ab-montag-26-10-1//GetPDF.ashx',
+   validUntil:'2026-10-30'};
+ const penny:GermanOffer={...aldi,id:'penny-cola',retailer:'penny',brand:'Coca-Cola',variant:'Original',
+   packSize:'1,25 l',priceCents:119,sourceUrl:'https://penny-publish.blaetterkatalog.de/frontend/catalogs/1408356/3/pdf/complete.pdf'};
+ const app={...penny,id:'penny-app',priceCents:99,priceKind:'loyalty' as const,conditions:'Nur mit PENNY App'};
+ assert.equal(parseGermanOffer(aldi)?.packSize,'2 l');
+ assert.equal(matchCentralGermanOffers('Cola',[aldi,penny,app],['aldi'],now).length,1);
+ assert.deepEqual(matchCentralGermanOffers('Coca Cola Zero 2 l',[aldi,penny,app],[],now).map(x=>x.offer.id),['aldi-cola-2l']);
+ assert.deepEqual(matchCentralGermanOffers('Coke Zero',[aldi,penny,app],[],now).map(x=>x.offer.id),['aldi-cola-2l']);
+ assert.deepEqual(matchCentralGermanOffers('Coca Cola 2 l',[aldi,penny,app],[],now).map(x=>x.kind),['exact','alternative','alternative']);
+ const listings=compactGermanOfferMatches(matchCentralGermanOffers('Cola',[aldi,penny,app],[],now));
+ assert.deepEqual(new Set(listings.map(m=>m.offer.id)),new Set(['aldi-cola-2l','penny-cola','penny-app']));
+ assert.equal(listings.find(m=>m.offer.id==='aldi-cola-2l')?.offer.priceCents,129);
+ assert.equal(listings.find(m=>m.offer.id==='penny-app')?.offer.priceKind,'loyalty');
+ assert.equal(matchCentralGermanOffers('Cola',[aldi,penny,app],[],new Date('2026-10-31T12:00:00Z')).length,0);
 });
