@@ -304,3 +304,16 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
  .german-draft-foot,.german-draft-notes{border-color:#45614d}
  .german-draft-more{background:#24392c;color:#edf3e9;border-color:#50634e}
 }
+
+
+/* Direct, per-retailer PDF shortcuts shown to all signed-in Kiel accounts. */
+.german-direct-flyers{display:grid;gap:8px;min-width:0;margin:10px 0 12px;padding:12px;border-radius:10px;background:var(--paper);border:1px solid var(--line)}
+.german-direct-flyers>strong{font-size:calc(13px * var(--text-scale));font-weight:650}
+.german-direct-flyer-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.german-flyer-link{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-height:54px;min-width:0;gap:5px;padding:9px;border:1px solid var(--line);border-radius:9px;text-decoration:none;background:var(--paper);color:var(--ink);font-size:calc(12px * var(--text-scale));font-weight:650;overflow-wrap:anywhere}
+.german-flyer-link.is-pdf{border-color:#96ae8e;background:#ebf2e5}
+.german-flyer-link small{font-size:calc(10px * var(--text-scale));font-weight:450;line-height:1.4}
+.german-direct-flyers>small{font-size:calc(10px * var(--text-scale));line-height:1.55;opacity:.8}
+.tile .german-direct-flyer-links{grid-template-columns:minmax(0,1fr)}
+@media(max-width:700px){.german-direct-flyer-links{grid-template-columns:minmax(0,1fr)}.german-flyer-link{min-height:45px;gap:3px}}
+@media(prefers-color-scheme:dark){.german-direct-flyers,.german-flyer-link{background:#21382b;color:#edf3e9;border-color:#45614d}.german-flyer-link.is-pdf{background:#2e4836;border-color:#668567}}

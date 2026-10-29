@@ -8,8 +8,9 @@ import {useCentralGermanOffers,useGermanOfferDisplay} from '../lib/german-offer-
 import {matchCentralGermanOffers,compactGermanOfferMatches,mergeGermanOfferSources} from '../lib/german-central-offers';
 import {matchGermanDrafts,unverifiedOfferCount} from '../lib/german-offer-drafts';
 import {GermanDraftCatalogue} from './german-draft-catalogue';
+import {GermanFlyerQuickLinks} from './german-flyer-quick-links';
 import {
- DEFAULT_OFFER_REGION,OFFER_PROVINCES,GERMAN_OFFER_CITIES,officialGermanFlyers,checkOffers,providerAvailable,restoreOfferRegion,storeChoices,isStoreOfferConnected,
+ DEFAULT_OFFER_REGION,OFFER_PROVINCES,GERMAN_OFFER_CITIES,checkOffers,providerAvailable,restoreOfferRegion,storeChoices,isStoreOfferConnected,
  type Deal,type OfferRegion,
 } from '../lib/current-offers';
 
@@ -18,7 +19,7 @@ export function GermanOfferTileBadge({name,region}:{name:string;region:OfferRegi
  const state=useCentralGermanOffers(),[enabled]=useGermanOfferDisplay();
  if(region.country!=='DE'||!enabled)return null;
  const matches=matchCentralGermanOffers(name,mergeGermanOfferSources(state.offers,state.previewOffers),region.stores);
- const pending=state.isOperator?matchGermanDrafts(name,state.drafts,region.stores).length:0;
+ const pending=matchGermanDrafts(name,state.drafts,region.stores).length;
  if(!matches.length)return pending?<span> · {unverifiedOfferCount(pending,getLanguage()==='de')}</span>:null;
  const available=compactGermanOfferMatches(matches);
  const eur=new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
@@ -74,6 +75,7 @@ export function OfferSettings({region,onChange}:{region:OfferRegion;onChange:Rea
       : tr('No verified automated offer feed is connected for this region or store selection. Receipt price history still works normally.')}
    </p>
    {region.country==='DE'&&<GermanAutomaticSourceStatus stores={region.stores}/>}
+   {region.country==='DE'&&<GermanFlyerQuickLinks region={region}/>}
    {region.country==='DE'&&<GermanDraftCatalogue stores={region.stores}/>}
    {region.country==='DE'&&<GermanOfferAdmin/>}
   </div>
@@ -86,11 +88,10 @@ function date(d:string){try{return new Intl.DateTimeFormat(locale(),{dateStyle:'
 export function OffersForItem({name,region,automatic}:{name:string;region:OfferRegion;automatic:boolean}){
  const [state,setState]=useState<'idle'|'checking'|'none'|'error'|'done'>('idle');
  const [deals,setDeals]=useState<Deal[]>([]);
- const [showGermanFlyers,setShowGermanFlyers]=useState(false);
  const [expanded,setExpanded]=useState(false);
  const panelId=useId();
  const connected=providerAvailable(region),key=JSON.stringify([region.country,region.province,region.city,region.stores]);
- useEffect(()=>{setState('idle');setDeals([]);setShowGermanFlyers(false);setExpanded(false)},[name,key]);
+ useEffect(()=>{setState('idle');setDeals([]);setExpanded(false)},[name,key]);
  useEffect(()=>{
   if(!automatic||!connected)return;
   let cancelled=false;setState('checking');
@@ -100,19 +101,12 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[name,key,automatic,connected]);
  if(region.country==='DE'){
-  const links=officialGermanFlyers(region);
   const de=getLanguage()==='de';
   return <div className="offer-in-tile">
-   <button type="button" className="offer-check" aria-expanded={expanded} aria-controls={panelId} onClick={()=>{setExpanded(!expanded);setShowGermanFlyers(false)}}>🏷️ {expanded?(de?'Angebote einklappen':'Hide offers'):(de?'Angebote anzeigen':'Show offers')}</button>
+   <button type="button" className="offer-check" aria-expanded={expanded} aria-controls={panelId} onClick={()=>setExpanded(!expanded)}>🏷️ {expanded?(de?'Angebote einklappen':'Hide offers'):(de?'Angebote anzeigen':'Show offers')}</button>
    {expanded&&<div id={panelId} className="german-item-offers">
    <CentralGermanOfferMatches name={name} stores={region.stores}/>
-   {!showGermanFlyers
-    ? <button type="button" className="offer-check" onClick={()=>setShowGermanFlyers(true)}>🏷️ {tr('Check official flyers')}</button>
-    : <>
-      <small>{tr('Confirmed REWE Kiel, ALDI Nord and PENNY flyer offers appear automatically on your shopping list. Check the advertised brand, size and conditions.')}</small>
-      <div className="offer-de-links">{links.map(l=><OfferSourceLink key={l.id} url={l.url}>{l.name}</OfferSourceLink>)}</div>
-      <button type="button" className="offer-again" onClick={()=>setShowGermanFlyers(false)}>{de?'Prospektlinks schließen':'Hide flyer links'}</button>
-     </>}
+   <GermanFlyerQuickLinks region={region}/>
    </div>}
   </div>;
  }

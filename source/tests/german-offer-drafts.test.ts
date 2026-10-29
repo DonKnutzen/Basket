@@ -70,3 +70,25 @@ test('Kiwi with a recognizable product but uncertain price remains searchable wi
  assert.equal(candidate.name.includes('Kiwi'),true);
  assert.deepEqual(searchGermanDraftCatalogue('Kiwi',[candidate],[],now).map(d=>d.id),['kiwi']);
 });
+
+test('authenticated read-only flyer projection remains a searchable unverified Kiwi item',()=>{
+ const shared={
+  id:'c-kiwi',import_id:'import-a',page:1,status:'unreadable',
+  data:{name:'Große Früchte Kl. 1 Neuseeland SunGold Kiwi',brand:'',packSize:'',priceCents:0,priceKind:'standard',
+   validFrom:'2026-10-26',validUntil:'2026-10-30'},
+  issues:['Keine eindeutige Packungsgröße erkannt'],
+  retailer:'aldi-nord',region:'Kiel',filename:'aldi.pdf',
+  source_url:'https://magazine.aldi-nord.de/2026/sample/GetPDF.ashx',
+  valid_from:'2026-10-26',valid_until:'2026-10-30',
+ };
+ const item=parseGermanDraft(shared,{
+  id:shared.import_id,retailer:shared.retailer,region:shared.region,
+  filename:shared.filename,source_url:shared.source_url,
+  valid_from:shared.valid_from,valid_until:shared.valid_until
+ });
+ assert.ok(item);
+ assert.equal(item.name.includes('SunGold Kiwi'),true);
+ assert.equal(item.status,'unreadable');
+ assert.equal(item.priceUsable,false);
+ assert.equal(searchGermanDraftCatalogue('Kiwi',[item],[],now).length,1);
+});
