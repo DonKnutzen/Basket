@@ -5,12 +5,23 @@ import {CentralGermanOfferMatches} from './german-central-offers';
 import {GermanOfferAdmin} from './german-offer-admin';
 import {OfferSourceLink} from './offer-source-link';
 import {useCentralGermanOffers,useGermanOfferDisplay} from '../lib/german-offer-store';
+import {matchCentralGermanOffers} from '../lib/german-central-offers';
 import {
  DEFAULT_OFFER_REGION,OFFER_PROVINCES,GERMAN_OFFER_CITIES,officialGermanFlyers,checkOffers,providerAvailable,restoreOfferRegion,storeChoices,isStoreOfferConnected,
  type Deal,type OfferRegion,
 } from '../lib/current-offers';
 
 const KEY='basket-deal-region-v1';
+export function GermanOfferTileBadge({name,region}:{name:string;region:OfferRegion}){
+ const state=useCentralGermanOffers(),[enabled]=useGermanOfferDisplay();
+ if(region.country!=='DE'||!enabled)return null;
+ const matches=matchCentralGermanOffers(name,[...state.offers,...state.previewOffers],region.stores);
+ if(!matches.length)return null;
+ const best=matches.reduce((a,b)=>b.offer.priceCents<a.offer.priceCents?b:a);
+ const preview=state.previewOffers.some(o=>o.id===best.offer.id);
+ const price=new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(best.offer.priceCents/100);
+ return <span> · {best.offer.retailer==='penny'?'PENNY':best.offer.retailer==='rewe'?'REWE':'ALDI Nord'}{preview?' Test':''}: {price}{best.offer.priceKind==='loyalty'?' (App/Bonus)':''}</span>;
+}
 function GermanAutomaticSourceStatus({stores}:{stores:readonly string[]}){
  const state=useCentralGermanOffers();
  const [enabled,setEnabled]=useGermanOfferDisplay();
