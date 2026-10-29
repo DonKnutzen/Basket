@@ -18,6 +18,7 @@ import urllib.parse
 import urllib.request
 import fitz
 from german_flyer_layout import analyze_page, save_evidence, page_quality_counts, VERSION
+from german_flyer_vision import configured_client, analyze_visual_page, VERSION as VISION_VERSION
 
 CHUNK=8*1024*1024
 
@@ -73,15 +74,21 @@ def source_available(url):
         except (ValueError,urllib.error.URLError,TimeoutError):pass
     return False
 
-def local(pdf_path,out,valid_from,valid_until):
+def analyze(page, start, until, vision=None, heartbeat=None):
+    # An enabled vision failure is a failed page, never an unnoticed fallback
+    # to the very geometry guesses that image recognition is meant to replace.
+    return analyze_visual_page(page, start, until, vision, heartbeat) if vision else analyze_page(page, start, until)
+
+
+def local(pdf_path,out,valid_from,valid_until,vision=None):
     out.mkdir(parents=True,exist_ok=True)
-    report={'parser':VERSION,'pages':[]}
+    report={'parser':VISION_VERSION if vision else VERSION,'pages':[]}
     with fitz.open(pdf_path) as pdf:
         if pdf.needs_pass:raise ValueError('Password-protected PDF')
         for number,page in enumerate(pdf,1):
             try:
-                result=analyze_page(page,valid_from,valid_until)
                 save_evidence(page,tuple(page.rect),out/f'page-{number}.png')
+                result=analyze(page,valid_from,valid_until,vision)
                 for candidate in result['offers']:
                     save_evidence(page,candidate['bbox'],out/f'{number}-{candidate["key"]}.png')
             except Exception as e:result={'status':'failed','error':type(e).__name__+': '+str(e)[:200]}
@@ -95,7 +102,7 @@ def local(pdf_path,out,valid_from,valid_until):
     (out/'analysis.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
     print('REVIEW COUNTS',json.dumps(report['quality'],sort_keys=True))
 
-def process(api,job):
+def process(api,job,vision=None):
     with tempfile.TemporaryDirectory(prefix='basket-flyer-') as tmp:
         folder=Path(tmp);path=folder/'flyer.pdf';digest=hashlib.sha256();size=0
         with path.open('wb') as file:
@@ -107,17 +114,26 @@ def process(api,job):
         if size!=job['byte_size'] or digest.hexdigest()!=job['sha256']:raise ValueError('PDF checksum mismatch; upload incomplete')
         with fitz.open(path) as pdf:
             if pdf.needs_pass or not 1<=len(pdf)<=1000:raise ValueError('Encrypted or unsupported PDF page count')
-            metadata=api.call('metadata',job,{'totalPages':len(pdf),'sourceAvailable':source_available(job['source_url'])})
+            availability=source_available(job['source_url'])
+            metadata=api.call('metadata',job,{'totalPages':len(pdf),'sourceAvailable':availability})
+            next_renewal=time.monotonic()+240
+            def renew_lease():
+                nonlocal next_renewal
+                if time.monotonic()>=next_renewal:
+                    api.call('metadata',job,{'totalPages':len(pdf),'sourceAvailable':availability})
+                    next_renewal=time.monotonic()+240
             done={p['page'] for p in metadata['pages'] if p['status']=='done'}
             quality={key:0 for key in ('regions','withPrice','withoutPack','inferredUnit','ambiguousPrice','unreadable')}
             for number in range(1,len(pdf)+1):
                 if number in done:continue
                 page=pdf[number-1]
+                page_image_key=None
                 try:
-                    result=analyze_page(page,str(job['valid_from']),str(job['valid_until']))
                     key=f'{job["id"]}/evidence/page-{number}.png'
                     image=folder/'evidence.png';save_evidence(page,tuple(page.rect),image)
-                    api.call('evidence',job,key=key,raw=image.read_bytes());result['imageKey']=key
+                    api.call('evidence',job,key=key,raw=image.read_bytes());page_image_key=key
+                    result=analyze(page,str(job['valid_from']),str(job['valid_until']),vision,renew_lease)
+                    result['imageKey']=page_image_key
                     for c in result['offers']:
                         key=f'{job["id"]}/evidence/{number}-{c["key"]}.png'
                         save_evidence(page,c['bbox'],image)
@@ -134,7 +150,13 @@ def process(api,job):
                     # DB/lease errors must abort; only extraction errors are marked
                     # as page failures. A lost lease cannot be written around.
                     if isinstance(error,urllib.error.HTTPError):raise
-                    api.call('page',job,{'page':number,'payload':{'status':'failed','error':type(error).__name__+': '+str(error)[:200],'offers':[]}})
+                    # A global call limit or missing service cannot be cured by
+                    # calling again on every remaining page. Checkpoint this
+                    # page, then release the job for explicit retry.
+                    api.call('page',job,{'page':number,'payload':{'status':'failed',
+                        'width':page.rect.width,'height':page.rect.height,'imageKey':page_image_key,
+                        'error':type(error).__name__+': '+str(error)[:200],'offers':[]}})
+                    if vision:raise
         # These counts cover newly processed pages only; resumed pages were
         # checkpointed earlier and must never be mistaken for zero candidates.
         print('REVIEW SUMMARY (new pages only)',json.dumps(quality,sort_keys=True),
@@ -145,9 +167,11 @@ def main():
     parser=argparse.ArgumentParser();parser.add_argument('--pdf',type=Path);parser.add_argument('--out',type=Path)
     parser.add_argument('--from',dest='start');parser.add_argument('--until')
     args=parser.parse_args()
+    vision=configured_client()
+    print('RECOGNITION',VISION_VERSION if vision else VERSION)
     if args.pdf:
         dt.date.fromisoformat(args.start);dt.date.fromisoformat(args.until)
-        return local(args.pdf,args.out,args.start,args.until)
+        return local(args.pdf,args.out,args.start,args.until,vision)
     api=Gateway();started=time.monotonic()
     for source in api.call('sources'):
         api.call('source-status',body={'id':source['id'],'available':source_available(source['source_url'])})
@@ -155,9 +179,10 @@ def main():
         jobs=api.call('claim')
         if not jobs:print('Queue empty');return
         job=jobs[0]
-        try:process(api,job)
+        try:process(api,job,vision)
         except Exception as error:
             print('IMPORT FAILED',type(error).__name__)
             api.call('fail',job,{'error':type(error).__name__+': '+str(error)[:200]})
+            if vision:raise SystemExit('Vision import incomplete; inspect failed page before retry')
 
 if __name__=='__main__':main()

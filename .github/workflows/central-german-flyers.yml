@@ -6,6 +6,7 @@ on:
     paths:
       - .github/workflows/central-german-flyers.yml
       - source/scripts/german_flyer_layout.py
+      - source/scripts/german_flyer_vision.py
       - source/scripts/process-german-flyers.py
       - source/scripts/flyer_requirements.txt
   schedule:
@@ -34,4 +35,9 @@ jobs:
       - name: Process queued imports (private data never becomes a workflow artifact)
         env:
           FLYER_WORKER_URL: https://wrmlkpuhyqxkehbvzoxx.supabase.co/functions/v1/german-flyer-worker
+          # Explicit opt-in: no calls or charges until the operator enables it.
+          FLYER_RECOGNITION: ${{ vars.FLYER_RECOGNITION || 'geometry' }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          FLYER_VISION_MODEL: ${{ vars.FLYER_VISION_MODEL }}
+          FLYER_VISION_MAX_CALLS: ${{ vars.FLYER_VISION_MAX_CALLS || '200' }}
         run: python source/scripts/process-german-flyers.py
