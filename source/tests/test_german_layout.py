@@ -2,7 +2,7 @@ import unittest
 import sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
-from german_flyer_layout import Box,price_anchors,quantity,unit_check,whitespace_tiles,printed_date_ranges
+from german_flyer_layout import Box,price_anchors,price_column_cells,quantity,unit_check,whitespace_tiles,printed_date_ranges
 
 class LayoutTests(unittest.TestCase):
     def test_overlapping_typographic_euro_and_cent_boxes(self):
@@ -32,5 +32,19 @@ class LayoutTests(unittest.TestCase):
         self.assertEqual(hints[0]['until'],'2026-10-30');self.assertTrue(hints[0]['yearFromImport'])
         self.assertEqual(printed_date_ranges('31.02. bis 32.02.',2026),[])
         self.assertEqual(printed_date_ranges('28.12. bis 02.01.',2026)[0]['until'],'2027-01-02')
+    def test_penny_cola_and_pringles_price_columns_stay_separate(self):
+        # Coordinates are from the printed first-page PENNY review panel.
+        panel=(166.3,538.6,459.2,799.4)
+        anchors=[{'rect':box} for box in [
+            (238.8,700.7,283.3,727.6), # Coca-Cola standard price
+            (221.5,755.9,288.3,796.2), # Coca-Cola app price
+            (256.1,622.7,282.1,631.7), # Coca-Cola size annotation
+            (395.8,700.7,440.4,727.6), # Pringles standard price
+            (378.6,755.9,445.4,796.2), # Pringles app price
+            (410.1,641.5,440.7,650.5)]]
+        cells=price_column_cells(panel,anchors)
+        self.assertEqual(len(cells),2)
+        self.assertLess(cells[0][2],cells[1][2])
+        self.assertEqual(price_column_cells(panel,anchors[:3]),[])
 
 if __name__=='__main__':unittest.main()
