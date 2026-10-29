@@ -40,12 +40,13 @@ function DraftRow({draft:d}:{draft:GermanDraft}){
 /** Operator-only candidate preview: no draft ever enters the verified badge price. */
 export function GermanDraftMatches({name,stores}:{name:string;stores:readonly string[]}){
  const state=useCentralGermanOffers(),[showAll,setShowAll]=useState(false),de=getLanguage()==='de';
- if(!state.isOperator)return null;
+
  const matches=matchGermanDrafts(name,state.drafts,stores);
  if(!matches.length)return null;
  return <details className="german-draft-matches">
   <summary>{unverifiedOfferCount(matches.length,de)}</summary>
   <div className="german-draft-list">
+   {state.draftError&&<small role="status">{de?state.draftError:'Unverified offers are currently unavailable.'}</small>}
    <p className="german-draft-disclaimer">{de?'Noch nicht bestätigt · Preise nicht im offiziellen Vergleich enthalten.':'Not verified · prices excluded from confirmed comparisons.'}</p>
    {(showAll?matches.slice(0,40):matches.slice(0,4)).map(d=><DraftRow key={d.id} draft={d}/>)}
    {matches.length>4&&<button type="button" className="german-draft-more" onClick={()=>setShowAll(!showAll)}>{showAll?(de?'Weniger anzeigen':'Show fewer'):(de?`Weitere Angebote ansehen (${matches.length-4})`:`More offers (${matches.length-4})`)}</button>}
@@ -56,14 +57,15 @@ export function GermanDraftMatches({name,stores}:{name:string;stores:readonly st
 /** Private searchable listing of candidate regions, not a verified prices feed. */
 export function GermanDraftCatalogue({stores}:{stores:readonly string[]}){
  const state=useCentralGermanOffers(),[search,setSearch]=useState(''),[limit,setLimit]=useState(24),[filter,setFilter]=useState<'all'|'price'|'unclear'>('all'),de=getLanguage()==='de';
- if(!state.isOperator)return null;
+
  const matched=searchGermanDraftCatalogue(search,state.drafts,stores);
  const candidates=matched.filter(d=>filter==='all'||filter==='price'&&d.priceUsable||filter==='unclear'&&!d.priceUsable);
  const count=state.drafts.filter(d=>!stores.length||stores.includes(d.retailer==='aldi-nord'?'aldi':d.retailer)).length;
  return <details className="german-offer-admin german-draft-catalogue">
   <summary>{de?`Ungeprüfte Angebote durchsuchen (${count})`:`Search unverified offers (${count})`}</summary>
   <div className="german-admin-body">
-   <p className="german-draft-disclaimer">{de?'Nur für den Betreiber · Erkannte Prospektbereiche sind noch nicht bestätigt. Ein Preis wird nur als Vorschlag angezeigt, wenn die Zuordnung plausibel ist.':'Operator only · PDF regions are not verified. Prices appear as suggestions only when the assignment seems plausible.'}</p>
+   <p className="german-draft-disclaimer">{de?'Für alle angemeldeten Konten · Diese Prospektbereiche sind noch nicht bestätigt. Angezeigte Preise sind lediglich Vorschläge.':'For all signed-in accounts · These flyer candidates are unverified. Displayed prices are suggestions only.'}</p>
+   {state.draftError&&<p role="status">{de?state.draftError:'Unverified offers are currently unavailable.'}</p>}
    <label>{de?'Produkt, Marke oder Menge suchen':'Search product, brand or pack size'}
     <input type="search" value={search} onChange={e=>{setSearch(e.target.value);setLimit(24)}} placeholder={de?'z. B. Butter, Joghurt, Coca-Cola':'e.g. Butter, yogurt, Coca-Cola'}/>
    </label>
