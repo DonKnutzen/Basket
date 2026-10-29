@@ -22,10 +22,11 @@ function DraftRow({draft:d}:{draft:GermanDraft}){
     <span className="german-draft-size">{d.packSize|| (de?'Packungsgröße unklar':'Pack size unclear')}{d.unitInferred?' · '+(de?'aus Prospekttext':'from flyer text'):''}{d.variant?' · '+d.variant:''}</span>
    </div>
    <div className="german-draft-money">
-    {d.priceUsable?<><small>{de?'Preisvorschlag':'Possible price'}</small><strong>{eur(d.priceCents)}</strong></>:
+    {d.priceUsable?<><small>{d.priceFromBase?(de?'Aus Grundpreis berechnet · ungeprüft':'Calculated from unit price · unverified'):(de?'Preisvorschlag':'Possible price')}</small><strong>{d.priceFromBase?'≈ ':''}{eur(d.displayPriceCents)}</strong></>:
      <span>{de?'Preis prüfen':'Check price'}</span>}
    </div>
   </div>
+  {d.priceFromBase&&<small className="german-draft-disclaimer">{de?'Nur rechnerischer Hinweis, kein bestätigter Angebotspreis. Bitte Originalprospekt prüfen.':'Calculated estimate only, not a confirmed sale price. Check the original flyer.'}</small>}
   {title.truncated&&<details className="german-draft-description">
    <summary>{de?'Vollständigen Produkttext anzeigen':'Show full product description'}</summary>
    <p>{title.full}</p>
