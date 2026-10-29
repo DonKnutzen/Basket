@@ -43,7 +43,7 @@ export async function refreshGermanOffers(){
          region:job.region,marketId:job.market_id,page:row.page,bbox:row.bbox,sourceUrl:'',
          sourceStatus:'unavailable',sourceCheckedAt:null,sourceFilename:job.filename,validationStatus:'verified'});
         if(parsed)previewOffers.push(parsed);
-       }else if(row.status==='review'||row.status==='unreadable'){
+       }else if(!publishedIds.has(row.id)&&(row.status==='review'||row.status==='unreadable')){
         const draft=parseGermanDraft(row,job);
         if(draft)drafts.push(draft);
        }

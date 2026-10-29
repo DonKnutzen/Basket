@@ -23,8 +23,10 @@ export function parseGermanDraft(raw:unknown,job:Import):GermanDraft|null{
  const data=x.data;
  if(!data||typeof data!=='object'||Array.isArray(data))return null;
  const d=data as Record<string,unknown>;
- const id=asText(x.id,80),name=asText(d.name,250),brand=asText(d.brand,100);
- if(!id||name.length<3||!Number.isInteger(x.page)||(x.page as number)<1)return null;
+ const id=asText(x.id,80),rawName=asText(d.name,250),brand=asText(d.brand,100);
+ if(!id||!Number.isInteger(x.page)||(x.page as number)<1)return null;
+ if(rawName.length<3&&x.status!=='unreadable')return null;
+ const name=rawName.length>=3?rawName:`Unlesbarer Bereich auf Seite ${x.page}`;
  const cents=Number(d.priceCents);
  const priceCents=Number.isInteger(cents)&&cents>0&&cents<250000?cents:0;
  const issues=Array.isArray(x.issues)?x.issues.filter(v=>typeof v==='string').slice(0,20) as string[]:[];
@@ -38,7 +40,7 @@ export function parseGermanDraft(raw:unknown,job:Import):GermanDraft|null{
   sourceUrl,name,brand,variant:asText(d.variant,100),packSize,priceCents,priceKind,
   conditions:asText(d.conditions,500),categoryHint,validFrom,validUntil,
   status:x.status,issues,
-  priceUsable:x.status==='review'&&priceCents>0&&!!germanPack(packSize)&&priceKind==='standard'&&!issues.some(v=>uncertainPrice.test(v)),
+  priceUsable:x.status==='review'&&rawName.length>=3&&priceCents>0&&!!germanPack(packSize)&&priceKind==='standard'&&!issues.some(v=>uncertainPrice.test(v)),
  };
 }
 function words(text:string){return fold(text).split(' ').filter(Boolean)}

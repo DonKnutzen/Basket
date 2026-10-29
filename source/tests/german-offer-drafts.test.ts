@@ -32,6 +32,12 @@ test('ambiguous prices and unreadable crops never display tentative amounts',()=
  assert.ok(unknownPack);
  assert.equal(unknownPack.priceUsable,false);
  assert.equal(parseGermanDraft(raw('Cola Original'),{...job,region:'Hamburg'}),null);
+ const unnamed=parseGermanDraft(raw('',{status:'unreadable',data:{...raw('').data,name:''}}),job);
+ assert.ok(unnamed);
+ assert.equal(unnamed.priceUsable,false);
+ assert.equal(unnamed.name,'Unlesbarer Bereich auf Seite 38');
+ assert.equal(matchGermanDrafts('Cola',[unnamed],[],now).length,0);
+ assert.equal(searchGermanDraftCatalogue('',[unnamed],[],now).length,1);
 });
 test('do not match cola candy, unrelated brands or wrong pack sizes',()=>{
  const soda=parseGermanDraft(raw('Coca-Cola Zero'),job);
