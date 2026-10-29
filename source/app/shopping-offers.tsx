@@ -6,6 +6,8 @@ import {GermanOfferAdmin} from './german-offer-admin';
 import {OfferSourceLink} from './offer-source-link';
 import {useCentralGermanOffers,useGermanOfferDisplay} from '../lib/german-offer-store';
 import {matchCentralGermanOffers,compactGermanOfferMatches} from '../lib/german-central-offers';
+import {matchGermanDrafts} from '../lib/german-offer-drafts';
+import {GermanDraftCatalogue} from './german-draft-catalogue';
 import {
  DEFAULT_OFFER_REGION,OFFER_PROVINCES,GERMAN_OFFER_CITIES,officialGermanFlyers,checkOffers,providerAvailable,restoreOfferRegion,storeChoices,isStoreOfferConnected,
  type Deal,type OfferRegion,
@@ -16,10 +18,11 @@ export function GermanOfferTileBadge({name,region}:{name:string;region:OfferRegi
  const state=useCentralGermanOffers(),[enabled]=useGermanOfferDisplay();
  if(region.country!=='DE'||!enabled)return null;
  const matches=matchCentralGermanOffers(name,[...state.offers,...state.previewOffers],region.stores);
- if(!matches.length)return null;
+ const pending=state.isOperator?matchGermanDrafts(name,state.drafts,region.stores).length:0;
+ if(!matches.length)return pending?<span> · {pending} ungeprüfte PDF-Treffer</span>:null;
  const available=compactGermanOfferMatches(matches);
  const eur=new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
- return <span>{available.map(({offer:o})=><span key={o.id}> · {o.retailer==='penny'?'PENNY':o.retailer==='rewe'?'REWE':'ALDI Nord'}{state.previewOffers.some(p=>p.id===o.id)||o.testOnly?' Test':''}: {eur.format(o.priceCents/100)}{o.packSize?' / '+o.packSize:''}{o.priceKind==='loyalty'?' (App/Bonus)':o.priceKind!=='standard'?' ('+o.priceKind+')':''}</span>)}{matches.length>available.length?' · +'+(matches.length-available.length)+' weitere':''}</span>;
+ return <span>{available.map(({offer:o})=><span key={o.id}> · {o.retailer==='penny'?'PENNY':o.retailer==='rewe'?'REWE':'ALDI Nord'}{state.previewOffers.some(p=>p.id===o.id)||o.testOnly?' Test':''}: {eur.format(o.priceCents/100)}{o.packSize?' / '+o.packSize:''}{o.priceKind==='loyalty'?' (App/Bonus)':o.priceKind!=='standard'?' ('+o.priceKind+')':''}</span>)}{matches.length>available.length?' · +'+(matches.length-available.length)+' weitere':''}{pending?' · '+pending+' ungeprüfte PDF-Treffer':''}</span>;
 }
 function GermanAutomaticSourceStatus({stores}:{stores:readonly string[]}){
  const state=useCentralGermanOffers();
@@ -71,6 +74,7 @@ export function OfferSettings({region,onChange}:{region:OfferRegion;onChange:Rea
       : tr('No verified automated offer feed is connected for this region or store selection. Receipt price history still works normally.')}
    </p>
    {region.country==='DE'&&<GermanAutomaticSourceStatus stores={region.stores}/>}
+   {region.country==='DE'&&<GermanDraftCatalogue stores={region.stores}/>}
    {region.country==='DE'&&<GermanOfferAdmin/>}
   </div>
  </details>;
