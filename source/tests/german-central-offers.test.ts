@@ -59,3 +59,17 @@ test('generic German milk, yogurt and cheese remain supported when the shared ca
  const milk={...offer,id:'milk',name:'Vollmilch',category:'Milch'};
  assert.ok(parseGermanOffer(milk));assert.equal(matchCentralGermanOffers('Milch',[milk],[],now).length,1);
 });
+
+test('PENNY regional offers coexist with REWE and ALDI and respect retailer filters',()=>{
+ const penny:GermanOffer={...offer,id:'penny-kiel',retailer:'penny',marketId:null,brand:'PENNY',name:'Butter',category:'Butter',priceCents:159,
+  sourceUrl:'https://penny-publish.blaetterkatalog.de/frontend/catalogs/1408356/3/pdf/complete.pdf'};
+ const rewe:GermanOffer={...offer,id:'rewe',retailer:'rewe',brand:'Kerrygold',name:'Butter',category:'Butter',priceCents:159};
+ const aldi:GermanOffer={...offer,id:'aldi',retailer:'aldi-nord',marketId:null,brand:'Weihenstephan',name:'Butter',category:'Butter',priceCents:149};
+ assert.equal(parseGermanOffer(penny)?.retailer,'penny');
+ assert.equal(matchCentralGermanOffers('Butter',[penny,rewe,aldi],[],now).length,3);
+ assert.deepEqual(matchCentralGermanOffers('Butter',[penny,rewe,aldi],['penny'],now).map(x=>x.offer.retailer),['penny']);
+ assert.equal(parseGermanOffer({...penny,marketId:'561204'}),null);
+ assert.equal(germanSourceUrl('https://penny-publish.blaetterkatalog.de/frontend/catalogs/1408356/3/pdf/complete.pdf'),penny.sourceUrl);
+ assert.equal(germanSourceUrl('https://evil.example/frontend/catalogs/1408356/3/pdf/complete.pdf'),null);
+ assert.equal(germanSourceUrl('https://penny-publish.blaetterkatalog.de/frontend/catalogs/1408356/3/pdf/complete.pdf?url=https://evil.example'),null);
+});

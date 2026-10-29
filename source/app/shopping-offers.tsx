@@ -14,7 +14,7 @@ const KEY='basket-deal-region-v1';
 function GermanAutomaticSourceStatus({stores}:{stores:readonly string[]}){
  const state=useCentralGermanOffers();
  const [enabled,setEnabled]=useGermanOfferDisplay();
- const current=state.offers.filter(o=>!stores.length||stores.includes(o.retailer==='aldi-nord'?'aldi':'rewe'));
+ const current=state.offers.filter(o=>!stores.length||stores.includes(o.retailer==='aldi-nord'?'aldi':o.retailer));
  return <div className="offer-de-feed-status"><label className="german-checkbox"><input type="checkbox" checked={enabled} onChange={e=>setEnabled(e.target.checked)}/>Aktuelle Prospektangebote anzeigen</label><small>{state.loading?'Angebote werden geladen …':state.error||`${current.length} zentral bestätigte Angebote · Kiel`}</small></div>;
 }
 export function useOfferRegion(){
@@ -33,7 +33,7 @@ export function OfferSettings({region,onChange}:{region:OfferRegion;onChange:Rea
    <p>{tr('Only check offers for products on your shopping list. Select your region and preferred stores.')}</p>
    <div className="offer-region-fields">
     <label>{tr('Country')}<select value={region.country} onChange={e=>onChange({
-      country:e.target.value==='DE'?'DE':'CA',province:e.target.value==='DE'?'':'NS',postalCode:'',stores:e.target.value==='DE'?['rewe','aldi']:[],...(e.target.value==='DE'?{city:'Kiel'}:{}),
+      country:e.target.value==='DE'?'DE':'CA',province:e.target.value==='DE'?'':'NS',postalCode:'',stores:e.target.value==='DE'?['rewe','aldi','penny']:[],...(e.target.value==='DE'?{retailerSelectionVersion:3}:{}),...(e.target.value==='DE'?{city:'Kiel'}:{}),
     })}><option value="CA">{tr('Canada')}</option><option value="DE">{tr('Germany')}</option></select></label>
     {region.country==='CA'&&<label>{tr('Province')}<select value={region.province}
      onChange={e=>onChange(x=>({...x,province:e.target.value,stores:[]}))}>
@@ -53,7 +53,7 @@ export function OfferSettings({region,onChange}:{region:OfferRegion;onChange:Rea
     </button>;
    })}</div>
    <p className="offer-source-note">
-    {region.country==='DE'?tr("Confirmed REWE Kiel and ALDI Nord flyer offers appear automatically on your shopping list. Check the advertised brand, size and conditions.")
+    {region.country==='DE'?tr("Confirmed REWE Kiel, ALDI Nord and PENNY flyer offers appear automatically on your shopping list. Check the advertised brand, size and conditions.")
       : eligible&&region.province==='NS'
       ? tr('Nova Scotia: weekly flyer reference prices for 19 common staples from Aubaine.ca. A price may not be a discount, and pack size and branch may differ. Source: aubaine.ca.')
       : eligible
@@ -95,7 +95,7 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
    {!showGermanFlyers
     ? <button type="button" className="offer-check" onClick={()=>setShowGermanFlyers(true)}>🏷️ {tr('Check official flyers')}</button>
     : <>
-      <small>{tr('Confirmed REWE Kiel and ALDI Nord flyer offers appear automatically on your shopping list. Check the advertised brand, size and conditions.')}</small>
+      <small>{tr('Confirmed REWE Kiel, ALDI Nord and PENNY flyer offers appear automatically on your shopping list. Check the advertised brand, size and conditions.')}</small>
       <div className="offer-de-links">{links.map(l=><OfferSourceLink key={l.id} url={l.url}>{l.name}</OfferSourceLink>)}</div>
       <button type="button" className="offer-again" onClick={()=>setShowGermanFlyers(false)}>{de?'Prospektlinks schließen':'Hide flyer links'}</button>
      </>}

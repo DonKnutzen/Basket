@@ -2,12 +2,12 @@
 /* eslint-disable @next/next/no-img-element -- private evidence uses revocable local blob URLs, not public image optimization */
 import React,{useCallback,useEffect,useState} from 'react';
 import {browserAuth} from '../lib/supabase-browser';
-import {uploadGermanFlyer} from '../lib/german-offer-upload';
+import {uploadGermanFlyer,uploadGermanFlyerFromPennyUrl} from '../lib/german-offer-upload';
 import {refreshGermanOffers} from '../lib/german-offer-store';
 import {berlinDay} from '../lib/rewe-official-weekly';
 import {PRODUCT_CATALOG} from '../lib/product-catalog';
 import {germanStoreName,germanCategoryExact,suggestGermanCategory,GERMAN_STAPLE_CATEGORIES,type GermanProduct} from '../lib/german-central-offers';
-type Import={id:string;retailer:'rewe'|'aldi-nord';filename:string;status:string;valid_from:string;valid_until:string;total_pages:number|null;revision:number;error:string|null;rights_confirmed:boolean;dates_confirmed:boolean;source_url:string;rights_note:string};
+type Import={id:string;retailer:'rewe'|'aldi-nord'|'penny';filename:string;status:string;valid_from:string;valid_until:string;total_pages:number|null;revision:number;error:string|null;rights_confirmed:boolean;dates_confirmed:boolean;source_url:string;rights_note:string};
 type Page={page:number;status:string;image_key:string;error:string|null;date_hints:{from:string;until:string;yearFromImport:boolean}[]};
 type Candidate={id:string;page:number;data:GermanProduct;status:string;crop_key:string;issues:string[];revision:number};
 const labels:Record<string,string>={uploading:'Upload unvollständig',queued:'Wartet auf Verarbeitung',processing:'Wird verarbeitet',review:'Zur Kontrolle',failed:'Verarbeitung fehlgeschlagen',published:'Veröffentlicht'};
@@ -50,7 +50,7 @@ function ReviewRow({row,busy,onSave}:{row:Candidate;busy:boolean;onSave:(fields:
 export function GermanOfferAdmin(){
  const [operator,setOperator]=useState(false),[imports,setImports]=useState<Import[]>([]),[selected,setSelected]=useState('');
  const [rows,setRows]=useState<Candidate[]>([]),[pages,setPages]=useState<Page[]>([]);
- const [file,setFile]=useState<File|null>(null),[retailer,setRetailer]=useState<'rewe'|'aldi-nord'>('rewe');
+ const [file,setFile]=useState<File|null>(null),[retailer,setRetailer]=useState<'rewe'|'aldi-nord'|'penny'>('rewe');
  const [from,setFrom]=useState(''),[until,setUntil]=useState(''),[source,setSource]=useState('');
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[progress,setProgress]=useState('');
  const [rights,setRights]=useState(''),[rightsChecked,setRightsChecked]=useState(false),[datesChecked,setDatesChecked]=useState(false);
@@ -74,14 +74,21 @@ export function GermanOfferAdmin(){
  const ready=rows.filter(r=>r.status==='verified').length,pending=rows.filter(r=>['review','unreadable'].includes(r.status)).length;
  const shown=rows.filter(r=>r.page===page&&(filter==='all'||filter==='pending'&&['review','unreadable'].includes(r.status)||r.status===filter));
  return <details className="german-offer-admin"><summary>Prospekte verwalten · Betreiberbereich</summary><div className="german-admin-body">
-  <p>REWE Kiel 561204 / ALDI Nord. Originale bleiben privat. Der zentrale Runner startet gewöhnlich innerhalb von 15 Minuten; GitHub kann geplante Läufe verzögern.</p>
+  <p>REWE Kiel 561204 / ALDI Nord / PENNY (regionale Ausgabe prüfen). Originale bleiben privat. Der zentrale Runner startet gewöhnlich innerhalb von 15 Minuten; GitHub kann geplante Läufe verzögern.</p>
   <div className="german-admin-form">
-   <label>Händler<select value={retailer} onChange={e=>setRetailer(e.target.value as typeof retailer)}><option value="rewe">REWE · Holtenauer Str. 69–71 · 561204</option><option value="aldi-nord">ALDI Nord · Region Kiel</option></select></label>
+   <label>Händler<select value={retailer} onChange={e=>setRetailer(e.target.value as typeof retailer)}><option value="rewe">REWE · Holtenauer Str. 69–71 · 561204</option><option value="aldi-nord">ALDI Nord · Region Kiel</option><option value="penny">PENNY · Region Kiel</option></select></label>
    <label>Gültig ab<input type="date" value={from} onChange={e=>setFrom(e.target.value)}/></label><label>Gültig bis<input type="date" value={until} onChange={e=>setUntil(e.target.value)}/></label>
-   <label className="wide">Originalprospekt-URL (optional)<input type="url" value={source} onChange={e=>setSource(e.target.value)} placeholder="https://…"/></label>
+   <label className="wide">Originalprospekt-URL (bei PENNY auch direkt importierbar)<input type="url" value={source} onChange={e=>setSource(e.target.value)} placeholder="https://…"/></label>
    <label className="wide">PDF · bis 250 MiB<input type="file" accept=".pdf,application/pdf" disabled={busy} onChange={e=>setFile(e.target.files?.[0]||null)}/></label>
   </div>
   <button type="button" disabled={!file||busy} onClick={()=>void action(async()=>{const id=await uploadGermanFlyer(file!,{retailer,validFrom:from,validUntil:until,sourceUrl:source},setProgress);chooseImport(id);setNotice('Import gespeichert. Vorhandene Uploads werden fortgesetzt; identische Prospekte werden nicht doppelt angelegt.')})}>Hochladen und zentral analysieren</button>
+  {retailer==='penny'&&<button type="button" disabled={busy||!source||!from||!until} onClick={()=>void action(async()=>{
+   const id=await uploadGermanFlyerFromPennyUrl(source,{retailer:'penny',validFrom:from,validUntil:until},setProgress);
+   chooseImport(id);
+   setNotice('PENNY-Prospekt aus offiziellem Link in die geschützte Prüfwarteschlange übernommen. Vor Veröffentlichung sind Produktpreise, Region und Nutzungsrechte zu bestätigen.');
+  })}>PENNY-PDF aus offiziellem Link laden und zentral analysieren</button>}
+  {retailer==='penny'&&<small>Der Betreiber lädt das große PDF nur einmal. Vor Veröffentlichung sind alle Preis-Kandidaten anhand der Originalausschnitte zu prüfen; PENNY kann regional unterschiedliche Ausgaben haben. Empfohlen: Desktop-Browser.</small>}
+
   {progress&&<p role="status">{progress}</p>}{error&&<p className="flyer-error" role="alert">{error}</p>}{notice&&<p role="status">{notice}</p>}
   <label>Import<select value={selected} disabled={busy} onChange={e=>chooseImport(e.target.value)}><option value="">Import auswählen</option>{imports.map(i=><option key={i.id} value={i.id}>{germanStoreName(i.retailer)} · {i.valid_from} · {labels[i.status]}</option>)}</select></label>
   {job&&<>
