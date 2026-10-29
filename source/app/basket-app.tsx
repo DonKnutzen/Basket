@@ -3,6 +3,8 @@ import {comparisonBasis,history,comparableLines,cheapest,weightedAverage,observa
 import {createHouseholdLoader} from '../lib/household-loader';
 import {OfferSettings, OffersForItem, useOfferRegion} from './shopping-offers';
 import {readBrowserSession} from '../lib/supabase-browser';
+import {recoverHouseholdUnauthorized} from '../lib/auth-recovery';
+import {withDeadline} from '../lib/request-deadline';
 import {tr,phrase,locale} from '../lib/i18n';
 import { SHOPPING_GROUPS, shoppingGroup, shoppingCategory, foodGroupClass, sortShoppingItems } from '../lib/food-presentation';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -105,8 +107,17 @@ export default function BasketApp() { useLanguage();
         load:async signal=>{
             const session=PAGES_BUILD?await readBrowserSession(signal):undefined;
             if(PAGES_BUILD&&!session)return {kind:'signin'};
-            const response=await basketFetch('/api/basket',{signal,cache:'no-store'},session);
-            if(response.status===401)return {kind:'signin'};
+            const initial=await basketFetch('/api/basket',{signal,cache:'no-store'},session);
+            const checked=PAGES_BUILD?await recoverHouseholdUnauthorized(
+                initial,session??null,
+                ()=>withDeadline(()=>browserAuth().auth.refreshSession(),{
+                    timeoutMs:8000,signal,
+                    message:'Could not verify your session right now. Please try again.'
+                }),
+                renewed=>basketFetch('/api/basket',{signal,cache:'no-store'},renewed)
+            ):initial.status===401?{kind:'signin'} as const:{kind:'response',response:initial} as const;
+            if(checked.kind==='signin')return {kind:'signin'};
+            const response=checked.response;
             const result:any=await response.json();
             if(!response.ok)throw Error(result.error||'Household unavailable. Please retry.');
             return {kind:'ready',data:result};
@@ -122,7 +133,9 @@ export default function BasketApp() { useLanguage();
         const visible=()=>document.visibilityState==='visible'&&!demoRef.current&&!pending.current;
         const resume=()=>{if(visible())void refresh()};
         void refresh(true);
-        const timer=setInterval(()=>{if(visible()&&!needsAuthRef.current)void refresh()},3000);
+        // Focus and online events still refresh immediately; avoid hammering Auth
+        // every three seconds on iOS during transient connectivity problems.
+        const timer=setInterval(()=>{if(visible()&&!needsAuthRef.current)void refresh()},15000);
         document.addEventListener('visibilitychange',resume);
         window.addEventListener('pageshow',resume);
         window.addEventListener('focus',resume);

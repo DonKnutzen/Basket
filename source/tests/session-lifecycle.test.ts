@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {createHouseholdLoader,type HouseholdLoad} from '../lib/household-loader';
 import {RequestTimeoutError,withDeadline} from '../lib/request-deadline';
 import {readBrowserSession,basketFetch} from '../lib/supabase-browser';
+import {recoverHouseholdUnauthorized} from '../lib/auth-recovery';
 function deferred<T>(){let resolve!:(value:T)=>void;const promise=new Promise<T>(r=>resolve=r);return {promise,resolve}}
 const globals=globalThis as any;
 beforeEach(()=>{globals.window={};globals.localStorage={getItem:()=> 'email'};globals.__browserSession=async()=>({data:{session:null},error:null})});
@@ -65,4 +66,37 @@ test('data calls wait for token renewal and use the renewed token without starti
 });
 test('cancelling a session wait does not issue data calls or revoke other sessions',async()=>{
  globals.__browserSession=()=>new Promise(()=>{});const controller=new AbortController();const waiting=readBrowserSession(controller.signal);controller.abort();await assert.rejects(waiting,error=>(error as Error).name==='AbortError');
+});
+
+test('a server 401 during iPhone token rotation renews and retries only once',async()=>{
+ const old={access_token:'old'} as any;
+ const next={access_token:'new'} as any;
+ let refreshed=0,retried=0;
+ const result=await recoverHouseholdUnauthorized(new Response('{}',{status:401}),old,async()=>{
+  refreshed++;return {data:{session:next},error:null};
+ },async session=>{
+  retried++;assert.equal(session.access_token,'new');return Response.json({ok:true});
+ });
+ assert.equal(result.kind,'response');assert.equal(refreshed,1);assert.equal(retried,1);
+});
+test('valid responses never trigger an auth renewal',async()=>{
+ let calls=0;const result=await recoverHouseholdUnauthorized(Response.json({ok:true}),{} as any,async()=>{
+  calls++;return {data:{session:null},error:null};
+ },async()=>{calls++;return new Response('',{status:401})});
+ assert.equal(result.kind,'response');assert.equal(calls,0);
+});
+test('only definitively ended refresh tokens force a sign-in',async()=>{
+ const ended=await recoverHouseholdUnauthorized(new Response('',{status:401}),{} as any,
+ async()=>({data:{session:null},error:{code:'refresh_token_not_found'}}),async()=>Response.json({ok:true}));
+ assert.equal(ended.kind,'signin');
+ const noSession=await recoverHouseholdUnauthorized(new Response('',{status:401}),null,
+ async()=>{throw Error('should not be called')},async()=>Response.json({ok:true}));
+ assert.equal(noSession.kind,'signin');
+});
+test('network errors or persistent server 401 do not erase a valid session',async()=>{
+ await assert.rejects(recoverHouseholdUnauthorized(new Response('',{status:401}),{} as any,
+  async()=>{throw Error('network down')},async()=>Response.json({ok:true})),/Could not verify your session/);
+ await assert.rejects(recoverHouseholdUnauthorized(new Response('',{status:401}),{} as any,
+  async()=>({data:{session:{access_token:'new'} as any},error:null}),
+  async()=>new Response('',{status:401})),/Basket could not verify your account/);
 });
