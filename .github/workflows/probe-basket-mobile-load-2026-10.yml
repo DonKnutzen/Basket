@@ -40,6 +40,10 @@ jobs:
                 text:(await page.locator('body').innerText()).slice(0,550),rootChildren:await page.locator('#root').locator(':scope > *').count(),
                 errors:errors.slice(0,12),failedRequests:failedRequests.slice(0,8)}));
             }catch(e){console.log(JSON.stringify({browser:name,error:String(e),errors,failedRequests}));}
+            try{
+              const direct=await page.goto('https://basket-together.gnoid-knutzen.chatgpt.site/',{waitUntil:'domcontentloaded',timeout:20000});
+              console.log(JSON.stringify({browser:name,alternativeOriginStatus:direct?.status(),alternativeOriginTitle:await page.title(),alternativeBody:(await page.locator('body').innerText()).slice(0,350),alternativeUrl:page.url()}));
+            }catch(e){console.log(JSON.stringify({browser:name,alternativeOriginError:String(e)}));}
             await browser.close();
           }
           JS
