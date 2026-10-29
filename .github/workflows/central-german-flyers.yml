@@ -1,6 +1,13 @@
 name: Central German flyer queue
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/central-german-flyers.yml
+      - source/scripts/german_flyer_layout.py
+      - source/scripts/process-german-flyers.py
+      - source/scripts/flyer_requirements.txt
   schedule:
     - cron: '*/15 * * * *'
 permissions:
