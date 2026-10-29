@@ -84,9 +84,9 @@ test('Germany is explicitly Kiel-scoped with two selected public-weekly sources;
  assert.equal(GERMAN_OFFER_CITIES[0].id,'Kiel');
  assert.equal(providerAvailable(de),false);
  const all=officialGermanFlyers(de);
- assert.equal(all.length,2);
- assert.deepEqual(de.stores,['rewe','aldi']);
- assert.deepEqual(all.map(f=>f.id),['rewe','aldi']);
+ assert.equal(all.length,3);
+ assert.deepEqual(de.stores,['rewe','aldi','penny']);
+ assert.deepEqual(all.map(f=>f.id),['rewe','aldi','penny']);
  assert.ok(all.every(v=>v.url.startsWith('https://')));
  assert.deepEqual(officialGermanFlyers({...de,stores:['rewe']} ).map(v=>v.id),['rewe']);
  assert.deepEqual(officialGermanFlyers({...de,stores:['walmart']}),[]);
@@ -103,4 +103,11 @@ test('REWE Kiel flyer link is for the selected Holtenauer Str. market, not anoth
  assert.equal(links.length,1);
  assert.match(links[0].url,/\/angebote\/kiel\/561204\//);
  assert.match(links[0].url,/holtenauer-str-69-71/);
+});
+
+test('existing German default preferences gain PENNY without overwriting custom selections',()=>{
+ const previous=restoreOfferRegion(JSON.stringify({country:'DE',city:'Kiel',stores:['rewe','aldi']}));
+ assert.deepEqual(previous.stores,['rewe','aldi','penny']);
+ const custom=restoreOfferRegion(JSON.stringify({country:'DE',city:'Kiel',stores:['aldi'],retailerSelectionVersion:3}));
+ assert.deepEqual(custom.stores,['aldi']);
 });
