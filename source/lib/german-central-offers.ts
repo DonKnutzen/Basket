@@ -7,7 +7,7 @@ export type GermanProduct={name:string;brand:string;variant?:string;category:str
  priceKind:'standard'|'multi'|'from'|'loyalty'|'tiered';minQuantity:number;validFrom:string;validUntil:string};
 export type GermanOffer=GermanProduct&{id:string;importId:string;retailer:'rewe'|'aldi-nord'|'penny';region:'Kiel';marketId:'561204'|null;
  page:number;bbox:number[];sourceUrl:string;sourceStatus:'checked-at-import'|'unavailable';sourceCheckedAt:string|null;
- sourceFilename:string;validationStatus:'verified'};
+ sourceFilename:string;validationStatus:'verified';testOnly?:boolean};
 export type GermanMatch={offer:GermanOffer;kind:'exact'|'category'|'alternative'};
 export const germanStoreName=(s:string)=>s==='rewe'?'REWE · Holtenauer Str. 69–71':s==='aldi-nord'?'ALDI Nord · Region Kiel':s==='penny'?'PENNY · Region Kiel':'Unbekannter Händler';
 export function untilBerlinMidnight(now=new Date()){
@@ -38,7 +38,7 @@ export function germanSourceUrl(raw:string){
 export function parseGermanOffer(raw:unknown):GermanOffer|null{
  if(!raw||typeof raw!=='object')return null;
  const x=raw as GermanOffer;
- if(x.validationStatus!=='verified'||x.currency!=='EUR'||x.region!=='Kiel'||
+ if(x.validationStatus!=='verified'||(x.testOnly!==undefined&&typeof x.testOnly!=='boolean')||x.currency!=='EUR'||x.region!=='Kiel'||
   !['rewe','aldi-nord','penny'].includes(x.retailer)||x.retailer==='rewe'&&x.marketId!=='561204'||(x.retailer==='aldi-nord'||x.retailer==='penny')&&x.marketId!==null||
   typeof x.id!=='string'||typeof x.importId!=='string'||typeof x.name!=='string'||x.name.length<2||x.name.length>250||
   typeof x.brand!=='string'||typeof x.category!=='string'||!germanCategoryExact(x.category)||typeof x.packSize!=='string'||
