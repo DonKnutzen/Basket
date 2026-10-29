@@ -92,4 +92,15 @@ The 19-region sample was used during development and is not a held-out or statis
 
 [The native real-PDF CI run](https://github.com/DonKnutzen/Basket/actions/runs/40792684586/job/123181808430) passed all 77 pages, including ALDI page 44. The application, database, Python, Deno and build CI jobs also passed at code revision `06219cd`.
 
-Outstanding acceptance checks: a real signed-in operator upload → GitHub OIDC worker → review → authorized publication → independent shopper session; and physical Safari/iOS navigation. Mock visual data and signed-token unit tests do not establish that complete production round trip. Keep these limits visible until those checks have run.
+## Live follow-up, 29 October 2026
+
+The earlier activation statements above record the initial deployment before publication. The real signed-in operator upload → GitHub OIDC worker → private review → publication → shopping-list display now works with genuine source facts:
+
+- REWE: 28/28 pages processed, 231 review regions; Kerrygold butter, 250 g, EUR 1.59 and Danone Activia yogurt, 4 x 115 g, EUR 1.49 published from original page 13, valid 26–31 October.
+- ALDI: the faithful compact upload processed 49/49 pages in [the scheduled queue run](https://github.com/DonKnutzen/Basket/actions/runs/40827411209), with 317 review regions. Original page 8 was visually checked; Weihenstephan Butter / Die Streichzarte, 250 g, EUR 1.49 was confirmed and published, valid 26–30 October.
+- The live existing Butter tile displays both retailers together and Joghurt displays the REWE Activia offer. These are production database results, not mocked cards. Official source links were checked again on 29 October.
+- 110 application tests passed at the generic-category follow-up. Narrow shopping tiles now place full product names above the price to avoid squeezing names into a thin column.
+
+Only three offers have been reviewed and published. All remaining proposals stay unpublished. Full-page processing does not imply reliable identification of every product. This is a conservative proposal-and-review method, not a proven fully automatic whole-flyer recognizer. Already published imports are currently read-only, including their pending candidates; incremental publication remains a known limitation.
+
+Outstanding acceptance checks: independent shopper-account access and physical Safari/iOS navigation. The same signed-in operator session verified the consumer display; it does not establish those independent checks. No paid services were introduced, and Canada/receipt/household functionality was not changed.
