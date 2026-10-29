@@ -6,8 +6,8 @@ import {GermanOfferAdmin} from './german-offer-admin';
 import {OfferSourceLink} from './offer-source-link';
 import {useCentralGermanOffers,useGermanOfferDisplay} from '../lib/german-offer-store';
 import {matchCentralGermanOffers,compactGermanOfferMatches,mergeGermanOfferSources} from '../lib/german-central-offers';
-import {matchGermanDrafts} from '../lib/german-offer-drafts';
-import {GermanDraftCatalogue,unverifiedOfferCount} from './german-draft-catalogue';
+import {matchGermanDrafts,unverifiedOfferCount} from '../lib/german-offer-drafts';
+import {GermanDraftCatalogue} from './german-draft-catalogue';
 import {
  DEFAULT_OFFER_REGION,OFFER_PROVINCES,GERMAN_OFFER_CITIES,officialGermanFlyers,checkOffers,providerAvailable,restoreOfferRegion,storeChoices,isStoreOfferConnected,
  type Deal,type OfferRegion,
