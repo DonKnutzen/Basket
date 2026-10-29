@@ -2,9 +2,48 @@ import unittest
 import sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
-from german_flyer_layout import Box,price_anchors,price_column_cells,product_name_fragment,quantity,inferred_unit_pack,page_quality_counts,unit_check,whitespace_tiles,printed_date_ranges
+from german_flyer_layout import Box,price_anchors,price_column_cells,product_name_fragment,quantity,inferred_unit_pack,page_quality_counts,unit_check,whitespace_tiles,printed_date_ranges,panel_row_cell,panel_has_product,recover_lateral_description
 
 class LayoutTests(unittest.TestCase):
+    def test_lateral_description_requires_unique_matching_pack_and_base_price(self):
+        rect=(135,149,225,249);price={'cents':159,'rect':(147,173,212,245)}
+        boxes=[Box('Mövenpick Eis',(22,199,100,227),10),
+               Box('850-ml-Packung',(22,226,124,246),8),Box('(Liter = 1.87)',(22,245,90,256),8)]
+        self.assertIsNotNone(recover_lateral_description(rect,price,boxes,[price],476))
+        self.assertIsNone(recover_lateral_description(rect,{**price,'cents':259},boxes,[price],476))
+        second={'cents':199,'rect':(50,180,90,200)}
+        self.assertIsNone(recover_lateral_description(rect,price,boxes,[price,second],476))
+        self.assertIsNone(recover_lateral_description(rect,price,boxes[:2],[price],476))
+    def test_base_price_check_requires_matching_units_and_explicit_denominator(self):
+        self.assertTrue(unit_check(159,'850 ml','(Liter = 1.87)'))
+        self.assertFalse(unit_check(159,'850 g','(Liter = 1.87)'))
+        self.assertTrue(unit_check(299,'250 g','(100 g = 1.20)'))
+        self.assertIsNone(unit_check(159,'850 ml','Liter = 1.87; Liter = 2.99'))
+
+    def test_price_badge_is_not_mistaken_for_product_panel(self):
+        badge=(135,149,225,257)
+        boxes=[Box('1.',(147,173,177,245),55),Box('59',(166,178,197,231),40),
+               Box('**',(199,186,212,207),16),Box('3.99',(195,231,220,254),17.5,True)]
+        self.assertFalse(panel_has_product(badge,boxes))
+        boxes.append(Box('Mövenpick Eis',(20,207,120,227),15))
+        self.assertFalse(panel_has_product(badge,boxes))
+        self.assertTrue(panel_has_product((10,140,225,260),boxes))
+
+    def test_single_price_on_wide_panel_row_keeps_name_from_left_half(self):
+        panel=(10,260,310,640);cell=(150,450,310,640)
+        price={'rect':(250,580,295,625)}
+        self.assertEqual(panel_row_cell(panel,cell,price,[price]),(10,450,310,640))
+        other={'rect':(90,580,135,625)}
+        self.assertEqual(panel_row_cell(panel,cell,price,[price,other]),cell)
+        previous_row={'rect':(90,380,135,425)}
+        self.assertEqual(panel_row_cell(panel,cell,price,[price,previous_row]),(10,450,310,640))
+
+    def test_equivalent_multipack_totals_do_not_create_false_alternatives(self):
+        self.assertEqual(quantity('900 g / 5x180 g'),('900 g',False))
+        self.assertEqual(quantity('3 x 90 ml = 270 ml'),('3 x 90 ml',False))
+        self.assertEqual(quantity('250 ml / 0,25 l'),('250 ml',False))
+        self.assertTrue(quantity('250 ml / 0,5 l')[1])
+
     def test_overlapping_typographic_euro_and_cent_boxes(self):
         boxes=[Box('1.',(175,396,199,437),41),Box('79',(190,399,215,428),29)]
         found=price_anchors(boxes)

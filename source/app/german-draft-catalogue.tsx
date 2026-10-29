@@ -7,7 +7,7 @@ import {OfferSourceLink} from './offer-source-link';
 
 const eur=(n:number)=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(n/100);
 
-function DraftRow({draft:d}:{draft:GermanDraft}){
+export function DraftRow({draft:d}:{draft:GermanDraft}){
  const de=getLanguage()==='de',unreadable=d.status==='unreadable';
  const title=compactGermanDraftTitle(d.name,d.brand);
  const shop=d.retailer==='aldi-nord'?'ALDI Nord':d.retailer==='rewe'?'REWE':'PENNY';
@@ -26,13 +26,14 @@ function DraftRow({draft:d}:{draft:GermanDraft}){
      <span>{de?'Preis prüfen':'Check price'}</span>}
    </div>
   </div>
+  {d.conditions&&<p className="german-draft-conditions">{d.conditions}</p>}
   {d.priceFromBase&&<small className="german-draft-disclaimer">{de?'Nur rechnerischer Hinweis, kein bestätigter Angebotspreis. Bitte Originalprospekt prüfen.':'Calculated estimate only, not a confirmed sale price. Check the original flyer.'}</small>}
   {title.truncated&&<details className="german-draft-description">
    <summary>{de?'Vollständigen Produkttext anzeigen':'Show full product description'}</summary>
    <p>{title.full}</p>
   </details>}
   <div className="german-draft-foot">
-   <span>{de?'Prospekt S. ':'Flyer p. '}{d.page}</span>
+   <span>{de?'Bis ':'Until '}{new Intl.DateTimeFormat(de?'de-DE':'en-GB',{day:'numeric',month:'short',timeZone:'Europe/Berlin'}).format(new Date(d.validUntil+'T12:00:00Z'))} · {de?'Seite ':'Page '}{d.page}</span>
    {d.sourceUrl&&<OfferSourceLink url={d.sourceUrl}>{de?'Original ansehen':'View original'}</OfferSourceLink>}
   </div>
   {d.issues.length>0&&<details className="german-draft-notes">
@@ -41,22 +42,22 @@ function DraftRow({draft:d}:{draft:GermanDraft}){
   </details>}
  </article>;
 }
-/** Operator-only candidate preview: no draft ever enters the verified badge price. */
+/** Read-only shared drafts: no draft ever enters the verified badge price. */
 export function GermanDraftMatches({name,stores}:{name:string;stores:readonly string[]}){
  const state=useCentralGermanOffers(),[visibleCount,setVisibleCount]=useState(2),de=getLanguage()==='de';
 
  const matches=matchGermanDrafts(name,state.drafts,stores);
  if(!matches.length)return null;
- return <details className="german-draft-matches">
-  <summary>{unverifiedOfferCount(matches.length,de)}</summary>
+ return <section className="german-draft-matches" aria-label={unverifiedOfferCount(matches.length,de)}>
+  <h3 className="german-draft-section-title">{unverifiedOfferCount(matches.length,de)}</h3>
   <div className="german-draft-list">
    {state.draftError&&<small role="status">{de?state.draftError:'Unverified offers are currently unavailable.'}</small>}
-   <p className="german-draft-disclaimer">{de?'Noch nicht bestätigt · Preise nicht im offiziellen Vergleich enthalten.':'Not verified · prices excluded from confirmed comparisons.'}</p>
+   <p className="german-draft-disclaimer">{de?'Preisvorschläge aus dem Prospekt. Bitte im Original prüfen.':'Flyer price suggestions. Check the original before buying.'}</p>
    {matches.slice(0,visibleCount).map(d=><DraftRow key={d.id} draft={d}/>)}
    {matches.length>visibleCount&&visibleCount<8&&<button type="button" className="german-draft-more" onClick={()=>setVisibleCount(n=>Math.min(n+3,8))}>{de?`Weitere Angebote anzeigen (${Math.min(3,matches.length-visibleCount)})`:`Show more offers (${Math.min(3,matches.length-visibleCount)})`}</button>}
    {matches.length>8&&visibleCount>=8&&<small>{de?`Weitere ${matches.length-8} Angebote unter „Wöchentliche Angebote“ durchsuchen.`:`Search ${matches.length-8} more in Weekly offers.`}</small>}
   </div>
- </details>;
+ </section>;
 }
 /** Private searchable listing of candidate regions, not a verified prices feed. */
 export function GermanDraftCatalogue({stores}:{stores:readonly string[]}){

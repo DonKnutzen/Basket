@@ -10,7 +10,7 @@ import {OfferSourceLink} from './offer-source-link';
 const retailerName=(id:string)=>id==='aldi'?'ALDI Nord':id==='rewe'?'REWE':id==='penny'?'PENNY':id;
 /** Visible to every account: direct official PDF links where an active
  * import exists, and an explicit retailer-page fallback otherwise. */
-export function GermanFlyerQuickLinks({region}:{region:OfferRegion}){
+export function GermanFlyerQuickLinks({region,compact=false}:{region:OfferRegion;compact?:boolean}){
  const data=useCentralGermanOffers(),de=getLanguage()==='de';
  if(region.country!=='DE'||region.city!=='Kiel')return null;
  const active=currentGermanFlyerPdfLinks(data.offers,data.drafts,region.stores);
@@ -27,6 +27,6 @@ export function GermanFlyerQuickLinks({region}:{region:OfferRegion}){
     </OfferSourceLink>;
    })}
   </div>
-  <small>{de?'PDF-Links stammen aus den aktuell importierten Prospekten. Fehlt ein gültiges PDF, öffnet der Link die offizielle Händlerseite.':'PDF links come from currently imported flyers. When no current PDF is available, links open the retailer offer page.'}</small>
+  {!compact&&<small>{de?'PDF-Links stammen aus den aktuell importierten Prospekten. Fehlt ein gültiges PDF, öffnet der Link die offizielle Händlerseite.':'PDF links come from currently imported flyers. When no current PDF is available, links open the retailer offer page.'}</small>}
  </section>;
 }

@@ -1,6 +1,6 @@
 /** Operator-only diagnostic records. These are never verified sale offers. */
 import {berlinDay} from './rewe-official-weekly';
-import {germanPack,inferGermanExplicitPack,suggestGermanCategory,germanSourceUrl,germanDay} from './german-central-offers';
+import {germanPack,inferGermanExplicitPack,suggestGermanCategory,germanSourceUrl,germanDay,germanCategoryCompatible} from './german-central-offers';
 import {tentativeCorrectedPrice} from './german-base-price';
 
 type Retailer='rewe'|'aldi-nord'|'penny';
@@ -66,9 +66,11 @@ export function matchGermanDrafts(name:string,drafts:readonly GermanDraft[],stor
  const requestedPack=requestedSize?germanPack(requestedSize):null;
  const queryWords=words(name.replace(/(?:\d+\s*[x×]\s*)?\d+(?:[.,]\d+)?\s*(?:kg|g|ml|cl|l|Stück|St\.?)\b/gi,'')).flatMap(w=>w==='coke'?['coca','cola']:[w]);
  return drafts.filter(d=>{
+  if(/^Unlesbarer Bereich auf Seite \d+$/.test(d.name))return false;
   if(d.validFrom>today||d.validUntil<today)return false;
   if(stores.length&&!stores.includes(d.retailer==='aldi-nord'?'aldi':d.retailer))return false;
   const identity=fold([d.brand,d.name,d.variant].join(' '));
+  if(category&&!germanCategoryCompatible(category,identity))return false;
   if(unsuitable.test(identity))return false;
   if(category==='Cola'&&beverageExclusion.test(identity))return false;
   if(category==='Cola'&&!/(?:coca cola|pepsi|cola erfrischungsgetrank|cola getrank|cola zero|cola original)/.test(identity))return false;

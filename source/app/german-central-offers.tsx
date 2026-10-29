@@ -5,6 +5,7 @@ import {useCentralGermanOffers,useGermanOfferDisplay} from '../lib/german-offer-
 import {getLanguage} from '../lib/i18n';
 import {OfferSourceLink} from './offer-source-link';
 import {GermanDraftMatches} from './german-draft-catalogue';
+import {matchGermanDrafts} from '../lib/german-offer-drafts';
 const eur=(n:number)=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(n/100);
 export function CentralGermanOfferMatches({name,stores}:{name:string;stores:readonly string[]}){
  const state=useCentralGermanOffers(),[all,setAll]=useState(false),[enabled]=useGermanOfferDisplay(),de=getLanguage()==='de';
@@ -12,7 +13,7 @@ export function CentralGermanOfferMatches({name,stores}:{name:string;stores:read
  const visible=mergeGermanOfferSources(state.offers,state.previewOffers);
  const matches=matchCentralGermanOffers(name,visible,stores);
  const unpublishedPreviewIds=new Set(state.previewOffers.filter(p=>!state.offers.some(o=>o.id===p.id)).map(p=>p.id));
- if(!matches.length)return <>{state.error&&<small className="central-offer-status">{de?state.error:'Central offers are currently unavailable.'}</small>}<GermanDraftMatches name={name} stores={stores}/></>;
+ if(!matches.length)return <>{state.error&&<small className="central-offer-status">{de?state.error:'Central offers are currently unavailable.'}</small>}{!matchGermanDrafts(name,state.drafts,stores).length&&<p className="german-offer-empty">{state.loading?(de?'Angebote werden geladen …':'Loading offers…'):(de?'Kein passendes Angebot erfasst. Du kannst unten direkt im Originalprospekt nachsehen.':'No matching offer recorded. Check the original flyers below.')}</p>}<GermanDraftMatches name={name} stores={stores}/></>;
  return <div className="central-offer-results" aria-live="polite">
   {(all?matches:matches.slice(0,3)).map(({offer:o,kind})=><details className={'central-offer '+o.retailer} key={o.id}>
    <summary>

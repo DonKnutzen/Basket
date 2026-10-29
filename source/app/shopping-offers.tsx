@@ -1,7 +1,7 @@
 'use client';
-import React,{useEffect,useId,useState} from 'react';
+import React,{useEffect,useState} from 'react';
 import {getLanguage,locale,tr} from '../lib/i18n';
-import {CentralGermanOfferMatches} from './german-central-offers';
+import {GermanOfferDialog} from './german-offer-dialog';
 import {GermanOfferAdmin} from './german-offer-admin';
 import {OfferSourceLink} from './offer-source-link';
 import {useCentralGermanOffers,useGermanOfferDisplay} from '../lib/german-offer-store';
@@ -89,7 +89,6 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
  const [state,setState]=useState<'idle'|'checking'|'none'|'error'|'done'>('idle');
  const [deals,setDeals]=useState<Deal[]>([]);
  const [expanded,setExpanded]=useState(false);
- const panelId=useId();
  const connected=providerAvailable(region),key=JSON.stringify([region.country,region.province,region.city,region.stores]);
  useEffect(()=>{setState('idle');setDeals([]);setExpanded(false)},[name,key]);
  useEffect(()=>{
@@ -103,11 +102,8 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
  if(region.country==='DE'){
   const de=getLanguage()==='de';
   return <div className="offer-in-tile">
-   <button type="button" className="offer-check" aria-expanded={expanded} aria-controls={panelId} onClick={()=>setExpanded(!expanded)}>🏷️ {expanded?(de?'Angebote einklappen':'Hide offers'):(de?'Angebote anzeigen':'Show offers')}</button>
-   {expanded&&<div id={panelId} className="german-item-offers">
-   <CentralGermanOfferMatches name={name} stores={region.stores}/>
-   <GermanFlyerQuickLinks region={region}/>
-   </div>}
+   <button type="button" className="offer-check" aria-haspopup="dialog" onClick={()=>setExpanded(true)}>🏷️ {de?'Angebote ansehen':'View offers'}</button>
+   {expanded&&<GermanOfferDialog name={name} region={region} close={()=>setExpanded(false)}/>}
   </div>;
  }
  if(!connected)return null;
