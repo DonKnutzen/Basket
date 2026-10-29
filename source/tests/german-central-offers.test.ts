@@ -73,6 +73,20 @@ test('PENNY regional offers coexist with REWE and ALDI and respect retailer filt
  assert.equal(germanSourceUrl('https://evil.example/frontend/catalogs/1408356/3/pdf/complete.pdf'),null);
  assert.equal(germanSourceUrl('https://penny-publish.blaetterkatalog.de/frontend/catalogs/1408356/3/pdf/complete.pdf?url=https://evil.example'),null);
 });
+test('PENNY pilot facts remain identifiable and still require verified evidence',()=>{
+ const penny:GermanOffer={...offer,id:'penny-test',retailer:'penny',marketId:null,brand:'Coca-Cola',
+  name:'Coca-Cola Erfrischungsgetränk',variant:'Original',category:'Cola',
+  packSize:'1,25 l',priceCents:119,testOnly:true,
+  sourceUrl:'https://penny-publish.blaetterkatalog.de/frontend/catalogs/1408356/3/pdf/complete.pdf'};
+ const app={...penny,id:'penny-app',priceCents:99,priceKind:'loyalty' as const,conditions:'Nur mit PENNY App'};
+ assert.equal(parseGermanOffer(penny)?.testOnly,true);
+ assert.equal(parseGermanOffer({...penny,validationStatus:'review'}),null);
+ assert.equal(parseGermanOffer({...penny,testOnly:'yes'}),null);
+ assert.deepEqual(new Set(matchCentralGermanOffers('Cola',[penny,app],['penny'],now).map(x=>x.offer.priceCents)),new Set([99,119]));
+ assert.equal(matchCentralGermanOffers('Cola',[penny,app],['aldi'],now).length,0);
+ assert.equal(matchCentralGermanOffers('Cola',[penny,app],[],new Date('2026-11-01T02:00:00Z')).length,0);
+});
+
 test('generic drink requests include variants while named variants require printed evidence',()=>{
  const regular:GermanOffer={...offer,id:'cola',retailer:'penny',marketId:null,brand:'Coca-Cola',name:'Cola Original',category:'Cola',packSize:'1,25 l',priceCents:119};
  const zero:GermanOffer={...regular,id:'zero',name:'Cola Zero',priceCents:99,priceKind:'loyalty',conditions:'Mit PENNY App'};

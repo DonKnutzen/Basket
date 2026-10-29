@@ -13,7 +13,7 @@ export function CentralGermanOfferMatches({name,stores}:{name:string;stores:read
  return <div className="central-offer-results" aria-live="polite">
   {(all?matches:matches.slice(0,3)).map(({offer:o,kind})=><details className={'central-offer '+o.retailer} key={o.id}>
    <summary>
-    <span className="central-offer-identity"><small>{germanStoreName(o.retailer)}{state.previewOffers.some(p=>p.id===o.id)?' · '+(de?'Interne Testvorschau, nicht veröffentlicht':'Private test preview, unpublished'):''}</small><b>{[o.brand,o.name].filter(Boolean).join(' · ')}</b><span>{o.packSize|| (de?'Packungsgröße nicht angegeben':'Pack size unspecified')}{kind==='alternative'?' · '+(de?'Andere Größe / Variante':'Different size / variant'):''}</span></span>
+    <span className="central-offer-identity"><small>{germanStoreName(o.retailer)}{o.testOnly?' · '+(de?'Testangebot':'Test offer'):''}{state.previewOffers.some(p=>p.id===o.id)?' · '+(de?'Interne Testvorschau, nicht veröffentlicht':'Private test preview, unpublished'):''}</small><b>{[o.brand,o.name].filter(Boolean).join(' · ')}</b><span>{o.packSize|| (de?'Packungsgröße nicht angegeben':'Pack size unspecified')}{kind==='alternative'?' · '+(de?'Andere Größe / Variante':'Different size / variant'):''}</span></span>
     <strong className="central-offer-price">{o.priceKind==='from'?(de?'ab ':'from '):''}{eur(o.priceCents)}</strong>
     {o.priceKind!=='standard'&&<span className="central-offer-condition">{o.conditions}{o.priceKind==='multi'?' · '+eur(Math.round(o.priceCents/o.minQuantity))+(de?' je Stück bei Abnahme von ':' each when buying ')+o.minQuantity:''}</span>}
    </summary>
