@@ -1,5 +1,4 @@
 """Contract/transport tests, NOT evidence of live model recognition accuracy."""
-import copy
 import io
 import json
 import os

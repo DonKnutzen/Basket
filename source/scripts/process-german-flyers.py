@@ -87,8 +87,8 @@ def local(pdf_path,out,valid_from,valid_until,vision=None):
         if pdf.needs_pass:raise ValueError('Password-protected PDF')
         for number,page in enumerate(pdf,1):
             try:
-                result=analyze(page,valid_from,valid_until,vision)
                 save_evidence(page,tuple(page.rect),out/f'page-{number}.png')
+                result=analyze(page,valid_from,valid_until,vision)
                 for candidate in result['offers']:
                     save_evidence(page,candidate['bbox'],out/f'{number}-{candidate["key"]}.png')
             except Exception as e:result={'status':'failed','error':type(e).__name__+': '+str(e)[:200]}
@@ -120,11 +120,13 @@ def process(api,job,vision=None):
             for number in range(1,len(pdf)+1):
                 if number in done:continue
                 page=pdf[number-1]
+                page_image_key=None
                 try:
-                    result=analyze(page,str(job['valid_from']),str(job['valid_until']),vision)
                     key=f'{job["id"]}/evidence/page-{number}.png'
                     image=folder/'evidence.png';save_evidence(page,tuple(page.rect),image)
-                    api.call('evidence',job,key=key,raw=image.read_bytes());result['imageKey']=key
+                    api.call('evidence',job,key=key,raw=image.read_bytes());page_image_key=key
+                    result=analyze(page,str(job['valid_from']),str(job['valid_until']),vision)
+                    result['imageKey']=page_image_key
                     for c in result['offers']:
                         key=f'{job["id"]}/evidence/{number}-{c["key"]}.png'
                         save_evidence(page,c['bbox'],image)
@@ -144,7 +146,9 @@ def process(api,job,vision=None):
                     # A global call limit or missing service cannot be cured by
                     # calling again on every remaining page. Checkpoint this
                     # page, then release the job for explicit retry.
-                    api.call('page',job,{'page':number,'payload':{'status':'failed','error':type(error).__name__+': '+str(error)[:200],'offers':[]}})
+                    api.call('page',job,{'page':number,'payload':{'status':'failed',
+                        'width':page.rect.width,'height':page.rect.height,'imageKey':page_image_key,
+                        'error':type(error).__name__+': '+str(error)[:200],'offers':[]}})
                     if vision:raise
         # These counts cover newly processed pages only; resumed pages were
         # checkpointed earlier and must never be mistaken for zero candidates.
