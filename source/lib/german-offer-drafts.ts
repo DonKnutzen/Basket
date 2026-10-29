@@ -75,3 +75,9 @@ export function searchGermanDraftCatalogue(search:string,drafts:readonly GermanD
  (!text||text.split(' ').every(w=>fold([d.brand,d.name,d.packSize,d.categoryHint].join(' ')).includes(w))))
  .sort((a,b)=>a.retailer.localeCompare(b.retailer)||a.page-b.page);
 }
+
+/** Human-readable but explicitly unverified: never an official price label. */
+export function unverifiedOfferCount(count:number,de:boolean):string{
+ return de?(count===1?'1 ungeprüftes Angebot':count+' ungeprüfte Angebote'):
+  (count===1?'1 unverified offer':count+' unverified offers');
+}
