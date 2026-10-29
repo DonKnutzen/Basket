@@ -53,21 +53,39 @@ def quantity(text):
     return ' / '.join(unique), len(unique)>1
 
 def inferred_unit_pack(name):
-    """Infer only a unit actually printed with the product description.
+    """Infer only units explicitly printed with the product description.
 
-    Do not infer pack weights from typical supermarket packages or derive
-    piece counts from marketing text. Implicit units remain review proposals.
+    Never guess an amount from familiar supermarket packaging.
+    This is an unverified suggestion until an operator checks the original.
     """
     text=re.sub(r'\s+',' ',name).strip()
     if not text:return ''
-    # Explicit per-kilo loose produce is very different from per-piece fruit.
     kilo=bool(re.search(r'\b(?:kg[\s-]*Preis|Preis\s*(?:je|pro)\s*kg|je\s+kg)\b',text,re.I))
     piece=bool(re.search(r'\b(?:Stück|Stk\.?)\b',text,re.I))
-    if kilo and piece:return ''  # conflicting evidence: don't guess
+    if kilo and piece:return ''
     if kilo:return '1 kg'
-    # Named sales units are trustworthy only if printed at the end (or
-    # separated into a final product-qualification clause).
-    found=re.search(r'(?:^|[,;]|\s)\s*(Stück|Stk\.?|Bund|Schale|Netz|Packung)\s*[.;]?\s*
+    found=re.search(r'(?:^|[,;]|\s)\s*(Stück|Stk\.?|Bund|Schale|Netz|Packung)\s*[.;]?\s*\Z',text,re.I)
+    if not found:return ''
+    unit=found[1].lower().strip('.')
+    return '1 '+{'stk':'Stück','stück':'Stück','bund':'Bund','schale':'Schale',
+                 'netz':'Netz','packung':'Packung'}[unit]
+
+def page_quality_counts(result):
+    """Counts are review signals, NOT a product-recall or correctness score."""
+    proposals=result.get('offers',[])
+    if result.get('status')!='done':
+        return {'regions':0,'withPrice':0,'withoutPack':0,'inferredUnit':0,
+                'ambiguousPrice':0,'unreadable':0}
+    return {
+        'regions':len(proposals),
+        'withPrice':sum(bool(o['data'].get('priceCents')) for o in proposals),
+        'withoutPack':sum(not o['data'].get('packSize') for o in proposals),
+        'inferredUnit':sum('Einheit aus Produkttext erschlossen; Original prüfen' in o['issues'] for o in proposals),
+        'ambiguousPrice':sum('Mehrere Verkaufspreise / Produkte im selben Bereich' in o['issues'] for o in proposals),
+        'unreadable':sum(o['status']=='unreadable' for o in proposals),
+    }
+
+def unit_check(cents, pack, printed):
     """Compare explicitly printed €/kg or €/l; no historical imputation."""
     m=re.fullmatch(r'(\d+(?:[.,]\d+)?)\s*(kg|g|ml|l)',pack.strip(),re.I)
     p=PRICE.search(printed)
