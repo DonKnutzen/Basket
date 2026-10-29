@@ -6,7 +6,7 @@ import {GermanOfferAdmin} from './german-offer-admin';
 import {OfferSourceLink} from './offer-source-link';
 import {useCentralGermanOffers,useGermanOfferDisplay} from '../lib/german-offer-store';
 import {matchCentralGermanOffers,compactGermanOfferMatches,mergeGermanOfferSources} from '../lib/german-central-offers';
-import {matchGermanDrafts} from '../lib/german-offer-drafts';
+import {matchGermanDrafts,unverifiedOfferCount} from '../lib/german-offer-drafts';
 import {GermanDraftCatalogue} from './german-draft-catalogue';
 import {
  DEFAULT_OFFER_REGION,OFFER_PROVINCES,GERMAN_OFFER_CITIES,officialGermanFlyers,checkOffers,providerAvailable,restoreOfferRegion,storeChoices,isStoreOfferConnected,
@@ -19,10 +19,10 @@ export function GermanOfferTileBadge({name,region}:{name:string;region:OfferRegi
  if(region.country!=='DE'||!enabled)return null;
  const matches=matchCentralGermanOffers(name,mergeGermanOfferSources(state.offers,state.previewOffers),region.stores);
  const pending=state.isOperator?matchGermanDrafts(name,state.drafts,region.stores).length:0;
- if(!matches.length)return pending?<span> · {pending} ungeprüfte PDF-Treffer</span>:null;
+ if(!matches.length)return pending?<span> · {unverifiedOfferCount(pending,getLanguage()==='de')}</span>:null;
  const available=compactGermanOfferMatches(matches);
  const eur=new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
- return <span>{available.map(({offer:o})=><span key={o.id}> · {o.retailer==='penny'?'PENNY':o.retailer==='rewe'?'REWE':'ALDI Nord'}{(o.testOnly||state.previewOffers.some(p=>p.id===o.id)&&!state.offers.some(p=>p.id===o.id))?' Test':''}: {eur.format(o.priceCents/100)}{o.packSize?' / '+o.packSize:''}{o.priceKind==='loyalty'?' (App/Bonus)':o.priceKind!=='standard'?' ('+o.priceKind+')':''}</span>)}{matches.length>available.length?' · +'+(matches.length-available.length)+' weitere':''}{pending?' · '+pending+' ungeprüfte PDF-Treffer':''}</span>;
+ return <span>{available.map(({offer:o})=><span key={o.id}> · {o.retailer==='penny'?'PENNY':o.retailer==='rewe'?'REWE':'ALDI Nord'}{(o.testOnly||state.previewOffers.some(p=>p.id===o.id)&&!state.offers.some(p=>p.id===o.id))?' Test':''}: {eur.format(o.priceCents/100)}{o.packSize?' / '+o.packSize:''}{o.priceKind==='loyalty'?' (App/Bonus)':o.priceKind!=='standard'?' ('+o.priceKind+')':''}</span>)}{matches.length>available.length?' · +'+(matches.length-available.length)+' weitere':''}{pending?' · '+unverifiedOfferCount(pending,getLanguage()==='de'):''}</span>;
 }
 function GermanAutomaticSourceStatus({stores}:{stores:readonly string[]}){
  const state=useCentralGermanOffers();
