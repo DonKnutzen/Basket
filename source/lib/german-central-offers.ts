@@ -52,12 +52,28 @@ export function parseGermanOffer(raw:unknown):GermanOffer|null{
   x.sourceStatus==='checked-at-import'&&!germanSourceUrl(x.sourceUrl))return null;
  return x;
 }
-export function germanPack(raw:string):{amount:number;unit:'kg'|'l'|'piece'}|null{
- const m=raw.trim().match(/^(?:(\d+)\s*[x×]\s*)?(\d+(?:[.,]\d+)?)\s*(kg|g|ml|cl|l|Stück|St\.?)$/i);
+export type GermanPackUnit='kg'|'l'|'piece'|'bundle'|'tray'|'net'|'pack';
+export function germanPack(raw:string):{amount:number;unit:GermanPackUnit}|null{
+ const m=raw.trim().match(/^(?:(\d+)\s*[x×]\s*)?(\d+(?:[.,]\d+)?)\s*(kg|g|ml|cl|l|Stück|St\.?|Bund|Schale|Netz|Packung)$/i);
  if(!m)return null;
  let amount=Number(m[1]||1)*Number(m[2].replace(',','.'));const u=m[3].toLowerCase();
  if(u==='g'||u==='ml')amount/=1000;else if(u==='cl')amount/=100;
- return amount>0?{amount,unit:['g','kg'].includes(u)?'kg':['l','ml','cl'].includes(u)?'l':'piece'}:null;
+ const unit:GermanPackUnit=['g','kg'].includes(u)?'kg':['l','ml','cl'].includes(u)?'l':
+  u==='bund'?'bundle':u==='schale'?'tray':u==='netz'?'net':u==='packung'?'pack':'piece';
+ return amount>0?{amount,unit}:null;
+}
+/** Infer missing sales units solely when the printed name explicitly says
+ * "Stück", "kg-Preis" etc. Never guess typical supermarket package sizes. */
+export function inferGermanExplicitPack(name:string):string{
+ const text=name.replace(/\s+/g,' ').trim();
+ const kilo=/\b(?:kg[\s-]*Preis|Preis\s*(?:je|pro)\s*kg|je\s+kg)\b/i.test(text);
+ const piece=/\b(?:Stück|Stk\.?)\b/i.test(text);
+ if(kilo&&piece)return '';
+ if(kilo)return '1 kg';
+ const match=text.match(/(?:^|[,;]|\s)\s*(Stück|Stk\.?|Bund|Schale|Netz|Packung)\s*[.;]?\s*$/i);
+ if(!match)return '';
+ const u=match[1].toLowerCase().replace(/\.$/,'');
+ return '1 '+(u==='stk'?'Stück':u[0].toUpperCase()+u.slice(1));
 }
 const forbidden=/\b(?:butterkeks\w*|schokomilch|paprikachips|reispudding|tomatensosse|tomatensauce|kartoffelchips|kasecracker)\b/;
 function requestedDrinkVariant(text:string){return fold(text).match(/\b(?:zero|cherry|vanilla|light|diet|sugarfree|zuckerfrei|original)\b/)?.[0]||null}
