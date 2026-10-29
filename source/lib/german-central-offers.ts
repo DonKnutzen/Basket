@@ -121,3 +121,29 @@ export function compactGermanOfferMatches(matches:readonly GermanMatch[],maxOffe
  }
  return ordered.slice(0,maxOffers);
 }
+
+/**
+ * The same operator-reviewed offer can be available through both the
+ * published feed and the private preview during a refresh. Published facts
+ * always win; never render the same flyer tile twice.
+ *
+ * Distinct prices, loyalty conditions, product variants and pack sizes
+ * remain independent offers (e.g. PENNY 0,99 € App vs 1,19 € standard).
+ */
+/** Product titles already containing the printed brand must not repeat it. */
+export function germanOfferDisplayName(offer:Pick<GermanOffer,'brand'|'name'>):string{
+ const brand=fold(offer.brand),name=fold(offer.name);
+ return brand&&name.startsWith(brand+' ')?offer.name:[offer.brand,offer.name].filter(Boolean).join(' · ');
+}
+export function mergeGermanOfferSources(published:readonly GermanOffer[],preview:readonly GermanOffer[]):GermanOffer[]{
+ const ids=new Set<string>(),fingerprints=new Set<string>(),result:GermanOffer[]=[];
+ for(const o of [...published,...preview]){
+  const signature=[
+   o.retailer,o.importId,o.brand,o.name,o.variant||'',o.packSize,o.priceCents,
+   o.priceKind,o.minQuantity,o.conditions,o.validFrom,o.validUntil,
+  ].map(x=>fold(String(x))).join('|');
+  if(ids.has(o.id)||fingerprints.has(signature))continue;
+  ids.add(o.id);fingerprints.add(signature);result.push(o);
+ }
+ return result;
+}
