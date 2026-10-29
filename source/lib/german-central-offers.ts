@@ -21,7 +21,7 @@ export const GERMAN_STAPLE_CATEGORIES=['Milch','Joghurt','Käse'];
 const staples:Record<string,string>={milch:'Milch',milk:'Milch',joghurt:'Joghurt',jogurt:'Joghurt',yogurt:'Joghurt',kase:'Käse',kaese:'Käse',cheese:'Käse',tomate:'Tomaten'};
 const productCategoryWords:Record<string,string>={rispentomate:'Tomaten',rispentomaten:'Tomaten'};
 export function germanCategoryExact(name:string){const staple=staples[fold(name)];return staple?{de:staple}:catalogExactProduct(name)}
-export function suggestGermanCategory(name:string){return germanCategoryExact(name)||catalogProduct(name)||fold(name).split(' ').map(w=>staples[w]||productCategoryWords[w]).filter(Boolean).map(de=>({de}))[0]}
+export function suggestGermanCategory(name:string){return germanCategoryExact(name)||(/\b(?:cola|coke|pepsi)\b/.test(fold(name))?{de:'Cola'}:undefined)||(/\b(?:red bull|redbull)\b/.test(fold(name))?{de:'Energydrink'}:undefined)||catalogProduct(name)||fold(name).split(' ').map(w=>staples[w]||productCategoryWords[w]).filter(Boolean).map(de=>({de}))[0]}
 function categoryParent(name:string){if(['Naturjoghurt','Griechischer Joghurt','Fruchtjoghurt'].includes(name))return 'Joghurt';if(['Vollmilch','H-Milch','Fettarme Milch'].includes(name))return 'Milch';return name}
 export function germanDay(value:unknown):value is string{
  if(typeof value!=='string'||!/^20\d{2}-\d{2}-\d{2}$/.test(value))return false;
@@ -60,6 +60,7 @@ export function germanPack(raw:string):{amount:number;unit:'kg'|'l'|'piece'}|nul
  return amount>0?{amount,unit:['g','kg'].includes(u)?'kg':['l','ml','cl'].includes(u)?'l':'piece'}:null;
 }
 const forbidden=/\b(?:butterkeks\w*|schokomilch|paprikachips|reispudding|tomatensosse|tomatensauce|kartoffelchips|kasecracker)\b/;
+function requestedDrinkVariant(text:string){return fold(text).match(/\b(?:zero|cherry|vanilla|light|diet|sugarfree|zuckerfrei|original)\b/)?.[0]||null}
 const categoryExclusions:Record<string,RegExp>={
  Butter:/keks|teig|geback|kuchen|sauce|buttermilch/,
  Milch:/schoko|kakao|pudding|milchreis/,
@@ -81,11 +82,15 @@ export function matchCentralGermanOffers(name:string,offers:readonly GermanOffer
   if(offer.validFrom>today||offer.validUntil<today||stores.length&&!stores.includes(offer.retailer==='aldi-nord'?'aldi':offer.retailer))continue;
   const offerCategory=germanCategoryExact(offer.category);
   if(!offerCategory||offerCategory.de!==category.de&&!(staples[query]&&categoryParent(offerCategory.de)===category.de))continue;
+  if(['Cola','Energydrink'].includes(category.de)){
+   const variant=requestedDrinkVariant(name);
+   if(variant&&!fold([offer.brand,offer.name,offer.variant].filter(Boolean).join(' ')).split(' ').includes(variant))continue;
+  }
   if(forbidden.test(fold(offer.name))||categoryExclusions[category.de]?.test(fold(offer.name)))continue;
   if(exactCategory){result.push({offer,kind:'category'});continue}
   // A specific brand/variant query must be present word-for-word in evidence.
   // This deliberately avoids fuzzy matches for unrelated foods and brands.
-  const words=fold(queryWithoutSize).split(' ').filter(Boolean);
+  const words=fold(queryWithoutSize).replace(/\bcoke\b/g,'coca cola').replace(/\bredbull\b/g,'red bull').split(' ').filter(Boolean);
   const identity=' '+fold([offer.brand,offer.name,offer.variant,offer.category].filter(Boolean).join(' '))+' ';
   if(!words.every(w=>identity.includes(' '+w+' ')))continue;
   const pack=germanPack(offer.packSize);
