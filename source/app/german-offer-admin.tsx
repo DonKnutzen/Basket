@@ -54,7 +54,7 @@ export function GermanOfferAdmin(){
  const [from,setFrom]=useState(''),[until,setUntil]=useState(''),[source,setSource]=useState('');
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[progress,setProgress]=useState('');
  const [rights,setRights]=useState(''),[rightsChecked,setRightsChecked]=useState(false),[datesChecked,setDatesChecked]=useState(false);
- const [page,setPage]=useState(1),[filter,setFilter]=useState('pending');
+ const [page,setPage]=useState(1),[filter,setFilter]=useState('pending'),[search,setSearch]=useState('');
  const job=imports.find(i=>i.id===selected);
  const load=useCallback(async(id:string)=>{
   const db=browserAuth();const list=await db.from('german_offer_imports').select('*').order('created_at',{ascending:false}).limit(100);
@@ -66,13 +66,16 @@ export function GermanOfferAdmin(){
   for(let offset=0;;offset+=1000){const result=await db.from('german_offer_candidates').select('*').eq('import_id',id).order('page').order('id').range(offset,offset+999);if(result.error)throw result.error;candidates.push(...result.data);if(result.data.length<1000)break}
   setRows(candidates);
  },[]);
- function chooseImport(id:string){setSelected(id);setRightsChecked(false);setDatesChecked(false);setRights('');setPage(1);setFilter('pending');void load(id).catch(e=>setError(message(e)))}
+ function chooseImport(id:string){setSelected(id);setRightsChecked(false);setDatesChecked(false);setRights('');setPage(1);setFilter('pending');setSearch('');void load(id).catch(e=>setError(message(e)))}
  useEffect(()=>{let active=true;void browserAuth().from('german_offer_operators').select('user_id').then(({data})=>{if(active&&data?.length){setOperator(true);void load('').catch(e=>setError(message(e)))}});return()=>{active=false}},[load]);
  useEffect(()=>{if(!operator||!['queued','processing'].includes(job?.status||''))return;const timer=setInterval(()=>void load(selected).catch(e=>setError(message(e))),15000);return()=>clearInterval(timer)},[operator,selected,job?.status,load]);
  async function action(work:()=>Promise<void>){setBusy(true);setError('');setNotice('');try{await work()}catch(e){setError(message(e))}finally{setBusy(false);setProgress('')}}
  if(!operator)return null;
  const ready=rows.filter(r=>r.status==='verified').length,pending=rows.filter(r=>['review','unreadable'].includes(r.status)).length;
- const shown=rows.filter(r=>r.page===page&&(filter==='all'||filter==='pending'&&['review','unreadable'].includes(r.status)||r.status===filter));
+ const searchTerm=search.trim().toLocaleLowerCase('de');
+ const shown=rows.filter(r=>searchTerm?
+  [r.data.name,r.data.brand,r.data.variant||'',r.data.category].join(' ').toLocaleLowerCase('de').includes(searchTerm):
+  r.page===page&&(filter==='all'||filter==='pending'&&['review','unreadable'].includes(r.status)||r.status===filter));
  return <details className="german-offer-admin"><summary>Prospekte verwalten · Betreiberbereich</summary><div className="german-admin-body">
   <p>REWE Kiel 561204 / ALDI Nord / PENNY (regionale Ausgabe prüfen). Originale bleiben privat. Der zentrale Runner startet gewöhnlich innerhalb von 15 Minuten; GitHub kann geplante Läufe verzögern.</p>
   <div className="german-admin-form">
@@ -93,10 +96,12 @@ export function GermanOfferAdmin(){
   <label>Import<select value={selected} disabled={busy} onChange={e=>chooseImport(e.target.value)}><option value="">Import auswählen</option>{imports.map(i=><option key={i.id} value={i.id}>{germanStoreName(i.retailer)} · {i.valid_from} · {labels[i.status]}</option>)}</select></label>
   {job&&<>
    <div className="german-import-stats"><strong>{labels[job.status]}</strong><span>{pages.filter(p=>p.status==='done').length} / {job.total_pages??'?'} Seiten verarbeitet</span><span>{rows.length} Angebotsbereiche erkannt</span><span>{ready} bestätigt · {pending} offen · {rows.filter(r=>r.status==='unreadable').length} nicht eindeutig</span></div>
+    {job.status==='review'&&ready>0&&<p role="status">{ready} bestätigte Angebote sind derzeit nur in der privaten Betreibervorschau sichtbar. Erst nach dokumentierter Freigabe und Veröffentlichung erscheinen sie auch bei anderen Haushalten im Warenkorb.</p>}
    {job.error&&<p className="flyer-error">{job.error}</p>}
    {pages.filter(p=>p.status==='failed').map(p=><p key={p.page} className="flyer-error">Seite {p.page}: {p.error}</p>)}
    {job.status==='failed'&&<button type="button" disabled={busy} onClick={()=>void action(async()=>{await rpc('offer_import_queue',{target:job.id});await load(selected)})}>Fehlgeschlagene Seiten erneut verarbeiten</button>}
    {['review','published'].includes(job.status)&&<>
+    <label>Produkt oder Marke auf allen Prospektseiten suchen<input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="z. B. Coca-Cola, Butter, Kaffee"/></label>
     <div className="german-admin-form"><label>Seite<select value={page} onChange={e=>setPage(Number(e.target.value))}>{pages.map(p=><option key={p.page} value={p.page}>Seite {p.page} · {rows.filter(r=>r.page===p.page).length} Bereiche</option>)}</select></label><label>Anzeige<select value={filter} onChange={e=>setFilter(e.target.value)}><option value="pending">Prüfung erforderlich</option><option value="verified">Bestätigt</option><option value="all">Alle</option><option value="rejected">Ausgeschlossen</option></select></label></div>
     <details><summary>Originalseite ansehen · fehlende Produkte ergänzen</summary>{pages.find(p=>p.page===page)?.image_key&&<Evidence path={pages.find(p=>p.page===page)!.image_key} label={`Prospektseite ${page}`}/>}</details>
     {pages.find(p=>p.page===page)?.date_hints?.map((h,i)=><p key={i}>Gedruckter Seitenzeitraum: {h.from} – {h.until}{h.yearFromImport?' · Jahr aus Import übernommen; bestätigen.':''}</p>)}
