@@ -2,17 +2,12 @@
 import React,{useState} from 'react';
 import {getLanguage} from '../lib/i18n';
 import {germanStoreName} from '../lib/german-central-offers';
-import {matchGermanDrafts,searchGermanDraftCatalogue,type GermanDraft} from '../lib/german-offer-drafts';
+import {matchGermanDrafts,searchGermanDraftCatalogue,unverifiedOfferCount,type GermanDraft} from '../lib/german-offer-drafts';
 import {useCentralGermanOffers} from '../lib/german-offer-store';
 import {OfferSourceLink} from './offer-source-link';
 
 const eur=(n:number)=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(n/100);
 
-/** Human readable count; a candidate stays unverified and is never a confirmed price. */
-export function unverifiedOfferCount(count:number,de:boolean):string{
- return de?(count===1?'1 ungeprüftes Angebot':count+' ungeprüfte Angebote'):
-  (count===1?'1 unverified offer':count+' unverified offers');
-}
 function DraftRow({draft:d}:{draft:GermanDraft}){
  const de=getLanguage()==='de',unreadable=d.status==='unreadable';
  const identity=d.brand&&d.name.toLocaleLowerCase('de').startsWith(d.brand.toLocaleLowerCase('de'))?d.name:
