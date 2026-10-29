@@ -5,11 +5,11 @@ import {berlinDay} from './rewe-official-weekly';
 export type GermanProduct={name:string;brand:string;variant?:string;category:string;packSize:string;
  priceCents:number;currency:'EUR';basePrice?:string;regularPrice?:string;conditions:string;
  priceKind:'standard'|'multi'|'from'|'loyalty'|'tiered';minQuantity:number;validFrom:string;validUntil:string};
-export type GermanOffer=GermanProduct&{id:string;importId:string;retailer:'rewe'|'aldi-nord';region:'Kiel';marketId:'561204'|null;
+export type GermanOffer=GermanProduct&{id:string;importId:string;retailer:'rewe'|'aldi-nord'|'penny';region:'Kiel';marketId:'561204'|null;
  page:number;bbox:number[];sourceUrl:string;sourceStatus:'checked-at-import'|'unavailable';sourceCheckedAt:string|null;
  sourceFilename:string;validationStatus:'verified'};
 export type GermanMatch={offer:GermanOffer;kind:'exact'|'category'|'alternative'};
-export const germanStoreName=(s:string)=>s==='rewe'?'REWE · Holtenauer Str. 69–71':'ALDI Nord · Region Kiel';
+export const germanStoreName=(s:string)=>s==='rewe'?'REWE · Holtenauer Str. 69–71':s==='aldi-nord'?'ALDI Nord · Region Kiel':s==='penny'?'PENNY · Region Kiel':'Unbekannter Händler';
 export function untilBerlinMidnight(now=new Date()){
  const today=berlinDay(now),nextUtc=Date.parse(today+'T00:00:00Z')+86400000;
  let low=nextUtc-4*3600000,high=nextUtc+3600000;
@@ -30,14 +30,16 @@ export function germanDay(value:unknown):value is string{
 /** No generated product URL or untested PDF page fragment. */
 export function germanSourceUrl(raw:string){
  try{const u=new URL(raw);return u.protocol==='https:'&&!u.username&&!u.password&&!u.hash&&(!u.port||u.port==='443')&&
- ['view.publitas.com','magazine.aldi-nord.de','www.aldi-nord.de','www.rewe.de'].includes(u.hostname)&&
- /(?:\.pdf|\/GetPDF\.ashx)$/i.test(u.pathname)?u.href:null}catch{return null}
+ (
+ (u.hostname==='penny-publish.blaetterkatalog.de'&&/^\/frontend\/catalogs\/\d{1,12}\/\d{1,3}\/pdf\/complete\.pdf$/i.test(u.pathname)&&!u.search)
+ ||(['view.publitas.com','magazine.aldi-nord.de','www.aldi-nord.de','www.rewe.de'].includes(u.hostname)&&/(?:\.pdf|\/GetPDF\.ashx)$/i.test(u.pathname))
+ )?u.href:null}catch{return null}
 }
 export function parseGermanOffer(raw:unknown):GermanOffer|null{
  if(!raw||typeof raw!=='object')return null;
  const x=raw as GermanOffer;
  if(x.validationStatus!=='verified'||x.currency!=='EUR'||x.region!=='Kiel'||
-  !['rewe','aldi-nord'].includes(x.retailer)||x.retailer==='rewe'&&x.marketId!=='561204'||x.retailer==='aldi-nord'&&x.marketId!==null||
+  !['rewe','aldi-nord','penny'].includes(x.retailer)||x.retailer==='rewe'&&x.marketId!=='561204'||(x.retailer==='aldi-nord'||x.retailer==='penny')&&x.marketId!==null||
   typeof x.id!=='string'||typeof x.importId!=='string'||typeof x.name!=='string'||x.name.length<2||x.name.length>250||
   typeof x.brand!=='string'||typeof x.category!=='string'||!germanCategoryExact(x.category)||typeof x.packSize!=='string'||
   !Number.isInteger(x.priceCents)||x.priceCents<=0||x.priceCents>250000||
@@ -76,7 +78,7 @@ export function matchCentralGermanOffers(name:string,offers:readonly GermanOffer
  const requestedPack=size?germanPack(size):null;
  const today=berlinDay(now);const result:GermanMatch[]=[];
  for(const offer of offers){
-  if(offer.validFrom>today||offer.validUntil<today||stores.length&&!stores.includes(offer.retailer==='aldi-nord'?'aldi':'rewe'))continue;
+  if(offer.validFrom>today||offer.validUntil<today||stores.length&&!stores.includes(offer.retailer==='aldi-nord'?'aldi':offer.retailer))continue;
   const offerCategory=germanCategoryExact(offer.category);
   if(!offerCategory||offerCategory.de!==category.de&&!(staples[query]&&categoryParent(offerCategory.de)===category.de))continue;
   if(forbidden.test(fold(offer.name))||categoryExclusions[category.de]?.test(fold(offer.name)))continue;
