@@ -1,10 +1,20 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {parseGermanOffer,matchCentralGermanOffers,germanPack,germanSourceUrl,untilBerlinMidnight,type GermanOffer} from '../lib/german-central-offers';
+import {parseGermanOffer,matchCentralGermanOffers,germanPack,germanSourceUrl,untilBerlinMidnight,suggestGermanCategory,type GermanOffer} from '../lib/german-central-offers';
 const now=new Date('2026-10-28T12:00:00Z');
 const offer:GermanOffer={id:'one',importId:'import',name:'Original Irische Butter',brand:'Kerrygold',variant:'',category:'Butter',packSize:'250 g',
  priceCents:159,currency:'EUR',conditions:'',priceKind:'standard',minQuantity:1,validFrom:'2026-10-26',validUntil:'2026-10-31',
  retailer:'rewe',region:'Kiel',marketId:'561204',page:13,bbox:[212,0,476,249],sourceUrl:'https://view.publitas.com/test.pdf',sourceStatus:'checked-at-import',sourceCheckedAt:'2026-10-28T12:00:00Z',sourceFilename:'flyer.pdf',validationStatus:'verified'};
+test('real REWE vine tomatoes match German singular and plural without losing the advertised variety',()=>{
+ const tomatoes={...offer,id:'tomatoes',brand:'',name:'Rispentomaten',category:'Tomaten',packSize:'1 kg',priceCents:189};
+ assert.equal(suggestGermanCategory('Niederlande: Rispentomaten Kl. I,')?.de,'Tomaten');
+ for(const query of ['Tomate','Tomaten','Rispentomaten']){
+  const matches=matchCentralGermanOffers(query,[tomatoes],[],now);
+  assert.equal(matches.length,1);assert.equal(matches[0].offer.name,'Rispentomaten');assert.equal(matches[0].offer.priceCents,189);
+ }
+ assert.equal(matchCentralGermanOffers('Tomate',[{...tomatoes,name:'Tomatensauce'}],[],now).length,0);
+ assert.equal(matchCentralGermanOffers('Tomaten',[tomatoes],[],new Date('2026-11-01T12:00:00Z')).length,0);
+});
 test('central feed validates verified provenance, market, cents, conditions, dates and bounding boxes',()=>{
  assert.ok(parseGermanOffer(offer));
  for(const change of [{validationStatus:'review'},{currency:'CAD'},{marketId:'other'},{region:'Hamburg'},{priceCents:1.59},{validUntil:'2026-02-30'},{category:'unknown'},{bbox:[0,0,Infinity,2]},{sourceUrl:'https://evil.example/pdf'},{priceKind:'loyalty',conditions:''},{priceKind:'multi',minQuantity:1,conditions:'2 für 3 €'}])assert.equal(parseGermanOffer({...offer,...change}),null);

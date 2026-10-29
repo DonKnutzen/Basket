@@ -18,9 +18,10 @@ export function untilBerlinMidnight(now=new Date()){
 }
 const fold=(s:string)=>s.toLocaleLowerCase('de').replace(/ß/g,'ss').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
 export const GERMAN_STAPLE_CATEGORIES=['Milch','Joghurt','Käse'];
-const staples:Record<string,string>={milch:'Milch',milk:'Milch',joghurt:'Joghurt',jogurt:'Joghurt',yogurt:'Joghurt',kase:'Käse',kaese:'Käse',cheese:'Käse'};
+const staples:Record<string,string>={milch:'Milch',milk:'Milch',joghurt:'Joghurt',jogurt:'Joghurt',yogurt:'Joghurt',kase:'Käse',kaese:'Käse',cheese:'Käse',tomate:'Tomaten'};
+const productCategoryWords:Record<string,string>={rispentomate:'Tomaten',rispentomaten:'Tomaten'};
 export function germanCategoryExact(name:string){const staple=staples[fold(name)];return staple?{de:staple}:catalogExactProduct(name)}
-export function suggestGermanCategory(name:string){return germanCategoryExact(name)||catalogProduct(name)||fold(name).split(' ').map(w=>staples[w]).filter(Boolean).map(de=>({de}))[0]}
+export function suggestGermanCategory(name:string){return germanCategoryExact(name)||catalogProduct(name)||fold(name).split(' ').map(w=>staples[w]||productCategoryWords[w]).filter(Boolean).map(de=>({de}))[0]}
 function categoryParent(name:string){if(['Naturjoghurt','Griechischer Joghurt','Fruchtjoghurt'].includes(name))return 'Joghurt';if(['Vollmilch','H-Milch','Fettarme Milch'].includes(name))return 'Milch';return name}
 export function germanDay(value:unknown):value is string{
  if(typeof value!=='string'||!/^20\d{2}-\d{2}-\d{2}$/.test(value))return false;
