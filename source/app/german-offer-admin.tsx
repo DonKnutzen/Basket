@@ -20,7 +20,7 @@ function Evidence({path,label}:{path:string;label:string}){
  return url?<a href={url} target="_blank" rel="noopener noreferrer" title="Original vergrößern"><img src={url} alt={label} className="german-evidence"/></a>:<small role="status">{error||'Originalausschnitt wird geladen …'}</small>;
 }
 function ReviewRow({row,busy,onSave}:{row:Candidate;busy:boolean;onSave:(fields:GermanProduct,decision:string)=>Promise<void>}){
- const [fields,setFields]=useState({...row.data,category:row.data.category||suggestGermanCategory(row.data.name)?.de||''}),[price,setPrice]=useState((row.data.priceCents/100).toFixed(2).replace('.',','));
+ const [fields,setFields]=useState({...row.data,category:row.data.category||suggestGermanCategory([row.data.brand,row.data.name].filter(Boolean).join(' '))?.de||''}),[price,setPrice]=useState((row.data.priceCents/100).toFixed(2).replace('.',','));
  const edit=(key:keyof GermanProduct,value:string|number)=>setFields(x=>({...x,[key]:value}));
  const save=(decision:string)=>{
   const parsed=/^\d{1,4}(?:[.,]\d{1,2})?$/.test(price)?Math.round(Number(price.replace(',','.'))*100):0;
