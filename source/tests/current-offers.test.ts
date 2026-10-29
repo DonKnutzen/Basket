@@ -24,7 +24,7 @@ test('no lookup outside approved regions or with unsupported selection',async()=
 test('region settings retain only selected local retailers',()=>{
  assert.deepEqual(restoreOfferRegion('bad json'),DEFAULT_OFFER_REGION);
  assert.deepEqual(restoreOfferRegion(JSON.stringify({country:'DE',province:'QC',stores:['rewe','walmart','rewe'],postalCode:'10115'})),
-  {country:'DE',province:'',postalCode:'10115',stores:['rewe'],city:'Kiel'});
+  {country:'DE',province:'',postalCode:'10115',stores:['rewe'],city:'Kiel',retailerSelectionVersion:3});
 });
 test('short bilingual names map to a single, on-demand product search',()=>{
  assert.equal(offerSearchTerm('Milk'),'lait');
