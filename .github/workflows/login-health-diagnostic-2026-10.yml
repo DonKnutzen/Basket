@@ -1,0 +1,41 @@
+name: One-off Basket login reachability diagnosis
+on:
+  push:
+    branches: [diagnostic/login-health-2026-10-29]
+    paths: [.github/workflows/login-health-diagnostic-2026-10.yml]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Probe public site, auth service and Basket backend (no credentials)
+        shell: bash
+        run: |
+          python - <<'PY'
+          import urllib.request, urllib.error, time, json
+          targets={
+            'GitHub Pages HTML':'https://donknutzen.github.io/Basket/',
+            'GitHub Pages JS':'https://donknutzen.github.io/Basket/index.html',
+            'GitHub Pages SW':'https://donknutzen.github.io/Basket/sw.js',
+            'Basket API auth config':'https://basket-together.gnoid-knutzen.chatgpt.site/api/account-config',
+            'Basket API basket unauth':'https://basket-together.gnoid-knutzen.chatgpt.site/api/basket',
+            'Supabase auth health':'https://wrmlkpuhyqxkehbvzoxx.supabase.co/auth/v1/health',
+            'Supabase auth settings':'https://wrmlkpuhyqxkehbvzoxx.supabase.co/auth/v1/settings',
+          }
+          for name,url in targets.items():
+            for attempt in range(2):
+              try:
+                req=urllib.request.Request(url,headers={'Origin':'https://donknutzen.github.io','User-Agent':'BasketLoginHealthCheck/1.0','Accept':'application/json,text/html,*/*','apikey':'sb_publishable_5hx44EPcvsxp_wJ8TK5vrw_vkI-ee26'})
+                t=time.monotonic()
+                with urllib.request.urlopen(req,timeout=12) as r:
+                  body=r.read(700).decode('utf-8','replace')
+                  print(json.dumps({'target':name,'status':r.status,'ms':round((time.monotonic()-t)*1000),'type':r.headers.get('content-type'),'cors':r.headers.get('access-control-allow-origin'),'body_head':body[:170] if ('config' in name or 'health' in name) else ''}))
+                break
+              except urllib.error.HTTPError as e:
+                print(json.dumps({'target':name,'status':e.code,'type':e.headers.get('content-type'),'cors':e.headers.get('access-control-allow-origin'),'body_head':e.read(200).decode('utf-8','replace') if ('config' in name or 'health' in name or 'unauth' in name) else ''}))
+                break
+              except Exception as e:
+                print(json.dumps({'target':name,'error':type(e).__name__,'details':str(e)[:160],'attempt':attempt+1}))
+          PY
