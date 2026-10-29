@@ -1,17 +1,17 @@
 /** Operator-only diagnostic records. These are never verified sale offers. */
 import {berlinDay} from './rewe-official-weekly';
-import {germanPack,suggestGermanCategory,germanSourceUrl,germanDay} from './german-central-offers';
+import {germanPack,inferGermanExplicitPack,suggestGermanCategory,germanSourceUrl,germanDay} from './german-central-offers';
 
 type Retailer='rewe'|'aldi-nord'|'penny';
 export type GermanDraft={
  id:string;importId:string;retailer:Retailer;page:number;sourceFilename:string;sourceUrl:string;
  name:string;brand:string;variant:string;packSize:string;priceCents:number;
  priceKind:string;conditions:string;categoryHint:string;validFrom:string;validUntil:string;
- status:'review'|'unreadable';issues:string[];priceUsable:boolean;
+ status:'review'|'unreadable';issues:string[];priceUsable:boolean;unitInferred:boolean;
 };
 type Import={id:string;retailer:string;region:string;filename:string;source_url:string;valid_from:string;valid_until:string};
 const fold=(s:string)=>s.toLocaleLowerCase('de').replace(/ß/g,'ss').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
-const uncertainPrice=/Mehrere Verkaufspreise|Keine eindeutige Kachelgrenze|Grundpreis passt|Mehrere Mengen|Bedingter Preis|Keine eindeutige Packungsgröße|Niedrige OCR|OCR:|Preiszuordnung bestätigen/i;
+const uncertainPrice=/Mehrere Verkaufspreise|Keine eindeutige Kachelgrenze|Grundpreis passt|Mehrere Mengen|Bedingter Preis|Keine eindeutige Packungsgröße|Niedrige OCR|OCR:|Preiszuordnung bestätigen|Mehrere Marken|Preisspalte nur|Preisraster/i;
 const unsuitable=/\b(?:butterkeks\w*|butterkuchen|buttermilch|schokomilch|paprikachips|reispudding|tomatensosse|tomatensauce|kartoffelchips|kasecracker)\b/i;
 const beverageExclusion=/\b(?:mentos|kaudragees|bonbon|kaugummi|fruchtgummi|gummibarchen|lutscher|cola geschmack|cola aromatisiert)\b/;
 const asText=(x:unknown,max:number)=>typeof x==='string'?x.trim().slice(0,max):'';
@@ -29,8 +29,13 @@ export function parseGermanDraft(raw:unknown,job:Import):GermanDraft|null{
  const name=rawName.length>=3?rawName:`Unlesbarer Bereich auf Seite ${x.page}`;
  const cents=Number(d.priceCents);
  const priceCents=Number.isInteger(cents)&&cents>0&&cents<250000?cents:0;
- const issues=Array.isArray(x.issues)?x.issues.filter(v=>typeof v==='string').slice(0,20) as string[]:[];
- const packSize=asText(d.packSize,150),priceKind=asText(d.priceKind,20);
+ const rawIssues=Array.isArray(x.issues)?x.issues.filter(v=>typeof v==='string').slice(0,20) as string[]:[];
+ const printedPack=asText(d.packSize,150),priceKind=asText(d.priceKind,20);
+ const inferredPack=!printedPack?inferGermanExplicitPack(rawName):'';
+ const packSize=printedPack||inferredPack,unitInferred=!!inferredPack;
+ const issues=unitInferred?
+  rawIssues.map(issue=>issue==='Keine eindeutige Packungsgröße erkannt'?'Einheit aus Produkttext erschlossen; Original prüfen':issue):
+  rawIssues;
  const validFrom=date(d.validFrom)||job.valid_from,validUntil=date(d.validUntil)||job.valid_until;
  if(!germanDay(validFrom)||!germanDay(validUntil)||validFrom>validUntil)return null;
  const sourceUrl=germanSourceUrl(job.source_url)||'';
@@ -39,7 +44,9 @@ export function parseGermanDraft(raw:unknown,job:Import):GermanDraft|null{
   id,importId:job.id,retailer:job.retailer as Retailer,page:x.page as number,sourceFilename:job.filename,
   sourceUrl,name,brand,variant:asText(d.variant,100),packSize,priceCents,priceKind,
   conditions:asText(d.conditions,500),categoryHint,validFrom,validUntil,
-  status:x.status,issues,
+  status:x.status,issues,unitInferred,
+  // This is a *tentative* price from the review feed, never a verified offer.
+  // A missing pack may only be inferred from words actually in the PDF.
   priceUsable:x.status==='review'&&rawName.length>=3&&priceCents>0&&!!germanPack(packSize)&&priceKind==='standard'&&!issues.some(v=>uncertainPrice.test(v)),
  };
 }
