@@ -142,7 +142,7 @@ def price_anchors(boxes):
         # a generic decimal regex, but the first is a bottle size, not a
         # price. Preserve separately printed sale prices in the same span.
         size_ranges=[(match.start(),match.end()) for match in SIZE.finditer(b.text)]
-        date_ranges=[(match.start(),match.end()) for match in re.finditer(r'(?<!\\d)\\d{1,2}\\.\\d{2}\\.(?:\\d{2,4})?(?!\\d)',b.text)]
+        date_ranges=[(match.start(),match.end()) for match in re.finditer(r'(?<!\d)\d{1,2}\.\d{2}\.(?:\d{2,4})?(?!\d)',b.text)]
         for m in PRICE.finditer(b.text):
             if any(lo<=m.start() and m.end()<=hi for lo,hi in size_ranges+date_ranges):continue
             if b.text[m.end():].lstrip().startswith('%'):continue
