@@ -5,10 +5,10 @@ import {createClient} from '@supabase/supabase-js';
 import {SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY} from './supabase-config';
 import {germanDay,germanSourceUrl} from './german-central-offers';
 export const FLYER_CHUNK_BYTES=8*1024*1024;
-export async function uploadGermanFlyer(file:File,meta:{retailer:'rewe'|'aldi-nord';validFrom:string;validUntil:string;sourceUrl:string},progress:(message:string)=>void){
+export async function uploadGermanFlyer(file:File,meta:{retailer:'rewe'|'aldi-nord'|'penny';validFrom:string;validUntil:string;sourceUrl:string},progress:(message:string)=>void){
  if(!file.name.toLowerCase().endsWith('.pdf')||file.size<5||file.size>250*1024*1024)throw Error('PDF mit maximal 250 MiB auswählen.');
  if(!germanDay(meta.validFrom)||!germanDay(meta.validUntil)||meta.validUntil<meta.validFrom)throw Error('Gültigkeitszeitraum aus dem Prospekt eingeben.');
- if(meta.sourceUrl&&!germanSourceUrl(meta.sourceUrl))throw Error('Eine offizielle REWE-/ALDI-Prospekt-URL eingeben oder das Feld leer lassen.');
+ if(meta.sourceUrl&&!germanSourceUrl(meta.sourceUrl))throw Error('Eine offizielle REWE-/ALDI-/PENNY-Prospekt-URL eingeben oder das Feld leer lassen.');
  if(new TextDecoder().decode(await file.slice(0,5).arrayBuffer())!=='%PDF-')throw Error('Die Datei ist kein PDF.');
  const digest=sha256.create();
  // No full-file arrayBuffer(): the live memory bound is one 8 MiB chunk.
