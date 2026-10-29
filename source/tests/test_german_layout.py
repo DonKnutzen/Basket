@@ -15,6 +15,23 @@ class LayoutTests(unittest.TestCase):
     def test_old_price_bonus_credit_and_deposit_are_not_sale_prices(self):
         found=price_anchors([Box('2,29',(0,0,50,15),12,True),Box('0,10 €',(100,0,145,15),14),Box('Bonus',(100,15,140,26),11),Box('zzgl. 0.25 Pfand',(0,60,80,72),9)])
         self.assertEqual([x['role'] for x in found],['regular','bonus-credit','deposit'])
+    def test_penny_bottle_size_date_and_percentage_are_not_prices(self):
+        # In PENNY leaflets "1,25 l" is the pack size; it must not become
+        # a third sale price next to the regular and app-only badges.
+        spans=[
+            Box('1,25 l',(10,10,50,24),12),
+            Box('1,19 €',(10,40,55,57),18),
+            Box('0,99 €',(10,70,55,87),18),
+            Box('gültig 26.10.2026',(10,100,130,115),12),
+            Box('20,00 %',(10,130,70,145),12),
+            Box('zzgl. 0,25 € Pfand',(10,160,125,175),12),
+        ]
+        found=price_anchors(spans)
+        self.assertEqual([(x['cents'],x['role']) for x in found],[
+            (119,'selling'),(99,'selling'),(25,'deposit')])
+        mixed=price_anchors([Box('1,25 l Flasche, 1,19 €',(10,20,180,38),15)])
+        self.assertEqual([x['cents'] for x in mixed],[119])
+
     def test_base_prices_are_separate(self):
         self.assertEqual(price_anchors([Box('(1 kg = 7.16)',(0,0,80,15),10)]),[])
         self.assertTrue(unit_check(179,'250 g','(1 kg = 7.16)'))
