@@ -160,6 +160,22 @@ def price_anchors(boxes):
             used.update((i,j))
     return result
 
+def price_column_cells(rect, selling):
+    """Split a large printed panel only when its price badges form clear columns.
+
+    Different prices inside one column remain together for human review (for
+    example PENNY's standard and app prices). A nearby product's price must
+    never be assigned by nearest-neighbour guessing.
+    """
+    positions=sorted((a['rect'][0]+a['rect'][2])/2 for a in selling if contains(rect,a['rect']))
+    if len(positions)<4:return []
+    gaps=[(right-left,index) for index,(left,right) in enumerate(zip(positions,positions[1:]))]
+    gap,index=max(gaps,default=(0,0))
+    if gap<75 or index<1 or len(positions)-index-1<2:return []
+    cut=(positions[index]+positions[index+1])/2
+    if cut-rect[0]<75 or rect[2]-cut<75:return []
+    return [(rect[0],rect[1],cut,rect[3]),(cut,rect[1],rect[2],rect[3])]
+
 def printed_date_ranges(text,year):
     """Propose printed German ranges. A missing year still needs confirmation."""
     weekday=r'(?:(?:Mo|Di|Mi|Do|Fr|Sa|So)\.?\s*)?'
@@ -230,6 +246,9 @@ def analyze_page(page, valid_from, valid_until):
                 cell=next((cell for cell in grid if contains(cell,anchor['rect'])),None)
                 if cell:
                     r=(max(r[0],cell[0]),max(r[1],cell[1]),min(r[2],cell[2]),min(r[3],cell[3]))
+                else:
+                    column=next((cell for cell in price_column_cells(r,selling) if contains(cell,anchor['rect'])),None)
+                    if column:r=column
         else:
             r=next((r for r in grid if contains(r,anchor['rect'])),None)
             if r is None:r=next((r for r in tiles if contains(r,anchor['rect'])),page_rect)
@@ -244,6 +263,7 @@ def analyze_page(page, valid_from, valid_until):
         prices=region['anchors']
         issues=[]
         if not region['segmented']:issues.append('Keine eindeutige Kachelgrenze; Originalbereich prüfen')
+        if rect not in panels and any(contains(panel,rect) for panel in panels):issues.append('Preisspalte nur als Prüfbereich getrennt; Produkt und Preis am Original bestätigen')
         if rect in grid:issues.append('Kachelgrenze aus wiederholtem Preisraster vorgeschlagen')
         if ocr:issues.append('OCR: Buchstaben, Mengen und Preisziffern prüfen')
         if ocr_uncertain:issues.append('Niedrige OCR-Zuverlässigkeit')
