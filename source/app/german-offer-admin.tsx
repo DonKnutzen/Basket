@@ -111,6 +111,23 @@ export function GermanOfferAdmin(){
     {!shown.length&&<p>Keine Einträge in dieser Ansicht. Die Originalseite kann auf fehlende Produkte geprüft werden.</p>}
    </>}
    {['review','published'].includes(job.status)&&<div className="german-publish">
+    {job.retailer==='penny'?<>
+     <p><strong>PENNY-Testbetrieb:</strong> Nur manuell überprüfte Preisangaben werden in Basket sichtbar. PDFs, OCR-Text und Originalausschnitte bleiben privat. Diese Freigabe behauptet keine Nutzungsrechte.</p>
+     <label className="german-checkbox"><input type="checkbox" checked={datesChecked} onChange={e=>setDatesChecked(e.target.checked)}/>Zeitraum {job.valid_from} – {job.valid_until} und eventuelle abweichende Aktionsdaten mit dem Original abgeglichen.</label>
+     <button type="button" disabled={busy||!ready||!datesChecked} onClick={()=>void action(async()=>{
+      await rpc('offer_import_confirm_test_dates',{target:job.id});
+      const fresh=await browserAuth().from('german_offer_imports').select('revision').eq('id',job.id).single();
+      if(fresh.error)throw fresh.error;
+      const count=await rpc('offer_import_publish_test',{target:job.id,expected_revision:fresh.data.revision});
+      const current=await browserAuth().from('german_published_offers').select('id',{count:'exact',head:true}).eq('import_id',job.id);
+      if(current.error)throw current.error;
+      const today=berlinDay(),expected=rows.filter(r=>r.status==='verified'&&r.data.validFrom<=today&&r.data.validUntil>=today).length;
+      if(current.count!==expected)throw Error('Gespeichert, aber PENNY-Testanzeige nicht vollständig bestätigt. Bitte neu laden.');
+      await refreshGermanOffers();await load(selected);
+      setNotice(`${count} überprüfte PENNY-Angebote veröffentlicht, ${current.count} davon im Datenzugriff bestätigt.`);
+     })}>{ready} überprüfte PENNY-Angebote für den Test anzeigen</button>
+     <small>Ungeprüfte oder unlesbare Bereiche bleiben unveröffentlicht. Für jede neue PENNY-Woche gelten dieselben Datums- und Preisprüfungen.</small>
+    </>:<>
     <label className="german-checkbox"><input type="checkbox" checked={datesChecked} onChange={e=>setDatesChecked(e.target.checked)}/>Zeitraum {job.valid_from} – {job.valid_until} und abweichende Aktionsdaten mit dem Prospekt abgeglichen.</label>
     <label className="german-checkbox"><input type="checkbox" checked={rightsChecked} onChange={e=>setRightsChecked(e.target.checked)}/>Die Nutzung und Veröffentlichung der bestätigten Angebotsdaten ist freigegeben.</label>
     <label>Grundlage / Quellenfreigabe<textarea value={rights} maxLength={2000} onChange={e=>setRights(e.target.value)} placeholder="Berechtigung oder Freigabe dokumentieren"/></label>
@@ -125,6 +142,8 @@ export function GermanOfferAdmin(){
      await refreshGermanOffers();await load(selected);setNotice(`${count} Angebote zentral veröffentlicht. ${current.count} davon heute über den Nutzerzugriff bestätigt.`);
     })}>{ready} bestätigte Angebote veröffentlichen</button>
     <small>Offene und ausgeschlossene Einträge bleiben unveröffentlicht. Alle PDF-Seiten müssen erfolgreich verarbeitet sein.</small>
+
+    </>}
    </div>}
   </>}
  </div></details>;
