@@ -4,12 +4,13 @@ import {germanSourceUrl,germanStoreName,matchCentralGermanOffers} from '../lib/g
 import {useCentralGermanOffers,useGermanOfferDisplay} from '../lib/german-offer-store';
 import {getLanguage} from '../lib/i18n';
 import {OfferSourceLink} from './offer-source-link';
+import {GermanDraftMatches} from './german-draft-catalogue';
 const eur=(n:number)=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(n/100);
 export function CentralGermanOfferMatches({name,stores}:{name:string;stores:readonly string[]}){
  const state=useCentralGermanOffers(),[all,setAll]=useState(false),[enabled]=useGermanOfferDisplay(),de=getLanguage()==='de';
  if(!enabled)return null;
  const matches=matchCentralGermanOffers(name,[...state.offers,...state.previewOffers],stores);
- if(!matches.length)return state.error?<small className="central-offer-status">{de?state.error:'Central offers are currently unavailable.'}</small>:null;
+ if(!matches.length)return <>{state.error&&<small className="central-offer-status">{de?state.error:'Central offers are currently unavailable.'}</small>}<GermanDraftMatches name={name} stores={stores}/></>;
  return <div className="central-offer-results" aria-live="polite">
   {(all?matches:matches.slice(0,3)).map(({offer:o,kind})=><details className={'central-offer '+o.retailer} key={o.id}>
    <summary>
@@ -28,6 +29,7 @@ export function CentralGermanOfferMatches({name,stores}:{name:string;stores:read
    </div>
   </details>)}
   {matches.length>3&&<button type="button" className="text-link" onClick={()=>setAll(!all)}>{all?(de?'Weniger anzeigen':'Show fewer'):(de?`${matches.length-3} weitere Angebote`:`${matches.length-3} more offers`)}</button>}
+  <GermanDraftMatches name={name} stores={stores}/>
  </div>;
 }
 
