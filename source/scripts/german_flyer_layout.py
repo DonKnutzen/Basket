@@ -60,6 +60,7 @@ def inferred_unit_pack(name):
     """
     text=re.sub(r'\s+',' ',name).strip()
     if not text:return ''
+    if re.search(r'\bStück\s+für\s+Stück\b',text,re.I):return ''
     kilo=bool(re.search(r'\b(?:kg[\s-]*Preis|Preis\s*(?:je|pro)\s*kg|je\s+kg)\b',text,re.I))
     piece=bool(re.search(r'\b(?:Stück|Stk\.?)\b',text,re.I))
     if kilo and piece:return ''
