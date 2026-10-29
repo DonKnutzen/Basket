@@ -74,10 +74,10 @@ def source_available(url):
         except (ValueError,urllib.error.URLError,TimeoutError):pass
     return False
 
-def analyze(page, start, until, vision=None):
+def analyze(page, start, until, vision=None, heartbeat=None):
     # An enabled vision failure is a failed page, never an unnoticed fallback
     # to the very geometry guesses that image recognition is meant to replace.
-    return analyze_visual_page(page, start, until, vision) if vision else analyze_page(page, start, until)
+    return analyze_visual_page(page, start, until, vision, heartbeat) if vision else analyze_page(page, start, until)
 
 
 def local(pdf_path,out,valid_from,valid_until,vision=None):
@@ -114,7 +114,14 @@ def process(api,job,vision=None):
         if size!=job['byte_size'] or digest.hexdigest()!=job['sha256']:raise ValueError('PDF checksum mismatch; upload incomplete')
         with fitz.open(path) as pdf:
             if pdf.needs_pass or not 1<=len(pdf)<=1000:raise ValueError('Encrypted or unsupported PDF page count')
-            metadata=api.call('metadata',job,{'totalPages':len(pdf),'sourceAvailable':source_available(job['source_url'])})
+            availability=source_available(job['source_url'])
+            metadata=api.call('metadata',job,{'totalPages':len(pdf),'sourceAvailable':availability})
+            next_renewal=time.monotonic()+240
+            def renew_lease():
+                nonlocal next_renewal
+                if time.monotonic()>=next_renewal:
+                    api.call('metadata',job,{'totalPages':len(pdf),'sourceAvailable':availability})
+                    next_renewal=time.monotonic()+240
             done={p['page'] for p in metadata['pages'] if p['status']=='done'}
             quality={key:0 for key in ('regions','withPrice','withoutPack','inferredUnit','ambiguousPrice','unreadable')}
             for number in range(1,len(pdf)+1):
@@ -125,7 +132,7 @@ def process(api,job,vision=None):
                     key=f'{job["id"]}/evidence/page-{number}.png'
                     image=folder/'evidence.png';save_evidence(page,tuple(page.rect),image)
                     api.call('evidence',job,key=key,raw=image.read_bytes());page_image_key=key
-                    result=analyze(page,str(job['valid_from']),str(job['valid_until']),vision)
+                    result=analyze(page,str(job['valid_from']),str(job['valid_until']),vision,renew_lease)
                     result['imageKey']=page_image_key
                     for c in result['offers']:
                         key=f'{job["id"]}/evidence/{number}-{c["key"]}.png'

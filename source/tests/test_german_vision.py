@@ -47,9 +47,12 @@ class VisionTests(unittest.TestCase):
         chips = [product(name='Pringles', category='Chips', packSize='185 g', priceCents=169,
             basePrice='1 kg = 9.14'), product(name='Pringles', category='Chips', packSize='185 g',
             priceCents=149, basePrice='1 kg = 8.05', priceKind='loyalty', conditions='Nur mit PENNY App')]
+        heartbeats = []
         with patch('german_flyer_vision.image', return_value=b'png'):
             result = analyze_visual_page(FakePage(), '2026-10-26', '2026-10-30',
-                FakeClient([discovery, {'offers':cola,'unresolved':[]}, {'offers':chips,'unresolved':[]}]))
+                FakeClient([discovery, {'offers':cola,'unresolved':[]}, {'offers':chips,'unresolved':[]}]),
+                heartbeat=lambda:heartbeats.append(True))
+        self.assertEqual(len(heartbeats), 3)
         self.assertEqual([o['data']['priceCents'] for o in result['offers']], [119,99,169,149])
         self.assertEqual({o['status'] for o in result['offers']}, {'review'})
         self.assertEqual(len({o['key'] for o in result['offers']}), 4)

@@ -10,6 +10,7 @@ import hashlib
 import json
 import math
 import os
+import time
 from pathlib import Path
 import urllib.error
 import urllib.request
@@ -59,9 +60,12 @@ class VisionClient:
             raise VisionError('Vision requires key, model and a bounded call budget')
         self.key, self.model, self.max_calls = key, model, max_calls
         self.calls = 0
+        self.deadline = time.monotonic() + 45 * 60
         self.opener = opener or urllib.request.build_opener()
 
     def ask(self, prompt, png, schema):
+        if time.monotonic() >= self.deadline:
+            raise VisionError('Vision runtime limit reached; resume incomplete import')
         if self.calls >= self.max_calls:
             raise VisionError('Vision call budget exhausted; resume after review')
         self.calls += 1
@@ -192,7 +196,8 @@ def candidate(raw, rect, start, until, catalogue):
             'evidence':{'text':evidence, 'parser':VERSION, 'prices':[]}}
 
 
-def analyze_visual_page(page, start, until, client):
+def analyze_visual_page(page, start, until, client, heartbeat=None):
+    if heartbeat:heartbeat()
     discovery = client.ask('Locate ALL grocery/drink product offer regions. Include product image, '
         'full name, sizes, price badges and associated app prices within each region. '
         'Coordinates [left,top,right,bottom] normalized 0..1000 relative to the whole image. '
@@ -205,6 +210,7 @@ def analyze_visual_page(page, start, until, client):
     offers, seen = [], set()
     catalogue = categories()
     for region in discovery['regions']:
+        if heartbeat:heartbeat()
         rect = region_rect(region.get('bbox'), tuple(page.rect))
         result = client.ask('Independently transcribe EVERY grocery offer visible in this crop. '
             'Return separate entries for standard and app prices, separate products and sizes. '

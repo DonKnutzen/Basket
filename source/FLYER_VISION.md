@@ -41,6 +41,11 @@ In the repository's Actions settings:
   A 43-page flyer can exceed 200 calls. The call limit is not a monetary cap;
   use the provider's project budget as well. An exhausted limit stops the run.
 
+Long pages renew the existing worker lease between calls. The vision client also
+stops starting new calls after 45 minutes, before the job's 55-minute hard timeout.
+An interrupted import retains finished pages but needs an explicit retry; the
+incomplete page is read again, which can incur repeated calls.
+
 Only the backend queue receives the secret. Image requests go to the fixed
 OpenAI Responses endpoint with `store: false`. Each request is bounded and has
 a timeout; no retries hide repeated charges. API error bodies, images and
