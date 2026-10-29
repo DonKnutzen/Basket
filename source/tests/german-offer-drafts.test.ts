@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {matchGermanDrafts,parseGermanDraft,searchGermanDraftCatalogue,unverifiedOfferCount,compactGermanDraftTitle} from '../lib/german-offer-drafts';
+import {priceFromPrintedBase,tentativeCorrectedPrice} from '../lib/german-base-price';
 
 const job={id:'a-1',retailer:'aldi-nord',region:'Kiel',filename:'aldi.pdf',source_url:'https://magazine.aldi-nord.de/2026/sample/GetPDF.ashx',valid_from:'2026-10-26',valid_until:'2026-10-30'};
 const raw=(name:string,changes:Record<string,unknown>={})=>({
@@ -149,4 +150,48 @@ test('a food category never inherits misleading unit guesses from promotional te
  assert.ok(candidate);
  assert.equal(candidate.packSize,'');
  assert.equal(candidate.priceUsable,false);
+});
+
+test('ALDI Red Bull 0,25 l: a mistaken 25-cent bottle-size price is replaced only by an explicitly labelled computed preview',()=>{
+ const row=parseGermanDraft(raw('IM AUFSTELLER RED BULL Energydrink Koffein- und taurinhaltig; versch. Sorten',{id:'red-bull',
+  status:'review',page:9,issues:[
+   'Marke nicht eindeutig als Text erkannt',
+   'Grundpreis passt rechnerisch nicht zu Preis / Menge',
+   'Angebotszeitraum mit dem Prospekt abgleichen',
+  ],
+  data:{...raw('').data,name:'IM AUFSTELLER RED BULL Energydrink',brand:'',packSize:'0,25 L',
+   priceCents:25,basePrice:'(Liter = 3.56)',priceKind:'standard'}
+ }),job);
+ assert.ok(row);
+ assert.equal(row.priceCents,25,'private OCR source must not be silently overwritten');
+ assert.equal(row.priceUsable,true);
+ assert.equal(row.priceFromBase,true);
+ assert.equal(row.displayPriceCents,89,'0.25 l x 3.56 EUR/l = 0.89 EUR estimate');
+ assert.equal(row.status,'review','must never approve the price automatically');
+});
+test('base-price calculations are deterministic and reject conflicting or unsupported evidence',()=>{
+ assert.equal(priceFromPrintedBase('(Liter = 3.56)','0,25 l'),89);
+ assert.equal(priceFromPrintedBase('(1 kg = 7.16)','250 g'),179);
+ assert.equal(priceFromPrintedBase('(1 l = 0,95 €)','1,25 l'),119);
+ assert.equal(priceFromPrintedBase('(1 kg = 9,99)','0,25 l'),null);
+ assert.equal(priceFromPrintedBase('(Liter = 3.56); (Liter = 5.50)','0,25 l'),null);
+ assert.equal(priceFromPrintedBase('','0,25 l'),null);
+ assert.equal(priceFromPrintedBase('(Liter = 3.56)','0,25 l / 0,5 l'),null);
+ assert.equal(priceFromPrintedBase('(Liter = 3.56)','1 Stück'),null);
+ assert.equal(tentativeCorrectedPrice(25,'(Liter = 3.56)','0,25 l','loyalty','review',
+  ['Grundpreis passt rechnerisch nicht zu Preis / Menge']),null);
+ assert.equal(tentativeCorrectedPrice(25,'(Liter = 3.56)','0,25 l','standard','unreadable',
+  ['Grundpreis passt rechnerisch nicht zu Preis / Menge']),null);
+ for(const block of ['Mehrere Verkaufspreise / Produkte im selben Bereich',
+  'Preisspalte nur als Prüfbereich getrennt; Produkt und Preis am Original bestätigen',
+  'Keine eindeutige Kachelgrenze; Originalbereich prüfen','OCR: Preisziffern prüfen']){
+  assert.equal(tentativeCorrectedPrice(25,'(Liter = 3.56)','0,25 l','standard','review',
+   ['Grundpreis passt rechnerisch nicht zu Preis / Menge',block]),null,block);
+ }
+ const clean=parseGermanDraft(raw('Coca-Cola 1,25 l',{
+  data:{...raw('').data,name:'Coca-Cola',packSize:'1,25 l',priceCents:119,basePrice:'1 l = 0,95 €'}
+ }),job);
+ assert.ok(clean);
+ assert.equal(clean.priceFromBase,false);
+ assert.equal(clean.displayPriceCents,119);
 });

@@ -1,6 +1,7 @@
 /** Operator-only diagnostic records. These are never verified sale offers. */
 import {berlinDay} from './rewe-official-weekly';
 import {germanPack,inferGermanExplicitPack,suggestGermanCategory,germanSourceUrl,germanDay} from './german-central-offers';
+import {tentativeCorrectedPrice} from './german-base-price';
 
 type Retailer='rewe'|'aldi-nord'|'penny';
 export type GermanDraft={
@@ -8,6 +9,7 @@ export type GermanDraft={
  name:string;brand:string;variant:string;packSize:string;priceCents:number;
  priceKind:string;conditions:string;categoryHint:string;validFrom:string;validUntil:string;
  status:'review'|'unreadable';issues:string[];priceUsable:boolean;unitInferred:boolean;
+ displayPriceCents:number;priceFromBase:boolean;
 };
 type Import={id:string;retailer:string;region:string;filename:string;source_url:string;valid_from:string;valid_until:string};
 const fold=(s:string)=>s.toLocaleLowerCase('de').replace(/ß/g,'ss').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
@@ -38,6 +40,9 @@ export function parseGermanDraft(raw:unknown,job:Import):GermanDraft|null{
   rawIssues;
  const validFrom=date(d.validFrom)||job.valid_from,validUntil=date(d.validUntil)||job.valid_until;
  if(!germanDay(validFrom)||!germanDay(validUntil)||validFrom>validUntil)return null;
+ const estimated=tentativeCorrectedPrice(priceCents,asText(d.basePrice,250),packSize,priceKind,String(x.status),issues);
+ const printedPriceUsable=x.status==='review'&&rawName.length>=3&&priceCents>0&&!!germanPack(packSize)&&priceKind==='standard'&&!issues.some(v=>uncertainPrice.test(v));
+ const priceUsable=printedPriceUsable||estimated!==null;
  const sourceUrl=germanSourceUrl(job.source_url)||'';
  const categoryHint=suggestGermanCategory([brand,name].filter(Boolean).join(' '))?.de||'';
  return {
@@ -45,9 +50,10 @@ export function parseGermanDraft(raw:unknown,job:Import):GermanDraft|null{
   sourceUrl,name,brand,variant:asText(d.variant,100),packSize,priceCents,priceKind,
   conditions:asText(d.conditions,500),categoryHint,validFrom,validUntil,
   status:x.status,issues,unitInferred,
-  // This is a *tentative* price from the review feed, never a verified offer.
-  // A missing pack may only be inferred from words actually in the PDF.
-  priceUsable:x.status==='review'&&rawName.length>=3&&priceCents>0&&!!germanPack(packSize)&&priceKind==='standard'&&!issues.some(v=>uncertainPrice.test(v)),
+  // Drafts are never verified sale prices. A calculated display estimate must
+  // never mutate or replace the raw OCR candidate price in the database.
+  priceUsable,priceFromBase:estimated!==null,
+  displayPriceCents:estimated??(printedPriceUsable?priceCents:0),
  };
 }
 function words(text:string){return fold(text).split(' ').filter(Boolean)}
