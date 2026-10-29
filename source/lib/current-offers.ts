@@ -5,7 +5,7 @@
  */
 import {AUBAINE_NS_STORE_IDS,getAubaineOffers} from './aubaine-offers';
 export type OfferCountry='CA'|'DE';
-export type OfferRegion={country:OfferCountry;province:string;postalCode:string;stores:string[];city?:string};
+export type OfferRegion={country:OfferCountry;province:string;postalCode:string;stores:string[];city?:string;retailerSelectionVersion?:number};
 export type Deal={id:string;name:string;storeId:string;store:string;priceCents:number;regularCents?:number;currency:'CAD'|'EUR';validFrom:string;validUntil:string;observedAt:string;sourceUrl:string;packSize:string;loyalty:boolean;provider:'bidou'|'aubaine'};
 export const OFFER_STORES=[
  {id:'walmart',name:'Walmart',country:'CA'},
@@ -58,13 +58,19 @@ export function restoreOfferRegion(input:string|null):OfferRegion{
   const selected=Array.isArray(d.stores)?[...new Set<string>(d.stores.filter((s:unknown):s is string=>typeof s==='string'&&ids.has(s)))]:[];
   // For Germany both live sources are selected by default, including older
   // localStorage preferences which used [] to mean every chain.
-  const stores=country==='DE'&&selected.length===0?['rewe','aldi']:selected;
-  return {country,province,postalCode:postal,stores,...(country==='DE'?{city:'Kiel'}:{})};
+  // Existing profiles saved before PENNY support use the former two-store default.
+  // Upgrade that default once, while preserving custom store selections.
+  const oldDefaults=country==='DE'&&d.retailerSelectionVersion!==3&&(
+   selected.length===0||(selected.length===2&&selected.includes('rewe')&&selected.includes('aldi')));
+  const stores=country==='DE'&&(oldDefaults)?['rewe','aldi','penny']:selected;
+  const retailerSelectionVersion=country==='DE'?{retailerSelectionVersion:3}:{};
+
+  return {country,province,postalCode:postal,stores,...(country==='DE'?{city:'Kiel'}:{}),...retailerSelectionVersion};
  }catch{return {...DEFAULT_OFFER_REGION};}
 }
 export function storeChoices(region:OfferRegion){return OFFER_STORES.filter(s=>s.country===region.country);}
 export function isStoreOfferConnected(region:OfferRegion,id:string){
- if(region.country==='DE')return region.city==='Kiel'&&(id==='rewe'||id==='aldi');
+ if(region.country==='DE')return region.city==='Kiel'&&(id==='rewe'||id==='aldi'||id==='penny');
  return region.country==='CA'&&region.province==='NS'?AUBAINE_NS_STORE_IDS.includes(id):region.country==='CA'&&supportedStores(region).includes(id);
 }
 export function providerAvailable(region:OfferRegion){
