@@ -20,7 +20,7 @@ export function GermanOfferTileBadge({name,region}:{name:string;region:OfferRegi
  const best=matches.reduce((a,b)=>b.offer.priceCents<a.offer.priceCents?b:a);
  const preview=state.previewOffers.some(o=>o.id===best.offer.id);
  const price=new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(best.offer.priceCents/100);
- return <span> · {best.offer.retailer==='penny'?'PENNY':best.offer.retailer==='rewe'?'REWE':'ALDI Nord'}{preview?' Test':''}: {price}{best.offer.priceKind==='loyalty'?' (App/Bonus)':''}</span>;
+ return <span> · {best.offer.retailer==='penny'?'PENNY':best.offer.retailer==='rewe'?'REWE':'ALDI Nord'}{preview||best.offer.testOnly?' Test':''}: {price}{best.offer.priceKind==='loyalty'?' (App/Bonus)':''}</span>;
 }
 function GermanAutomaticSourceStatus({stores}:{stores:readonly string[]}){
  const state=useCentralGermanOffers();
