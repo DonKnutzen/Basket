@@ -142,3 +142,20 @@ test('published prices win over private previews; only distinct standard/app off
  assert.equal(matchCentralGermanOffers('Coca-Cola Zero',merged,[],now).map(x=>x.offer.id).join(' '),'aldi-cola');
  assert.equal(matchCentralGermanOffers('Cola',merged,[],now).length,3);
 });
+
+test('ALDI Zespri SunGold Kiwi piece offer matches Kiwi and expires correctly',()=>{
+ const kiwi:GermanOffer={...offer,id:'aldi-sungold-kiwi',importId:'aldi-week44',retailer:'aldi-nord',marketId:null,
+  brand:'Zespri',name:'SunGold Kiwi',variant:'',category:'Kiwi',packSize:'1 Stück',
+  priceCents:59,conditions:'Große Früchte; Klasse 1; Neuseeland; Preis je Stück.',
+  testOnly:true,validUntil:'2026-10-30',page:1,
+  sourceUrl:'https://magazine.aldi-nord.de/aldi-nord/aldi-aktuell/2026/2026cw44mopromotionaldi-angebote-ab-montag-26-10-1//GetPDF.ashx'};
+ assert.ok(parseGermanOffer(kiwi));
+ assert.deepEqual(germanPack(kiwi.packSize),{amount:1,unit:'piece'});
+ for(const query of ['Kiwi','kiwi','Zespri SunGold Kiwi','SunGold Kiwi']){
+  const hits=matchCentralGermanOffers(query,[kiwi],['aldi'],now);
+  assert.equal(hits.length,1,query);
+  assert.equal(hits[0].offer.priceCents,59,query);
+ }
+ assert.equal(matchCentralGermanOffers('Kiwi',[kiwi],['rewe'],now).length,0);
+ assert.equal(matchCentralGermanOffers('Kiwi',[kiwi],[],new Date('2026-10-31T12:00:00Z')).length,0);
+});
