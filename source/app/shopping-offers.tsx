@@ -1,6 +1,6 @@
 'use client';
-import React,{useEffect,useState} from 'react';
-import {locale,tr} from '../lib/i18n';
+import React,{useEffect,useId,useState} from 'react';
+import {getLanguage,locale,tr} from '../lib/i18n';
 import {CentralGermanOfferMatches} from './german-central-offers';
 import {GermanOfferAdmin} from './german-offer-admin';
 import {OfferSourceLink} from './offer-source-link';
@@ -73,8 +73,10 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
  const [state,setState]=useState<'idle'|'checking'|'none'|'error'|'done'>('idle');
  const [deals,setDeals]=useState<Deal[]>([]);
  const [showGermanFlyers,setShowGermanFlyers]=useState(false);
+ const [expanded,setExpanded]=useState(false);
+ const panelId=useId();
  const connected=providerAvailable(region),key=JSON.stringify([region.country,region.province,region.city,region.stores]);
- useEffect(()=>{setState('idle');setDeals([]);setShowGermanFlyers(false)},[name,key]);
+ useEffect(()=>{setState('idle');setDeals([]);setShowGermanFlyers(false);setExpanded(false)},[name,key]);
  useEffect(()=>{
   if(!automatic||!connected)return;
   let cancelled=false;setState('checking');
@@ -85,14 +87,19 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
  },[name,key,automatic,connected]);
  if(region.country==='DE'){
   const links=officialGermanFlyers(region);
+  const de=getLanguage()==='de';
   return <div className="offer-in-tile">
+   <button type="button" className="offer-check" aria-expanded={expanded} aria-controls={panelId} onClick={()=>{setExpanded(!expanded);setShowGermanFlyers(false)}}>🏷️ {expanded?(de?'Angebote einklappen':'Hide offers'):(de?'Angebote anzeigen':'Show offers')}</button>
+   {expanded&&<div id={panelId} className="german-item-offers">
    <CentralGermanOfferMatches name={name} stores={region.stores}/>
    {!showGermanFlyers
     ? <button type="button" className="offer-check" onClick={()=>setShowGermanFlyers(true)}>🏷️ {tr('Check official flyers')}</button>
     : <>
       <small>{tr('Confirmed REWE Kiel and ALDI Nord flyer offers appear automatically on your shopping list. Check the advertised brand, size and conditions.')}</small>
       <div className="offer-de-links">{links.map(l=><OfferSourceLink key={l.id} url={l.url}>{l.name}</OfferSourceLink>)}</div>
+      <button type="button" className="offer-again" onClick={()=>setShowGermanFlyers(false)}>{de?'Prospektlinks schließen':'Hide flyer links'}</button>
      </>}
+   </div>}
   </div>;
  }
  if(!connected)return null;
