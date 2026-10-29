@@ -1,0 +1,45 @@
+name: Probe live Basket page in headless mobile browsers
+on:
+  push:
+    branches: [diagnostic/browser-load-ios-2026-10-29]
+    paths: [.github/workflows/probe-basket-mobile-load-2026-10.yml]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install temporary browser harness
+        run: |
+          mkdir -p /tmp/basket-browser-check
+          cd /tmp/basket-browser-check
+          npm init -y >/dev/null
+          npm i --no-audit --no-fund playwright@1.58.2 >/dev/null
+          npx playwright install --with-deps chromium webkit >/dev/null
+      - name: Load deployed Basket in Chromium and WebKit and capture errors
+        run: |
+          cd /tmp/basket-browser-check
+          node --input-type=module <<'JS'
+          import { chromium, webkit } from 'playwright';
+          for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]){
+            const browser=await engine.launch({headless:true});
+            const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2});
+            const page=await context.newPage();
+            const errors=[],failedRequests=[];
+            page.on('pageerror',e=>errors.push(e.message.slice(0,250)));
+            page.on('console',m=>{if(m.type()==='error')errors.push(m.text().slice(0,250))});
+            page.on('requestfailed',r=>failedRequests.push({url:r.url().slice(0,100),failure:r.failure()?.errorText}));
+            try{
+              const response=await page.goto('https://donknutzen.github.io/Basket/?v=weekly-rewe-manual-20261028',{waitUntil:'domcontentloaded',timeout:30000});
+              await page.waitForTimeout(9000);
+              console.log(JSON.stringify({browser:name,status:response?.status(),url:page.url(),title:await page.title(),
+                text:(await page.locator('body').innerText()).slice(0,550),rootChildren:await page.locator('#root').locator(':scope > *').count(),
+                errors:errors.slice(0,12),failedRequests:failedRequests.slice(0,8)}));
+            }catch(e){console.log(JSON.stringify({browser:name,error:String(e),errors,failedRequests}));}
+            await browser.close();
+          }
+          JS
