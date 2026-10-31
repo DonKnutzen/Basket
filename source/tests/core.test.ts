@@ -366,7 +366,7 @@ test('every article in the 468-entry bilingual supermarket catalogue resolves to
   assert.ok(isFoodIcon(item.icon),item.icon);
   for(const name of [item.de,item.en,...item.aliases]){
    assert.equal(foodIcon(name),item.icon,name);assert.equal(shoppingGroup(name),item.displayGroup,name);
-   const category=({Fruit:'Produce',Vegetables:'Produce',Meat:'Meat & fish','Fish & seafood':'Meat & fish'} as Record<string,string>)[item.group]||item.group;
+   const category=item.displayGroup==='Snacks & sweets'&&item.group==='Pantry'?'Snacks & sweets':({Fruit:'Produce',Vegetables:'Produce',Meat:'Meat & fish','Fish & seafood':'Meat & fish'} as Record<string,string>)[item.group]||item.group;
    assert.equal(inferCategory(name),category,name);assert.equal(shoppingCategory(name),category,name);
   }
  }

@@ -13,6 +13,7 @@ import {
  DEFAULT_OFFER_REGION,OFFER_PROVINCES,GERMAN_OFFER_CITIES,checkOffers,providerAvailable,restoreOfferRegion,storeChoices,isStoreOfferConnected,
  type Deal,type OfferRegion,
 } from '../lib/current-offers';
+import {aubaineCategory} from '../lib/aubaine-offers';
 
 const KEY='basket-deal-region-v1';
 export function GermanOfferTileBadge({name,region}:{name:string;region:OfferRegion}){
@@ -89,8 +90,10 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
  const [state,setState]=useState<'idle'|'checking'|'none'|'error'|'done'>('idle');
  const [deals,setDeals]=useState<Deal[]>([]);
  const [expanded,setExpanded]=useState(false);
- const connected=providerAvailable(region),key=JSON.stringify([region.country,region.province,region.city,region.stores]);
- useEffect(()=>{setState('idle');setDeals([]);setExpanded(false)},[name,key]);
+ const [showAll,setShowAll]=useState(false);
+ const covered=region.country!=='CA'||region.province!=='NS'||!!aubaineCategory(name);
+ const connected=providerAvailable(region)&&covered,key=JSON.stringify([region.country,region.province,region.city,region.stores]);
+ useEffect(()=>{setState('idle');setDeals([]);setExpanded(false);setShowAll(false)},[name,key]);
  useEffect(()=>{
   if(!automatic||!connected)return;
   let cancelled=false;setState('checking');
@@ -106,6 +109,7 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
    {expanded&&<GermanOfferDialog name={name} region={region} close={()=>setExpanded(false)}/>}
   </div>;
  }
+ if(!covered&&providerAvailable(region))return <div className="offer-in-tile"><small className="offer-uncovered">🏷️ {tr('Not in the Nova Scotia weekly staples list')}</small></div>;
  if(!connected)return null;
  const lookup=()=>{setState('checking');checkOffers(name,region).then(v=>{setDeals(v);setState(v.length?'done':'none')}).catch(()=>setState('error'))};
  return <div className="offer-in-tile" aria-live="polite">
@@ -115,14 +119,14 @@ export function OffersForItem({name,region,automatic}:{name:string;region:OfferR
   {state==='error'&&<><small>{tr('Offer source unavailable')}</small><button type="button" className="offer-again" onClick={lookup}>{tr('Try again')}</button></>}
   {state==='done'&&<>
    <strong>🏷️ {deals.some(d=>d.provider==='aubaine')?tr('Weekly flyer reference prices'):tr('Current offers')} ({deals.length})</strong>
-   {deals.slice(0,3).map(d=><OfferSourceLink key={d.id} className="offer-hit" url={d.sourceUrl}
+   {deals.slice(0,showAll?deals.length:3).map(d=><OfferSourceLink key={d.id} className="offer-hit" url={d.sourceUrl}
      title={tr('View offer source')}>
      <span><b>{d.store}</b><small>{d.name}{d.packSize?' · '+d.packSize:''}</small></span>
      <span className="offer-money"><b>{localMoney(d.priceCents,d.currency)}</b>
       {d.regularCents!==undefined&&<small className="offer-was">{localMoney(d.regularCents,d.currency)}</small>}</span>
      <small className="offer-period">{tr('Valid')} {date(d.validFrom)} – {date(d.validUntil)}{d.observedAt?' · '+tr('Checked')+' '+date(d.observedAt):''}{d.loyalty?' · '+tr('Membership required'):''}</small>
    </OfferSourceLink>)}
-   {deals.length>3&&<small>{tr('More matching offers exist.')}</small>}
+   {deals.length>3&&<button type="button" className="offer-again" onClick={()=>setShowAll(v=>!v)}>{showAll?tr('Show fewer stores'):tr('Show all stores')+' ('+deals.length+')'}</button>}
    <small>{deals.some(d=>d.provider==='aubaine') ? tr('Source: aubaine.ca · Weekly flyer reference price, not guaranteed discount. Product, size and branch may differ. Verify before buying.') : tr('Source: Bidou · Verify price and product at the retailer.')}</small>
   </>}
  </div>;

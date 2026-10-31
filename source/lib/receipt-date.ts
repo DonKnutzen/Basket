@@ -6,8 +6,11 @@ export function validPurchaseDate(value:string){
 }
 const iso=(y:string,m:string,d:string)=>`${y.length===2?'20'+y:y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
 const months=[['januar','january','janvier','jan'],['februar','february','fevrier','feb'],['marz','maerz','march','mars','mar'],['april','avril','apr'],['mai','may'],['juni','june','juin','jun'],['juli','july','juillet','jul'],['august','aout','aug'],['september','septembre','sept','sep'],['oktober','october','octobre','okt','oct'],['november','novembre','nov'],['dezember','december','decembre','dez','dec']];
-// Country is evidence, not a universal locale: Canadian slash dates remain ambiguous.
-export function receiptDate(text:string,country=''):DateEvidence{
+// Country is evidence, not a universal locale: Canadian slash dates remain ambiguous,
+// except for national chains whose registers always print month first (10/28/26).
+const MONTH_FIRST_CHAINS=/walmart|superstore|no frills|sobeys|costco|foodland|giant tiger|shoppers|dollarama|lawtons|independent|freshco|bulk barn|save easy|nslc|loblaws|food basics|gateway/i;
+export function receiptDate(text:string,country='',store=''):DateEvidence{
+ const monthFirst=country==='CA'&&MONTH_FIRST_CHAINS.test(store);
  const normalized=text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
  const found:{source:string;candidates:string[]}[]=[];
  for(const line of normalized.split(/\r?\n/)){
@@ -20,7 +23,7 @@ export function receiptDate(text:string,country=''):DateEvidence{
    if(match[1])candidates=[iso(match[1],match[2],match[3])];
    else{
     const a=match[4],b=match[6],y=match[7],dmy=iso(y,b,a),mdy=iso(y,a,b);
-    candidates=explicitDMY&&!explicitMDY?[dmy]:explicitMDY&&!explicitDMY?[mdy]:match[5]==='.'||country==='DE'?[dmy]:[dmy,mdy];
+    candidates=explicitDMY&&!explicitMDY?[dmy]:explicitMDY&&!explicitDMY?[mdy]:match[5]==='.'||country==='DE'?[dmy]:monthFirst?[mdy]:[dmy,mdy];
    }
    found.push({source:match[0],candidates:[...new Set(candidates.filter(validPurchaseDate))]});
   }

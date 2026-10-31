@@ -53,7 +53,8 @@ export default function ReceiptScanner({ data, demo, initialFile, initialListId,
             finally {
                 URL.revokeObjectURL(src);
             }
-            const scale = Math.min(1, 4096 / Math.max(image.naturalWidth, image.naturalHeight)), canvas = document.createElement('canvas');
+            // Small or heavily compressed photos are enlarged: Tesseract reads receipt print best at ~1600px width.
+            const scale = Math.min(4096 / Math.max(image.naturalWidth, image.naturalHeight), Math.max(1, 1600 / image.naturalWidth), 2.5), canvas = document.createElement('canvas');
             canvas.width = Math.round(image.naturalWidth * scale);
             canvas.height = Math.round(image.naturalHeight * scale);
             const ctx = canvas.getContext('2d');

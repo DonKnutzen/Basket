@@ -21,6 +21,6 @@ export function catalogExactProduct(name:string){return index.get(fold(name))}
 const cache=new Map<string,(typeof phrases)[number]|null>();
 export function catalogMatch(name:string){const key=fold(name);if(cache.has(key))return cache.get(key)||undefined;const text=' '+key+' ';const result=phrases.find(([alias])=>text.includes(' '+alias+' '));if(cache.size>=1024)cache.clear();cache.set(key,result||null);return result}
 export function catalogProduct(name:string){const key=fold(name);const exact=index.get(key);if(exact)return exact;const text=' '+key+' ';return phrases.find(([alias])=>text.includes(' '+alias+' '))?.[1]}
-export function catalogCategory(name:string){const group=catalogExactProduct(name)?.group;return group?({Fruit:'Produce',Vegetables:'Produce',Meat:'Meat & fish','Fish & seafood':'Meat & fish'} as Record<string,string>)[group]||group:undefined}
+export function catalogCategory(name:string){const item=catalogExactProduct(name);if(item?.displayGroup==='Snacks & sweets'&&item.group==='Pantry')return 'Snacks & sweets';const group=item?.group;return group?({Fruit:'Produce',Vegetables:'Produce',Meat:'Meat & fish','Fish & seafood':'Meat & fish'} as Record<string,string>)[group]||group:undefined}
 
 export function catalogIconGroup(key:string){if(!CATALOG_ICONS.some(([icon])=>icon===key))return;return key==='icecream'?'Frozen':['can','jar','spread','snack','meal','plant-protein'].includes(key)?'Pantry':'Household'}

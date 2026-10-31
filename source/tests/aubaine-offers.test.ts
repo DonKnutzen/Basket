@@ -22,7 +22,8 @@ test('only intentionally generic English German and French staples are matched',
  assert.equal(aubaineCategory('Butter'),'beurre');
  assert.equal(aubaineCategory('Eier'),'oeufs');
  assert.equal(aubaineCategory('Karotten'),'carottes');
- for(const term of ['2 L Milk','2% Milk','Milch 2%','Milk chocolate','Tomaten','Vanilla yogurt','organic eggs','Butter 454g'])assert.equal(aubaineCategory(term),undefined,term);
+ for(const [term,key] of [['2 L Milk','lait'],['2% Milk 4L','lait'],['Milch 3,5%','lait'],['H-Milch','lait'],['Large eggs 12','oeufs'],['Gala apples','pommes'],['Chicken breasts','poulet'],['Whole wheat bread','pain'],['Lean ground beef','boeuf-hache'],['Vanilla yogurt','yogourt'],['Butter 454g','beurre'],['Old cheddar','fromage-cheddar'],['Russet potatoes 10 lb','pommes-de-terre'],['Basmati rice','riz'],['Spaghetti','pates'],['Ground coffee','cafe']])assert.equal(aubaineCategory(term),key,term);
+ for(const term of ['Milk chocolate','Chocolate milk','Almond milk','Tomaten','organic eggs','Peanut butter','Apple juice','Chicken soup','Egg noodles','Rice milk','Butter chicken','Carrot cake','Coffee creamer','Potato chips','Bread crumbs'])assert.equal(aubaineCategory(term),undefined,term);
 });
 test('NS price quotes require matching week, province, exact source retailer and positive price',()=>{
  const matches=selectAubaineOffers(fixture,'Milk',[],now);
@@ -37,7 +38,8 @@ test('NS price quotes require matching week, province, exact source retailer and
  assert.equal(selectAubaineOffers(fixture,'Milch',['sobeys'],now).length,1);
  assert.equal(selectAubaineOffers(fixture,'Milk',['walmart'],now).length,0);
  assert.equal(selectAubaineOffers(fixture,'Milk',[],new Date('2026-10-29T15:00:00Z')).length,0);
- assert.equal(selectAubaineOffers(fixture,'2% Milk',[],now).length,0);
+ assert.equal(selectAubaineOffers(fixture,'2% Milk',[],now).length,2);
+ assert.equal(selectAubaineOffers(fixture,'Milk chocolate',[],now).length,0);
 });
 test('ignore malformed fields and rows outside Nova Scotia',()=>{
  const bad=header+'\n'+row('sobeys-ns','lait','Milk','0')+'\n'

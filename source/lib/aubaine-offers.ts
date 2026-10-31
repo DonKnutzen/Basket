@@ -54,8 +54,66 @@ const NAME_TO_CATEGORY:Record<string,string>={
  'orange juice':'jus-orange','orangensaft':'jus-orange','jus orange':'jus-orange',
  'carrots':'carottes','carrot':'carottes','karotten':'carottes','karotte':'carottes','mohren':'carottes','carottes':'carottes',
 };
+// Shopping-list names usually carry a size, fat level or common variant
+// ("2% Milk 4L", "Large eggs", "Gala apples"). Such names match when every
+// remaining word is a known neutral modifier for that staple; anything else
+// ("milk chocolate", "chicken soup", "organic eggs") stays unmatched.
+const HEADS:[string,string][]=[
+ ['ground beef','boeuf-hache'],['lean ground beef','boeuf-hache'],['boeuf hache','boeuf-hache'],['hackfleisch','boeuf-hache'],['rinderhackfleisch','boeuf-hache'],['rinderhack','boeuf-hache'],['hack','boeuf-hache'],
+ ['orange juice','jus-orange'],['jus orange','jus-orange'],['orangensaft','jus-orange'],
+ ['toilet paper','papier-hygienique'],['bathroom tissue','papier-hygienique'],['papier hygienique','papier-hygienique'],['toilettenpapier','papier-hygienique'],['klopapier','papier-hygienique'],
+ ['cooking oil','huile'],['vegetable oil','huile'],['canola oil','huile'],['olive oil','huile'],['olivenol','huile'],['olivenoel','huile'],['rapsol','huile'],['rapsoel','huile'],['speiseol','huile'],['speiseoel','huile'],
+ ['cheddar cheese','fromage-cheddar'],['cheddar','fromage-cheddar'],
+ ['milk','lait'],['milch','lait'],['vollmilch','lait'],['frischmilch','lait'],['lait','lait'],
+ ['egg','oeufs'],['eggs','oeufs'],['eier','oeufs'],['oeufs','oeufs'],
+ ['bread','pain'],['brot','pain'],['toast','pain'],['toastbrot','pain'],['pain','pain'],
+ ['butter','beurre'],['beurre','beurre'],
+ ['apple','pommes'],['apples','pommes'],['apfel','pommes'],['aepfel','pommes'],['pommes','pommes'],
+ ['potato','pommes-de-terre'],['potatoes','pommes-de-terre'],['kartoffel','pommes-de-terre'],['kartoffeln','pommes-de-terre'],
+ ['rice','riz'],['reis','riz'],['riz','riz'],
+ ['sugar','sucre'],['zucker','sucre'],['sucre','sucre'],
+ ['yogurt','yogourt'],['yoghurt','yogourt'],['yogourt','yogourt'],['joghurt','yogourt'],
+ ['pasta','pates'],['spaghetti','pates'],['penne','pates'],['macaroni','pates'],['fusilli','pates'],['rotini','pates'],['linguine','pates'],['nudeln','pates'],['pates','pates'],
+ ['coffee','cafe'],['kaffee','cafe'],['cafe','cafe'],
+ ['flour','farine'],['mehl','farine'],['farine','farine'],
+ ['chicken','poulet'],['chicken breast','poulet'],['chicken breasts','poulet'],['whole chicken','poulet'],['hahnchen','poulet'],['haehnchen','poulet'],['hahnchenbrust','poulet'],['haehnchenbrust','poulet'],['poulet','poulet'],
+ ['carrot','carottes'],['carrots','carottes'],['karotte','carottes'],['karotten','carottes'],['mohren','carottes'],['moehren','carottes'],['carottes','carottes'],
+];
+const NEUTRAL=new Set(['fresh','frisch','frische','frischer','large','regular','white','weiss','weisse','the','of','and','or','und','pack','pk','x','ct','count','bag','beutel','tube','block','value','pc','compliments','gv','great','no','name','selection','kirkland','stuck','stk','dozen','dz','doz','kg','g','lb','lbs','l','ml','litre','litres','liter','oz']);
+const MODIFIERS:Record<string,string[]>={
+ 'lait':['skim','homo','homogenized','whole','partly','skimmed','percent','fat','free','natrel','neilson','sealtest','scotsburn','farmers','baxter','dairyland','h','fettarme','fettarm','haltbare','haltbar','teilentrahmt'],
+ 'oeufs':['brown','braun','braune','extra','medium','grade','a','freiland','bodenhaltung','free','run','range','farm'],
+ 'pain':['sliced','whole','wheat','grain','multigrain','sandwich','loaf','dempsters','wonder','country','harvest','vollkorn','weizen','toast'],
+ 'beurre':['salted','unsalted','gesalzen','ungesalzen','suss','suessrahm','sussrahm','lactantia','gay','lea','stick','sticks'],
+ 'pommes':['gala','mcintosh','honeycrisp','ambrosia','fuji','granny','smith','red','delicious','golden','cortland','spartan','jonagold','pink','lady','rot','rote','grun','gruen','grune','gruene','elstar','braeburn','nova','scotia'],
+ 'pommes-de-terre':['russet','yellow','gold','red','white','baking','mehligkochend','festkochend','vorwiegend','festkochende','pei'],
+ 'riz':['basmati','jasmine','long','grain','parboiled','minute','langkorn','langkornreis'],
+ 'sucre':['granulated','fine','kristall','kristallzucker','raffinade','redpath','lantic'],
+ 'yogourt':['plain','vanilla','strawberry','blueberry','peach','raspberry','berry','mixed','fruit','natur','vanille','erdbeer','activia','danone','astro','yoplait','tubes','multipack'],
+ 'huile':['canola','olive','vegetable','sunflower','extra','virgin','nativ','natives','raps','sonnenblumen','pflanzen','mazola'],
+ 'pates':['dry','durum','wheat','catelli','barilla','italpasta','primo','ronzoni','elbow','spaghettini'],
+ 'fromage-cheddar':['cheese','kase','kaese','mild','medium','old','aged','sharp','extra','marble','white','orange','cracker','barrel','black','diamond','balderson','cows'],
+ 'cafe':['ground','gemahlen','gemahlener','beans','bohnen','medium','dark','roast','tim','hortons','maxwell','house','folgers','kicking','horse','van','houtte','starbucks','nabob','filter','filterkaffee'],
+ 'farine':['all','purpose','unbleached','robin','hood','five','roses','weizenmehl','type','405','550'],
+ 'papier-hygienique':['double','triple','rolls','roll','rollen','ply','lagig','charmin','cottonelle','royale','purex','cashmere','majesta'],
+ 'poulet':['breast','breasts','thigh','thighs','drumstick','drumsticks','whole','boneless','skinless','brust','brustfilet','schenkel','keule','keulen','ganzes','ganz'],
+ 'boeuf-hache':['medium','lean','extra','regular','rind','rinder','gemischt'],
+ 'jus-orange':['tropicana','oasis','simply','pulp','no','some','not','from','concentrate','fruchtfleisch','direktsaft','100'],
+ 'carottes':['baby','bunch','bund','mini'],
+};
 export function aubaineCategory(name:string):string | undefined{
- return NAME_TO_CATEGORY[norm(name)];
+ const key=norm(name);
+ const exact=NAME_TO_CATEGORY[key];if(exact)return exact;
+ const tokens=key.split(' ').filter(t=>t&&!/^\d+$/.test(t)&&!/^\d+(kg|g|lb|lbs|l|ml|pk|x|ct)$/.test(t));
+ if(!tokens.length)return;
+ const text=' '+tokens.join(' ')+' ';
+ for(const [head,category] of [...HEADS].sort((a,b)=>b[0].length-a[0].length)){
+  if(!text.includes(' '+head+' '))continue;
+  const allowed=new Set([...NEUTRAL,...MODIFIERS[category]||[]]);
+  const rest=text.replace(' '+head+' ',' ').trim().split(' ').filter(Boolean);
+  if(rest.every(t=>allowed.has(t)))return category;
+  return;
+ }
 }
 /** RFC 4180-style CSV parser with escaped quotes, commas, CRLF and line bounds. */
 export function parseCsv(csv:string):string[][]{

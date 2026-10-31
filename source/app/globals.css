@@ -503,3 +503,58 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
  .german-offer-dialog{--ink:#edf3ec;--muted:#b9cbbd;--paper:#192c23;--line:#3a5143;color-scheme:dark}
  .german-offer-dialog .german-draft-status{background:#514423;color:#f6e3a4}
 }
+
+/* Spending insights */
+.period-chips{display:flex;flex-wrap:wrap;gap:8px;margin:-6px 0 22px}
+.period-chips button{border:1px solid #dce4d2;background:white;border-radius:999px;padding:8px 15px;font-size:calc(13px * var(--text-scale));font-weight:550;color:var(--ink)}
+.period-chips button.active{background:var(--green);border-color:var(--green);color:#f8fbef}
+.stats.stats-four{grid-template-columns:repeat(4,1fr)}
+.timeline-card{margin-bottom:24px}
+.timeline-tip{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;min-height:28px;margin:18px 0 8px;font-size:calc(13px * var(--text-scale));color:#6f8160}
+.timeline-tip b{font-size:calc(18px * var(--text-scale));font-weight:600;color:var(--ink)}
+.timeline-bars{display:flex;align-items:stretch;gap:4px;height:190px}
+.timeline-bar{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;padding:0;cursor:pointer}
+.timeline-bar>span{flex:1;display:flex;align-items:flex-end;border-bottom:1px solid #e2e8db}
+.timeline-bar>span>i{display:block;width:100%;max-width:44px;margin:0 auto;background:#8fae86;border-radius:4px 4px 0 0;transition:background .15s}
+.timeline-bar.active>span>i,.timeline-bar:hover>span>i{background:var(--green)}
+.timeline-bar>small{height:16px;font-size:calc(10px * var(--text-scale));color:#87957b;white-space:nowrap;overflow:visible;text-align:center}
+.spending-layout+.spending-layout{margin-top:24px}
+.rank-list{display:flex;flex-direction:column;gap:6px;margin-top:22px}
+.rank-row>button,.rank-row.static{display:flex;flex-direction:column;gap:7px;width:100%;text-align:left;padding:9px 8px;border-radius:8px}
+.rank-row>button:hover{background:#f4f7ee}
+.rank-head{display:flex;justify-content:space-between;gap:12px;font-size:calc(14px * var(--text-scale))}
+.rank-head b,.rank-head strong{font-weight:500}
+.rank-head b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-bar{display:block;height:7px;background:#eef3e5;border-radius:4px;overflow:hidden}
+.rank-bar>i{display:block;height:100%;background:var(--green);border-radius:4px}
+.rank-row small{display:flex;align-items:center;gap:4px;color:#87957b}
+.rank-row.open small svg{transform:rotate(180deg)}
+.rank-detail{list-style:none;margin:0 8px 8px;padding:8px 0 0;border-top:1px dashed #e2e8db}
+.rank-detail li{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:calc(13px * var(--text-scale));color:#4d6150}
+.rank-detail b{font-weight:500}
+.index-list{display:flex;flex-direction:column;gap:10px;margin:22px 0 18px}
+.index-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 10px;padding:12px 14px;border:1px solid #e6eddc;border-radius:10px}
+.index-row b{font-weight:550}
+.index-row>span{font-weight:600;font-size:calc(13px * var(--text-scale))}
+.index-row>small{grid-column:2/4;color:#87957b}
+.cheaper{color:#1f6b3d}
+.pricier{color:#a4452c}
+.compare-list{display:flex;flex-direction:column}
+.compare-row{display:flex;flex-direction:column;gap:5px;padding:11px 0;border-top:1px solid #eef3e5}
+.compare-row b{font-weight:550;font-size:calc(14px * var(--text-scale))}
+.compare-row>span{display:flex;flex-wrap:wrap;gap:6px}
+.compare-row em{display:inline-block;font-size:calc(12px * var(--text-scale));padding:3px 8px;border-radius:6px;background:#f2f5ec;color:#4d6150}
+.compare-row em.best{background:#dcebd6;color:#1f5a35;font-weight:600}
+.compare-row small{color:#87957b}
+.compare-more{margin-top:10px;width:100%}
+.muted-note{color:#87957b;font-size:calc(13px * var(--text-scale));margin-top:18px}
+.price-moves{margin-top:24px}
+.moves{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:18px}
+.moves h3{display:flex;align-items:center;gap:7px;font-size:calc(14px * var(--text-scale));margin-bottom:6px}
+.move-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #eef3e5}
+.move-row>span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.move-row>span:last-child{text-align:right;font-weight:600;flex-shrink:0}
+.move-row small{color:#87957b;font-weight:400}
+.offer-uncovered{color:#9aa88e}
+@media(max-width:1000px){.stats.stats-four{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.moves{grid-template-columns:1fr}.timeline-bars{height:150px;gap:2px}.period-chips button{padding:7px 12px}}
