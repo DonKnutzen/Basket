@@ -558,3 +558,18 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
 .offer-uncovered{color:#9aa88e}
 @media(max-width:1000px){.stats.stats-four{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:650px){.moves{grid-template-columns:1fr}.timeline-bars{height:150px;gap:2px}.period-chips button{padding:7px 12px}}
+
+/* Offers on/off */
+.offers-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0;padding:10px 14px;border:1px solid var(--line,#d6ddcf);border-radius:11px;background:#fff}
+.offers-switch>span{display:flex;flex-direction:column;gap:2px;font-weight:550;font-size:calc(14px * var(--text-scale))}
+.offers-switch small{font-weight:400;color:#87957b}
+.offers-switch button{position:relative;width:46px;height:26px;border-radius:999px;background:#d5dccb;flex-shrink:0;transition:background .15s}
+.offers-switch button i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .15s}
+.offers-switch button.on{background:var(--green)}
+.offers-switch button.on i{transform:translateX(20px)}
+.offers-switch+.offer-settings{margin-top:0}
+/* Receipt review: unrecognized category */
+.review-line.needs-category .line-category{border-color:#d9962f;background:#fffaf0;outline:1px solid #d9962f}
+.category-hint{color:#9a6418;font-weight:550}
+.set-all-category{flex-direction:row;align-items:center;justify-content:flex-end;gap:10px;margin:6px 0 4px;color:#6f8160}
+.set-all-category select{font-size:calc(13px * var(--text-scale));padding:8px 10px}

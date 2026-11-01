@@ -8,7 +8,7 @@ const iso=(y:string,m:string,d:string)=>`${y.length===2?'20'+y:y}-${m.padStart(2
 const months=[['januar','january','janvier','jan'],['februar','february','fevrier','feb'],['marz','maerz','march','mars','mar'],['april','avril','apr'],['mai','may'],['juni','june','juin','jun'],['juli','july','juillet','jul'],['august','aout','aug'],['september','septembre','sept','sep'],['oktober','october','octobre','okt','oct'],['november','novembre','nov'],['dezember','december','decembre','dez','dec']];
 // Country is evidence, not a universal locale: Canadian slash dates remain ambiguous,
 // except for national chains whose registers always print month first (10/28/26).
-const MONTH_FIRST_CHAINS=/walmart|superstore|no frills|sobeys|costco|foodland|giant tiger|shoppers|dollarama|lawtons|independent|freshco|bulk barn|save easy|nslc|loblaws|food basics|gateway/i;
+const MONTH_FIRST_CHAINS=/walmart|superstore|no frills|sobeys|costco|foodland|giant tiger|shoppers|dollarama|lawtons|independent|freshco|bulk barn|save easy|nslc|loblaws|food basics|gateway|irving|esso|petro-canada|shell|ultramar|circle k|pioneer/i;
 export function receiptDate(text:string,country='',store=''):DateEvidence{
  const monthFirst=country==='CA'&&MONTH_FIRST_CHAINS.test(store);
  const normalized=text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');

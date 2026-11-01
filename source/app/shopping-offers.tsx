@@ -1,5 +1,5 @@
 'use client';
-import React,{useEffect,useState} from 'react';
+import React,{useEffect,useState,useSyncExternalStore} from 'react';
 import {getLanguage,locale,tr} from '../lib/i18n';
 import {GermanOfferDialog} from './german-offer-dialog';
 import {GermanOfferAdmin} from './german-offer-admin';
@@ -31,6 +31,19 @@ function GermanAutomaticSourceStatus({stores}:{stores:readonly string[]}){
  const [enabled,setEnabled]=useGermanOfferDisplay();
  const current=state.offers.filter(o=>!stores.length||stores.includes(o.retailer==='aldi-nord'?'aldi':o.retailer));
  return <div className="offer-de-feed-status"><label className="german-checkbox"><input type="checkbox" checked={enabled} onChange={e=>setEnabled(e.target.checked)}/>Aktuelle Prospektangebote anzeigen</label><small>{state.loading?'Angebote werden geladen …':state.error||`${current.length} veröffentlichte Angebote · Kiel${state.previewOffers.length?` · ${state.previewOffers.length} interne Testvorschau`:''}`}</small></div>;
+}
+// One switch for all offer features. Off turns Basket into a plain shopping list.
+const OFFERS_KEY='basket-offers-enabled-v1',OFFERS_EVENT='basket-offers-enabled';
+function readOffersEnabled(){try{return localStorage.getItem(OFFERS_KEY)!=='false'}catch{return true}}
+function subscribeOffers(notify:()=>void){window.addEventListener(OFFERS_EVENT,notify);window.addEventListener('storage',notify);return()=>{window.removeEventListener(OFFERS_EVENT,notify);window.removeEventListener('storage',notify)}}
+export function useOffersEnabled(){
+ const enabled=useSyncExternalStore(subscribeOffers,readOffersEnabled,()=>true);
+ return [enabled,(value:boolean)=>{try{localStorage.setItem(OFFERS_KEY,String(value))}catch{}window.dispatchEvent(new Event(OFFERS_EVENT))}] as const;
+}
+export function OffersSwitch(){
+ const [enabled,setEnabled]=useOffersEnabled();
+ return <div className="offers-switch"><span>🏷️ {tr('Offers')}<small>{enabled?tr('Weekly flyer prices on your list'):tr('Off · plain shopping list')}</small></span>
+  <button type="button" role="switch" aria-checked={enabled} aria-label={tr('Show offers')} className={enabled?'on':''} onClick={()=>setEnabled(!enabled)}><i/></button></div>;
 }
 export function useOfferRegion(){
  const [region,setRegion]=useState<OfferRegion>(DEFAULT_OFFER_REGION);

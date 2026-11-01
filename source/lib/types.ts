@@ -2,7 +2,7 @@ import {catalogCategory} from './product-catalog';
 import {locale} from './i18n';
 import {householdIcon} from './household-icons';
 import {drinkIcon} from './drink-icons';
-export const CATEGORIES=['Produce','Dairy & eggs','Meat & fish','Bakery','Snacks & sweets','Pantry','Frozen','Drinks','Household','Other'];
+export const CATEGORIES=['Produce','Dairy & eggs','Meat & fish','Bakery','Snacks & sweets','Pantry','Frozen','Drinks','Household','Takeout','Fuel','Other'];
 // Chips, chocolate, candy and cookies, including common Canadian and German brands.
 const SNACKS=/\b(chips|crisps|doritos|lays|ruffles|pringles|cheetos|tostitos|old dutch|miss vickies|nachos?|popcorn|pretzels?|crackers?|goldfish|candy|candies|chocolates?|chocolate bars?|gummy|gummies|gummi|jelly beans|licorice|liquorice|marshmallows?|cookies?|oreo|chips ahoy|kit ?kat|snickers|twix|aero|coffee crisp|reeses?|smarties|skittles|maynards|swedish berries|cadbury|lindt|milka|ritter sport|kinder|haribo|toblerone|schokolade|schoko|sussigkeiten|suessigkeiten|gummibarchen|gummibaerchen|goldbaren|goldbaeren|kekse?|bonbons?|lakritz|riegel|salzstangen|flips|erdnussflips|kartoffelchips|paprikachips|tortillachips|pralinen?)\b/;
 const NOT_SNACKS=/\b(chocolate milk|schokomilch|chocolate chips|chocolate chip|schokotropfen|kakao|cocoa|baking|backen)\b/;
