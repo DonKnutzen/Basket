@@ -16,7 +16,10 @@ const singular=(s:string)=>s.replace(/[a-zA-Z]+$/,word=>{
  return lower.endsWith('s')&&!lower.endsWith('ss')?word.slice(0,-1):word;
 });
 for(const item of data)for(const name of [item.de,item.en,singular(item.en),...item.aliases,item.de.replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/Ä/g,'Ae').replace(/Ö/g,'Oe').replace(/Ü/g,'Ue')]){const key=fold(name);if(key)index.set(key,item)}
-const phrases=[...index].sort((a,b)=>b[0].split(' ').length-a[0].split(' ').length||b[0].length-a[0].length);
+// French names never replace German/English hits; "pain"/"piles" are English words too, so they only match exactly.
+const FR_EXACT_ONLY=new Set(['pain','piles']);
+for(const item of data)for(const name of [item.fr,item.fr.replace(/[sx]$/i,'')]){const key=fold(name);if(key&&!index.has(key))index.set(key,item)}
+const phrases=[...index].filter(([key])=>!FR_EXACT_ONLY.has(key)).sort((a,b)=>b[0].split(' ').length-a[0].split(' ').length||b[0].length-a[0].length);
 export function catalogExactProduct(name:string){return index.get(fold(name))}
 const cache=new Map<string,(typeof phrases)[number]|null>();
 export function catalogMatch(name:string){const key=fold(name);if(cache.has(key))return cache.get(key)||undefined;const text=' '+key+' ';const result=phrases.find(([alias])=>text.includes(' '+alias+' '));if(cache.size>=1024)cache.clear();cache.set(key,result||null);return result}
