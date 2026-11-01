@@ -58,7 +58,7 @@ test('two email accounts see their household membership and can both create and 
 });
 test('household sharing labels use the active household members without repeating the signed-in user',()=>{
  const user={id:'me',name:'Alex'};
- assert.deepEqual(householdSharing({user,members:[{userId:'me',displayName:'Alex'}]}),{shared:false,label:'Only you · Invite your partner'});
+ assert.deepEqual(householdSharing({user,members:[{userId:'me',displayName:'Alex'}]}),{shared:false,label:'Only you · Invite friends'});
  assert.equal(householdSharing({user,members:[{userId:'me',displayName:'Alex'},{userId:'sam',displayName:'Sam'},{userId:'jo',displayName:'Jo'}]}).label,'Shared with Sam and Jo');
 });
 test('receipt save stores line quantities, learns aliases and avoids duplicates',async()=>{await get();const d=draft();assert.equal((await post('saveReceipt',{draft:d})).status,200);await post('saveReceipt',{draft:d});const a=(await get()).body;assert.equal(a.receipts.length,1);assert.equal(a.lines[0].quantity,2);assert.equal(a.lines[0].amountCents,1098);assert.equal(a.products[0].packSize,'2 L');assert.equal(a.aliases[0].label,'milk 2l');assert.equal(a.aliases[0].store,'no frills')});

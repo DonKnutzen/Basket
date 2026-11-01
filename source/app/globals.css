@@ -588,3 +588,13 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
 .recipe-check input{width:18px;height:18px;flex-shrink:0}
 .recipe-check .at-home{text-decoration:line-through;color:var(--muted)}
 .recipe-check small{margin-left:auto;color:var(--muted)}
+.recipe-card small{color:var(--muted)}
+.recipe-book-bar>div{display:flex;flex-direction:column;gap:10px;flex:1;min-width:0}
+.recipe-book-bar .input-button{flex-wrap:wrap}
+.recipe-send{margin-bottom:12px}
+.friends-badge{background:#d9962f;color:white;border-radius:9px;padding:0 6px;font-size:calc(11px * var(--text-scale));line-height:18px}
+.friends section{display:flex;flex-direction:column;gap:6px}
+.friends h3{display:flex;align-items:center;gap:6px}
+.friend-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.friend-row>span{display:flex;flex-direction:column;flex:1;min-width:150px}
+.friend-row small{color:var(--muted)}
