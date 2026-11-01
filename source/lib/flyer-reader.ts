@@ -17,7 +17,7 @@ function imageFile(file:Pick<File,'type'|'name'>){
 function pdfFile(file:Pick<File,'type'|'name'>){
  return file.type==='application/pdf'||/\.pdf$/i.test(file.name);
 }
-async function ocrWorker(){
+export async function ocrWorker(languages=['deu','eng'],sparse=true){
  const {createWorker,PSM}=await import('tesseract.js');
  const options=PAGES_BUILD?
   {workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/worker.min.js',
@@ -25,11 +25,11 @@ async function ocrWorker(){
    langPath:'https://tessdata.projectnaptha.com/4.0.0',workerBlobURL:true}:
   {workerPath:'/ocr/worker.min.js',corePath:'/ocr/core',
    langPath:'https://tessdata.projectnaptha.com/4.0.0',workerBlobURL:false};
- const worker=await createWorker(['deu','eng'],1,options);
- await worker.setParameters({tessedit_pageseg_mode:PSM.SPARSE_TEXT,preserve_interword_spaces:'1'});
+ const worker=await createWorker(languages,1,options);
+ await worker.setParameters({tessedit_pageseg_mode:sparse?PSM.SPARSE_TEXT:PSM.AUTO,preserve_interword_spaces:'1'});
  return worker;
 }
-async function boundedImage(file:File):Promise<HTMLCanvasElement>{
+export async function boundedImage(file:File):Promise<HTMLCanvasElement>{
  const objectUrl=URL.createObjectURL(file);
  try{
   const img=new Image();img.src=objectUrl;await img.decode();

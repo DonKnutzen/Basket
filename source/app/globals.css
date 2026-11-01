@@ -573,3 +573,18 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
 .category-hint{color:#9a6418;font-weight:550}
 .set-all-category{flex-direction:row;align-items:center;justify-content:flex-end;gap:10px;margin:6px 0 4px;color:#6f8160}
 .set-all-category select{font-size:calc(13px * var(--text-scale));padding:8px 10px}
+.recipe-card{display:flex;flex-direction:column;gap:8px;color:var(--green)}
+.recipe-card h3{color:var(--ink)}
+.recipe-card p{color:var(--muted);font-size:calc(13px * var(--text-scale))}
+.recipe-detail{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+.recipe-detail ul,.recipe-detail ol{margin:0 0 8px;padding-left:22px;line-height:1.8}
+.recipe-import{border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.recipe-import>label{display:flex}
+.recipe-import summary{cursor:pointer;font-weight:550;font-size:calc(13px * var(--text-scale))}
+.recipe-import>*+*{margin-top:12px}
+.recipe-import>button{align-self:flex-start}
+.recipe-checklist{display:flex;flex-direction:column;gap:4px;max-height:45vh;overflow:auto}
+.recipe-check{flex-direction:row;align-items:center;gap:10px;font-weight:400;padding:8px 4px;border-bottom:1px solid var(--line)}
+.recipe-check input{width:18px;height:18px;flex-shrink:0}
+.recipe-check .at-home{text-decoration:line-through;color:var(--muted)}
+.recipe-check small{margin-left:auto;color:var(--muted)}
