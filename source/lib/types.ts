@@ -2,7 +2,7 @@ import {catalogCategory,catalogExactProduct} from './product-catalog';
 import {locale} from './i18n';
 import {householdIcon} from './household-icons';
 import {drinkIcon} from './drink-icons';
-export const CATEGORIES=['Produce','Dairy & eggs','Meat & fish','Bakery','Snacks & sweets','Pantry','Frozen','Drinks','Household','Takeout','Fuel','Other'];
+export const CATEGORIES=['Produce','Dairy & eggs','Meat & fish','Bakery','Snacks & sweets','Pantry','Frozen','Drinks','Household','Takeout','Fuel','Medicine','Clothing','Other'];
 // Receipts split produce into fruit and veggies, and track processed food on its own.
 export const RECEIPT_CATEGORIES=CATEGORIES.flatMap(c=>c==='Produce'?['Fruit','Veggies','Processed Food']:[c]);
 const PROCESSED=/\b(sushi|dinner|dnr|ready meal|meal kit|fertiggericht|instant|nuggets|lasagna|lasagne)\b/;
