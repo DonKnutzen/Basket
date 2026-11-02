@@ -24,6 +24,8 @@ export function receiptDate(text:string,country='',store=''):DateEvidence{
    else{
     const a=match[4],b=match[6],y=match[7],dmy=iso(y,b,a),mdy=iso(y,a,b);
     candidates=explicitDMY&&!explicitMDY?[dmy]:explicitMDY&&!explicitDMY?[mdy]:match[5]==='.'||country==='DE'?[dmy]:monthFirst?[mdy]:[dmy,mdy];
+    // Card terminals at those chains print YY/MM/DD ("DateTime: 26/10/31") when month-first cannot be a date.
+    if(monthFirst&&a.length===2&&y.length===2&&!validPurchaseDate(mdy))candidates=[iso(a,b,y)];
    }
    found.push({source:match[0],candidates:[...new Set(candidates.filter(validPurchaseDate))]});
   }

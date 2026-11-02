@@ -24,6 +24,14 @@ test('specific fruit, vegetables and non-food items show a fitting emoji',async(
  assert.match(await render('aux cable'),/🔌/);
 });
 
+test('emoji icons are painted, not inherited fill="none" from the svg',async()=>{
+ const markup=await render('aux cable');
+ const tag=markup.match(/<text[^>]*>/)?.[0]||'';
+ assert.match(tag,/ fill="(?!none)[^"]+"/,tag);
+ assert.match(tag,/ stroke="none"/,tag);
+ assert.match(tag,/font-family="[^"]*Emoji/,tag);
+});
+
 test('French item names find the catalogue and the right category',()=>{
  const cases:Record<string,string>={pomme:'Produce',lait:'Dairy & eggs',poulet:'Meat & fish','poitrine de poulet':'Meat & fish',fromage:'Dairy & eggs','fromage râpé':'Dairy & eggs',pain:'Bakery',baguette:'Bakery','papier toilette':'Household','huile d\'olive':'Pantry'};
  for(const [name,category] of Object.entries(cases))assert.equal(inferCategory(name),category,name);

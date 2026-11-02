@@ -9,10 +9,11 @@ const TAKEOUT_PLACES=['Tim Hortons','McDonald\'s','McDonalds','Subway','A&W','We
 const TAKEOUT_HINT=/\b(dine[- ]?in|take[- ]?out|to go|eat[- ]?in|zum mitnehmen|au(?:ss|ß)er haus|gratuity|trinkgeld|table\s*#?\s*\d+|server\s*:)/i;
 const STORES=[...FUEL_STATIONS,...TAKEOUT_PLACES,'Atlantic Superstore','Real Canadian Superstore','No Frills','Walmart','Sobeys','Costco','Gateway','Giant Tiger','Food Basics','Shoppers Drug Mart','Dollarama','Bulk Barn','Save Easy','Lawtons','Metro','IGA','Provigo','Maxi','Loblaws','FreshCo','REWE Center','REWE','Aldi Nord','Aldi Süd','Aldi','Lidl','EDEKA','Netto','Penny','Kaufland','Globus','HIT','tegut','Denns Biomarkt','Alnatura','Rossmann','famila','NSLC','Foodland','Independent','Superstore'];
 // Register abbreviations seen on Loblaw, Sobeys and Walmart receipts. Whole words only.
-const ABBREVIATIONS:Record<string,string>={chkn:'chicken',chk:'chicken',mlk:'milk',grnd:'ground',grd:'ground',bf:'beef',brst:'breast',bnls:'boneless',sknls:'skinless',blk:'black',wht:'white',brd:'bread',chs:'cheese',ched:'cheddar',yog:'yogurt',ygrt:'yogurt',choc:'chocolate',crm:'cream',ckie:'cookie',ckies:'cookies',crkr:'cracker',crkrs:'crackers',jce:'juice',ornge:'orange',lrg:'large',btr:'butter',marg:'margarine',saus:'sausage',trky:'turkey',bcn:'bacon',mshrm:'mushroom',mshrms:'mushrooms',grn:'green',veg:'vegetable',frz:'frozen',swt:'sweet',pots:'potatoes',bnna:'banana',bnnas:'bananas'};
+const ABBREVIATIONS:Record<string,string>={chkn:'chicken',chk:'chicken',mlk:'milk',grnd:'ground',grd:'ground',bf:'beef',brst:'breast',bnls:'boneless',sknls:'skinless',blk:'black',wht:'white',brd:'bread',chs:'cheese',ched:'cheddar',yog:'yogurt',ygrt:'yogurt',choc:'chocolate',crm:'cream',ckie:'cookie',ckies:'cookies',crkr:'cracker',crkrs:'crackers',jce:'juice',ornge:'orange',lrg:'large',btr:'butter',marg:'margarine',saus:'sausage',trky:'turkey',bcn:'bacon',mshrm:'mushroom',mshrms:'mushrooms',grn:'green',veg:'vegetable',frz:'frozen',swt:'sweet',pots:'potatoes',bnna:'banana',bnnas:'bananas',chse:'cheese',dnr:'dinner'};
 // Strip register noise around a product label: leading PLU/UPC codes, inline
 // UPCs with Walmart flags (006259801047 F) and Loblaw/Sobeys tax flags (MRJ, HMRJ).
-function cleanLabel(label:string){return label.replace(/^\d{4,14}\s+/,'').replace(/\s+\d{6,14}\s*[A-Z]{0,2}$/,'').replace(/\s+[A-Z]?MRJ\b/,'').trim()}
+// Loblaw prints a pack count before the UPC: "(2)06148306079 ROOSTER SUSHI MRJ".
+function cleanLabel(label:string){return label.replace(/^(?:\(\d{1,3}\))?\d{4,14}[\s/]+/,'').replace(/\s+\d{6,14}\s*[A-Z]{0,2}$/,'').replace(/\s+[A-Z]?MRJ\b/,'').trim()}
 // Fuel: the grade names a line, the litres come from the line or a "Litres: 40.123" field.
 const FUEL_GRADE=/\b(regular|unleaded|premium|supreme|ultimate|v-?power|mid-?grade|plus|diesel|super(?:\s*plus|\s*e10|\s*e5)?|e10|e5|benzin|bleifrei|gasoline|petrol)\b/i;
 // generic=false ignores plain "fuel"/"gas" so an explicit grade elsewhere on the receipt wins.
@@ -20,10 +21,11 @@ function fuelGrade(text:string,generic=true){const t=text.toLowerCase();return /
 function fuelLitres(label:string,text:string){const m=label.match(/(\d+[.,]\d{1,3})\s*(?:l|litres?|liters?|ltr)\b/i)||text.match(/(?:litres?|liters?|volume|menge|ltr)\s*:?\s*(\d+[.,]\d{1,3})/i)||text.match(/(\d+[.,]\d{2,3})\s*(?:l|litres?|liters?|ltr)\b/i);return m?m[1].replace(',','.'):undefined}
 function expandAbbreviations(name:string){return name.split(' ').map(w=>ABBREVIATIONS[w.toLowerCase()]||w).join(' ')}
 export function parseReceipt(text:string,products:Product[]=[],aliases:BasketData['aliases']=[]):ReceiptDraft{
- const raw=text.split(/\r?\n/).map(l=>l.replace(/\s+/g,' ').trim()).filter(Boolean);
+ // Large total fonts often OCR with a space after the decimal point: "TOTAL 21. 78".
+ const raw=text.split(/\r?\n/).map(l=>l.replace(/\s+/g,' ').trim().replace(/(\d[.,]) (\d{2})$/,'$1$2')).filter(Boolean);
  const header=raw.slice(0,8).join('\n');
  let store=STORES.find(s=>new RegExp('(?:^|[^a-z])'+s+'(?:$|[^a-z])','i').test(header))||raw.slice(0,3).find(l=>/[a-z]{3}/i.test(l)&&!/[\d@$]/.test(l)&&l.length<60)||'';
- if(store==='Superstore'&&/\b(NS|NB|PE|NL|nova scotia|halifax|dartmouth|bedford|sackville)\b/i.test(text))store='Atlantic Superstore';
+ if(store==='Superstore'&&/\b(NS|NB|PE|NL|nova scotia|halifax|dartmouth|bedford|sackville|atlantic)\b|\(\s*902\s*\)/i.test(text))store='Atlantic Superstore';
  const d:ReceiptDraft={id:newId(),store,date:'',total:'',tax:'0.00',currency:'',lines:[],rawText:text};
  const country=/\b(canada|nova scotia|quebec|ontario|halifax|dartmouth|sobeys|no frills|superstore|nslc)\b|\b[A-Z]\d[A-Z]\s?\d[A-Z]\d\b/i.test(text)?'CA':/\b(deutschland|germany|rewe|edeka|kaufland|alnatura|aldi|lidl|penny|netto|gmbh|kiel|aral|tankstelle|mwst)\b/i.test(text)?'DE':'';
  d.country=country;d.currency=/\bCAD\b/i.test(text)?'CAD':/€|\bEUR\b/i.test(text)?'EUR':country==='CA'?'CAD':country==='DE'?'EUR':'';
@@ -42,6 +44,8 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
   if(last&&lastItemIndex===index-1&&last.quantity==='1'&&Math.abs(toCents(last.amount)-n*unit)<=1){last.quantity=String(n);last.sourceLines=[...(last.sourceLines||[]),index+1]}
   else pendingQuantity={n,unit};
   pending='';continue}
+ // Loblaw limit notes between an item and its count line: "$1.00 lmt 6, $2.00 ea".
+ if(/^[$€]?\d+[.,]\d{2}\s+(?:lmt|limit)\b/i.test(line))continue;
  let m=line.match(/^(.+?)\s+(-?\$?(?:\d{1,3}(?:[.,]\d{3})+|\d{1,6})[.,]\d{2})\s*(?:€|EUR|CAD)?\s*[A-Z*]{0,4}$/i);if(!m&&pending&&/^-?[$€]?\d+(?:[.,]\d{3})*[.,]\d{2}\s*(?:€|EUR|CAD)?$/.test(line))m=[line,pending,line.replace(/\s*(?:€|EUR|CAD)$/,'')] as RegExpMatchArray;
  if(!m){
   // Walmart prints the weight below the item: "1.090 kg @ 1 kg /1.30".
@@ -55,11 +59,12 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  if(/^(price\s*\/\s*l(?:itre|iter)?|price per lit(?:re|er)|ppl|preis\s*\/\s*l|grundpreis|unit price)\s*:?$/i.test(label)){pending='';continue}if(/^sub[ -]?total/i.test(label)){subtotal=amount;ended=true;pending='';continue}if(/^(total|summe|gesamt|zu zahlen|balance due|amount due|grand total)\b(?!\s*(savings|saved|discount|items?|number))/i.test(label)){total=amount;ended=true;pending='';continue}
  const regular=label.match(/^(?:regular price|normalpreis|prix regulier)\s+(.+)$/i);
  if(regular){const matches=d.lines.filter(l=>normalize(l.label)===normalize(regular[1])||normalize(l.name)===normalize(regular[1]));if(matches.length===1&&amount>=toCents(matches[0].amount)){matches[0].regularPrice=amountText(amount);matches[0].sourceLines=[...(matches[0].sourceLines||[]),index+1]}else d.warnings.push('Regular price could not be uniquely associated: '+line);pending='';continue}
- const discount=label.match(/^(?:discount|rabatt|rabais|coupon|member savings|loyalty discount|scene\+?\s*savings|instant savings|sale savings|savings|preisvorteil|ersparnis|aktionsrabatt)(?:\s+(.+))?$/i);
+ const discount=label.match(/^(?:discount|rabatt|rabais|coupon|arcp:?|member savings|loyalty discount|scene\+?\s*savings|instant savings|sale savings|savings|preisvorteil|ersparnis|aktionsrabatt)(?:\s+(.+))?$/i);
  if(discount){
-  const target=discount[1]?.trim();let candidates=target?d.lines.filter(l=>normalize(l.label)===normalize(target)||normalize(l.name)===normalize(target)):[];
+  // "ARCP: ($2.50) -1.00" repeats the regular price in brackets instead of naming the item.
+  const target=discount[1]?.replace(/^\(\s*[$€]?\d+[.,]\d{2}\s*\)$/,'').trim();let candidates=target?d.lines.filter(l=>normalize(l.label)===normalize(target)||normalize(l.name)===normalize(target)):[];
   // Item-level savings are printed directly beneath the item they reduce; coupons may cover the whole basket.
-  if(!target&&amount<0&&/savings|rabatt|preisvorteil|ersparnis/i.test(label)&&lastItemIndex===index-1&&d.lines.length)candidates=[d.lines[d.lines.length-1]];
+  if(!target&&amount<0&&/savings|rabatt|preisvorteil|ersparnis|arcp/i.test(label)&&lastItemIndex===index-1&&d.lines.length)candidates=[d.lines[d.lines.length-1]];
   if(amount<0&&candidates.length===1){const l=candidates[0],paid=toCents(l.amount),reduction=-amount;if(reduction<=paid){const alreadyIncluded=l.regularPrice!==undefined&&toCents(l.regularPrice)-paid===reduction;l.regularPrice=l.regularPrice||l.amount;l.discount=amountText(toCents(l.discount||'0')+reduction);l.amount=alreadyIncluded?l.amount:amountText(paid-reduction);l.saleStatus='reduced';l.sourceLines=[...(l.sourceLines||[]),index+1]}else{d.unassignedAdjustments.push({label,amount:amountText(amount),sourceLine:index+1});d.warnings.push('Discount exceeds the associated item price.')}}
   else{d.unassignedAdjustments.push({label,amount:amountText(amount),sourceLine:index+1});d.warnings.push('Discount cannot be uniquely assigned: '+line)}pending='';continue;
  }
@@ -68,11 +73,13 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  if(pending&&/^\d+\s*[@x×]/i.test(label)){label=pending+' '+label;pending=''}
  else if(pending&&/^\d+(?:[.,]\d+)?\s*(kg|g|lb|l)\b/i.test(label)){label=pending+' '+label;pending=''}
  else if(pending&&/^\d{5,14}$/.test(label)){label=pending;pending=''}
- if(/^total\s+(savings|saved|discount|items?|number)|^(cash|change|debit|credit|visa|mastercard|amex|tender|payment|approved|auth|terminal|trans\b|you saved|savings|points|rewards|coupon|discount|rabais|items?\b|articles?\b|tel\b|phone|www\.|thank|merci|receipt|invoice|cashier)/i.test(label)||!/[a-z]/i.test(label)||/^\d+\s*[@x]\s*\d/i.test(label))continue;
+ if(/^total\s+(savings|saved|discount|items?|number)|^(cash|change|debit|credit|visa|mastercard|amex|tender|payment|approved|auth|terminal|trans\b|you saved|savings|points|rewards|coupon|discount|rabais|items?\b|articles?\b|tel\b|phone|www\.|thank|merci|receipt|invoice|cashier)/i.test(label)||!/[a-z]/i.test(label)||/^\d+\s*[@x]\s*\$?\d/i.test(label))continue;
+ // Loyalty stamps and points print as zero-priced lines: "24632 PHY STAMP EARN Q 0.00".
+ if(amount===0&&/\b(stamps?|pts|points|rewards?|earn)\b/i.test(label)){pending='';continue}
  if(fuelReceipt&&(FUEL_GRADE.test(label)||/\b(fuel|pump|säule|saule|tank\w*|gas sale|kraftstoff)\b/i.test(label))){
   d.lines.push({id:newId(),sourceLines:[index+1],label,name:fuelGrade(label,false)||fuelGrade(text,false)||fuelGrade(label)||'Fuel',quantity:'1',amount:amountText(amount),category:'Fuel',packSize:'',measuredQuantity:fuelLitres(label,text),measuredUnit:fuelLitres(label,text)?'L':undefined});
   lastItemIndex=index;pending='';pendingQuantity=null;continue}
- let name=expandAbbreviations(label),quantity='1';const count=name.match(/\b(\d+)\s*[@x×]\s*\d+[.,]\d{2}/i);if(count){quantity=count[1];name=name.slice(0,count.index).trim()}const qty=name.match(/^(\d+)\s*x\s+(.+)/i);if(qty){quantity=qty[1];name=qty[2]}
+ let name=expandAbbreviations(label),quantity='1';const count=name.match(/\b(\d+)\s*[@x×]\s*\$?\d+[.,]\d{2}/i);if(count){quantity=count[1];name=name.slice(0,count.index).trim()}const qty=name.match(/^(\d+)\s*x\s+(.+)/i);if(qty){quantity=qty[1];name=qty[2]}
  // Restaurant registers print the count first: "1 BAGEL BELT", "2 MED ORIGINAL".
  const served=takeout&&!qty&&name.match(/^(\d{1,2})\s+([a-z].*)$/i);if(served){quantity=served[1];name=served[2]}
  if(pendingQuantity&&quantity==='1'&&Math.abs(amount-pendingQuantity.n*pendingQuantity.unit)<=1)quantity=String(pendingQuantity.n);pendingQuantity=null;

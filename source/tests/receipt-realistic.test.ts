@@ -190,3 +190,18 @@ test('takeout receipts: restaurant chains and dine-in/take-out hints use the Tak
  assert.ok(local.lines.every(l=>l.category==='Takeout'));
  assert.equal(parseReceipt('SOBEYS\nCHIPS 4.99\nTOTAL 4.99').lines[0].category,'Snacks & sweets');
 });
+
+test('Atlantic Superstore Bayers Lake: count lines carry the price, limits, ARCP, stamps and YY/MM/DD',async()=>{
+ const {RECEIPT_FIXTURES,checkReceiptFixture}=await import('../lib/receipt-fixtures');
+ const fixture=RECEIPT_FIXTURES.find(f=>f.id==='superstore-bayers-lake')!;
+ const d=parseReceipt(fixture.text);
+ const failed=checkReceiptFixture(d,fixture).filter(c=>!c.ok);
+ assert.deepEqual(failed,[],JSON.stringify(d.lines.map(l=>[l.label,l.amount,l.quantity])));
+ assert.deepEqual(d.lines.map(l=>l.name),['Rooster Sushi','Three Cheese Dinner','Marukome Miso','White Batard','D Ital Buns Crus','Oka Mushrooms An']);
+ const batard=d.lines[3];assert.equal(batard.regularPrice,'2.50');assert.equal(batard.discount,'1.00');
+ assert.equal(d.unassignedAdjustments?.length,0);
+ assert.ok(!d.warnings?.some(w=>/negative|differs/i.test(w)),d.warnings?.join('|'));
+ // OCR variants: slash after the code, everything else the same.
+ const variant=parseReceipt(fixture.text.replace('24632 PHY','24632/PHY'));
+ assert.equal(variant.lines.length,6);assert.equal(difference(variant),0);
+});
