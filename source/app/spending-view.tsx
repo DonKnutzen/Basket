@@ -4,7 +4,7 @@ import { ShoppingBasket, ReceiptText, ChartNoAxesCombined, CalendarDays, ScanLin
 import { tr, phrase, locale } from '../lib/i18n';
 import { localDate, money, type BasketData, type Receipt } from '../lib/types';
 import { monthOptions } from '../lib/budgets';
-import { receiptCurrencies, spendingStats, type PeriodKey, type TimeBucket, type WeekdayStat, type CategoryStat } from '../lib/spending-stats';
+import { defaultSpendingMonth, receiptCurrencies, spendingStats, type PeriodKey, type TimeBucket, type WeekdayStat, type CategoryStat } from '../lib/spending-stats';
 import BudgetPanel from './budget-panel';
 import { Empty, Intro } from './basket-app';
 
@@ -88,11 +88,12 @@ export function SpendingView({ data, scan, busy, act }: {
     const months = monthOptions(data);
     const currencies = receiptCurrencies(data.receipts);
     const [period, setPeriod] = useState<PeriodKey>('month');
-    const [month, setMonth] = useState(localDate().slice(0, 7));
+    const [chosenMonth, setMonth] = useState('');
     const [chosenCurrency, setCurrency] = useState('');
     const [openCategory, setOpenCategory] = useState('');
     const [allComparisons, setAllComparisons] = useState(false);
     const currency = chosenCurrency || currencies[0] || 'CAD';
+    const month = chosenMonth || defaultSpendingMonth(data.receipts, currency);
     const s = spendingStats(data, period, month, currency);
     const delta = s.previousTotalCents ? (s.totalCents - s.previousTotalCents) / s.previousTotalCents : null;
     const periodText = period === 'month' ? monthName(month) : period === 'all' ? tr('All time') : tr(PERIODS.find(p => p.id === period)!.label);

@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {periodRange,previousRange,receiptCurrencies,spendingStats,timeline} from '../lib/spending-stats';
+import {defaultSpendingMonth,periodRange,previousRange,receiptCurrencies,spendingStats,timeline} from '../lib/spending-stats';
 import type {PriceLine,Receipt} from '../lib/types';
 
 const receipt=(id:string,store:string,date:string,totalCents:number,currency='CAD',taxCents=0):Receipt=>({id,store,date,totalCents,taxCents,currency,createdBy:'u'});
@@ -75,4 +75,11 @@ test('weekday pattern and largest shop come from the saved receipts of the perio
  assert.equal(s.weekdays.reduce((n,w)=>n+w.trips,0),3);
  assert.equal(s.largest?.id,'r2');
  assert.equal(spendingStats(data,'month','2026-08','CAD','2026-10-31').largest,null);
+});
+
+test('spending opens on the latest month with receipts when the current month has none',()=>{
+ assert.equal(defaultSpendingMonth(receipts,'CAD','2026-11-02'),'2026-10');
+ assert.equal(defaultSpendingMonth(receipts,'CAD','2026-10-30'),'2026-10');
+ assert.equal(defaultSpendingMonth([],'CAD','2026-11-02'),'2026-11');
+ assert.equal(defaultSpendingMonth([receipt('x','A','2026-12-01',100)],'CAD','2026-11-02'),'2026-11');
 });

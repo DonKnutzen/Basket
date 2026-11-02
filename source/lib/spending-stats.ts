@@ -32,6 +32,11 @@ export function receiptCurrencies(receipts:readonly Receipt[]){
  return [...count].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).map(([c])=>c);
 }
 const inRange=(day:string,r:DateRange)=>day>=r.from&&day<=r.to;
+/** Current month, or the latest earlier month with receipts in this currency when the current one has none. */
+export function defaultSpendingMonth(receipts:readonly Receipt[],currency:string,today=localDate()){
+ const current=today.slice(0,7),months=receipts.filter(r=>r.currency===currency).map(r=>r.date.slice(0,7)).filter(m=>m<=current).sort();
+ return months.includes(current)?current:months[months.length-1]||current;
+}
 
 export type TimeBucket={key:string;from:string;to:string;cents:number;trips:number};
 /** Weeks (Monday start) for ranges up to ~3 months, months beyond; empty periods are kept as zero. */
