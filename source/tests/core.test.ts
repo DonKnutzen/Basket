@@ -392,6 +392,11 @@ test('international purchase dates never fall back to scan day',()=>{
  for(const text of ['02.11.26 14:35','Bon 1234 02.11.26 12:10:45','02.11.2614:35 Uhr','Datum 02.11.26 Zeit 23:59:01','15:10:45 Uhr 02.11.26'])assert.equal(receiptDate(text,'DE','REWE').date,'2026-11-02',text);
  assert.equal(parseReceipt('SOBEYS\nMILK 5.49\nTOTAL 5.49').date,'');
  for(const text of ['31.02.2026','2026-13-28'])assert.equal(receiptDate(text).status,'invalid');
+ // OCR may garble month and year after "Datum:" (Kaufland iPhone scan); a day from the past week is taken as this scan's date.
+ const scan=new Date('2026-11-02T12:00:00');
+ assert.equal(receiptDate('Datum: 02.   a ein Ju 00:38 Bon:40219','DE','Kaufland',scan).date,'2026-11-02');
+ assert.equal(receiptDate('Datum: 30. ii 10:12','DE','Kaufland',scan).date,'2026-10-30');
+ assert.equal(receiptDate('Datum: 15. ii 10:12','DE','Kaufland',scan).status,'missing');
 });
 test('ambiguous Canadian dates and conflicting dates require confirmation',()=>{
  const ambiguous=receiptDate('04/05/2026','CA');assert.equal(ambiguous.date,'');assert.equal(ambiguous.status,'ambiguous');assert.deepEqual(ambiguous.candidates,['2026-05-04','2026-04-05']);

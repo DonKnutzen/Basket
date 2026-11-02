@@ -9,7 +9,7 @@ const months=[['januar','january','janvier','jan'],['februar','february','fevrie
 // Country is evidence, not a universal locale: Canadian slash dates remain ambiguous,
 // except for national chains whose registers always print month first (10/28/26).
 const MONTH_FIRST_CHAINS=/walmart|superstore|no frills|sobeys|costco|foodland|giant tiger|shoppers|dollarama|lawtons|independent|freshco|bulk barn|save easy|nslc|loblaws|food basics|gateway|irving|esso|petro-canada|shell|ultramar|circle k|pioneer/i;
-export function receiptDate(text:string,country='',store=''):DateEvidence{
+export function receiptDate(text:string,country='',store='',scan=new Date()):DateEvidence{
  const monthFirst=country==='CA'&&MONTH_FIRST_CHAINS.test(store);
  const normalized=text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
  const found:{source:string;candidates:string[]}[]=[];
@@ -41,7 +41,16 @@ export function receiptDate(text:string,country='',store=''):DateEvidence{
   });
  }
  const candidates=[...new Set(found.flatMap(f=>f.candidates))];
- if(!found.length)return {date:'',status:'missing',candidates:[]};
+ if(!found.length){
+  // OCR can garble month and year after "Datum:" while the day survives ("Datum: 02.   a ein Ju").
+  // Only a printed day from the past week is trusted, read against the scan date.
+  const day=normalized.match(/\bdatum:?\s*(\d{1,2})\.(?!\s*\d)/);
+  if(day)for(let back=0;back<7;back++){
+   const d=new Date(scan.getFullYear(),scan.getMonth(),scan.getDate()-back);
+   if(d.getDate()===Number(day[1])){const date=iso(String(d.getFullYear()),String(d.getMonth()+1),String(d.getDate()));return {date,status:'recognized',candidates:[date],source:day[0]};}
+  }
+  return {date:'',status:'missing',candidates:[]};
+ }
  if(!candidates.length)return {date:'',status:'invalid',candidates:[],source:found.map(f=>f.source).join('; ')};
  // Conflicting dates never silently pick the first one.
  return {date:candidates.length===1?candidates[0]:'',status:candidates.length===1?'recognized':'ambiguous',candidates,source:found.map(f=>f.source).join('; ')};
