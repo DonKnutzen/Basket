@@ -1,10 +1,10 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ShoppingBasket, ReceiptText, ChartNoAxesCombined, CalendarDays, ScanLine, ShieldCheck, TrendingUp, TrendingDown, ChevronDown, Store } from 'lucide-react';
 import { tr, phrase, locale } from '../lib/i18n';
-import { localDate, money, type BasketData } from '../lib/types';
+import { localDate, money, type BasketData, type Receipt } from '../lib/types';
 import { monthOptions } from '../lib/budgets';
-import { receiptCurrencies, spendingStats, type PeriodKey, type TimeBucket } from '../lib/spending-stats';
+import { receiptCurrencies, spendingStats, type PeriodKey, type TimeBucket, type WeekdayStat, type CategoryStat } from '../lib/spending-stats';
 import BudgetPanel from './budget-panel';
 import { Empty, Intro } from './basket-app';
 
@@ -14,6 +14,49 @@ const share = (value: number) => new Intl.NumberFormat(locale(), { style: 'perce
 const day = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString(locale(), { day: 'numeric', month: 'short' });
 const monthName = (m: string, style: 'short' | 'long' = 'long') => new Date(m + '-15T12:00:00').toLocaleDateString(locale(), { month: style, year: style === 'long' ? 'numeric' : '2-digit' });
 const unitText = (unit: string) => unit === 'kg' || unit === 'L' ? unit : unit === 'piece' ? tr('piece') : unit;
+
+const CATEGORY_COLORS = ['#285640', '#5f8f5a', '#8fae86', '#c2a25a', '#d98b5f', '#7d9bb3', '#a98bb5', '#b8c4a8', '#6f7f63', '#d4c49a'];
+const weekdayName = (d: number, style: 'short' | 'long' = 'short') => new Date(Date.UTC(2024, 0, 1 + d)).toLocaleDateString(locale(), { weekday: style, timeZone: 'UTC' });
+
+/** Counts smoothly from the previous value to the new one. */
+function useCountUp(target: number, ms = 750) {
+    const [value, setValue] = useState(0);
+    const from = useRef(0);
+    useEffect(() => {
+        if (typeof window === 'undefined' || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { from.current = target; setValue(target); return; }
+        const start = performance.now(), a = from.current; let frame = 0;
+        const step = (t: number) => { const k = Math.min(1, (t - start) / ms), x = Math.round(a + (target - a) * (1 - Math.pow(1 - k, 3))); from.current = x; setValue(x); if (k < 1) frame = requestAnimationFrame(step); };
+        frame = requestAnimationFrame(step);
+        return () => cancelAnimationFrame(frame);
+    }, [target, ms]);
+    return value;
+}
+function Count({ value, format }: { value: number; format: (n: number) => string }) { return <>{format(useCountUp(value))}</>; }
+
+function Donut({ categories, total, currency }: { categories: CategoryStat[]; total: number; currency: string }) {
+    const r = 52, c = 2 * Math.PI * r;
+    let offset = 0;
+    return <div className="donut" role="img" aria-label={categories.map(x => tr(x.name) + ' ' + share(x.share)).join('; ')}>
+        <svg viewBox="0 0 140 140"><circle cx="70" cy="70" r={r} className="donut-track"/>
+            {categories.map((x, i) => { const len = x.share * c, el = <circle key={x.name} cx="70" cy="70" r={r} stroke={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} strokeDasharray={`${Math.max(0, len - 1.5)} ${c}`} strokeDashoffset={-offset} style={{ animationDelay: i * 70 + 'ms' }}/>; offset += len; return el; })}
+        </svg>
+        <div className="donut-center"><small>{tr('Items')}</small><b><Count value={total} format={n => money(n, currency)}/></b></div>
+    </div>;
+}
+
+function Weekdays({ days, largest, currency }: { days: WeekdayStat[]; largest: Receipt | null; currency: string }) {
+    const max = Math.max(...days.map(d => d.cents), 1), top = days.reduce((a, d) => d.cents > a.cents ? d : a, days[0]);
+    return <section className="chart-card weekday-card">
+        <h2>{tr('By weekday')}</h2>
+        <p>{top.cents ? phrase('You spend the most on {0}', weekdayName(top.day, 'long')) : tr('Per week')}</p>
+        <div className="weekday-bars">{days.map(d => <div key={d.day} className={'weekday-bar' + (d === top && d.cents ? ' top' : '')} title={money(d.cents, currency)}>
+            <em>{d.trips || ''}</em>
+            <span><i style={{ height: d.cents ? Math.max(4, d.cents / max * 100) + '%' : '0', animationDelay: d.day * 60 + 'ms' }}/></span>
+            <small>{weekdayName(d.day)}</small>
+        </div>)}</div>
+        {largest && <div className="largest-shop"><ReceiptText size={18}/><span><small>{tr('Largest shop')}</small><b>{largest.store}</b><small>{day(largest.date)}</small></span><strong><Count value={largest.totalCents} format={n => money(n, currency)}/></strong></div>}
+    </section>;
+}
 
 function bucketLabel(b: TimeBucket, unit: 'week' | 'month') { return unit === 'week' ? day(b.from) : monthName(b.key, 'short'); }
 
@@ -29,7 +72,7 @@ function Timeline({ buckets, unit, currency }: { buckets: TimeBucket[]; unit: 'w
         <div className="timeline-tip" aria-live="polite">{shown ? <><b>{money(shown.cents, currency)}</b><span>{unit === 'week' ? phrase('Week of {0}', day(shown.from)) : monthName(shown.key)} · {shown.trips} {shown.trips === 1 ? tr('trip') : tr('trips')}</span></> : <span>{tr('Highest')}: <b>{money(max, currency)}</b></span>}</div>
         <div className="timeline-bars" role="group" aria-label={buckets.map(b => bucketLabel(b, unit) + ': ' + money(b.cents, currency)).join('; ')} onMouseLeave={() => setActive(null)}>
             {buckets.map((b, i) => <button type="button" key={b.key} className={'timeline-bar' + (active === i ? ' active' : '')} onMouseEnter={() => setActive(i)} onFocus={() => setActive(i)} onClick={() => setActive(i)} aria-label={bucketLabel(b, unit) + ': ' + money(b.cents, currency)}>
-                <span><i style={{ height: b.cents ? Math.max(3, b.cents / max * 100) + '%' : '0' }} /></span>
+                <span><i style={{ height: b.cents ? Math.max(3, b.cents / max * 100) + '%' : '0', animationDelay: Math.min(i * 35, 600) + 'ms' }} /></span>
                 <small>{(buckets.length - 1 - i) % every === 0 ? bucketLabel(b, unit) : ''}</small>
             </button>)}
         </div>
@@ -64,21 +107,23 @@ export function SpendingView({ data, scan, busy, act }: {
         <div className="period-chips" role="group" aria-label={tr('Period')}>{PERIODS.map(p => <button type="button" key={p.id} aria-pressed={period === p.id} className={period === p.id ? 'active' : ''} onClick={() => setPeriod(p.id)}>{tr(p.label)}</button>)}</div>
         {period === 'month' && <BudgetPanel data={data} month={month} currency={currency} busy={busy} act={act}/>}
         <div className="stats stats-four">
-            <div className="stat featured"><span>{tr('TOTAL SPENT ')}<ShoppingBasket size={19}/></span><strong>{money(s.totalCents, currency)}</strong><small>{delta === null ? periodText : phrase('{0} vs. previous period', percent(delta))}</small></div>
-            <div className="stat"><span>{tr('SHOPPING TRIPS ')}<ReceiptText size={19}/></span><strong>{String(s.trips).padStart(2, '0')}</strong><small>{tr('Across ')}{s.stores.length}{tr(' stores')}</small></div>
-            <div className="stat"><span>{tr('AVERAGE SHOP ')}<ChartNoAxesCombined size={19}/></span><strong>{money(s.averageTripCents, currency)}</strong><small>{s.itemCount} {tr('items recorded')}</small></div>
-            <div className="stat"><span>{tr('PER WEEK ')}<CalendarDays size={19}/></span><strong>{money(s.perWeekCents, currency)}</strong><small>{tr('Average in this period')}</small></div>
+            <div className="stat featured"><span>{tr('TOTAL SPENT ')}<ShoppingBasket size={19}/></span><strong><Count value={s.totalCents} format={n => money(n, currency)}/></strong><small>{delta === null ? periodText : phrase('{0} vs. previous period', percent(delta))}</small></div>
+            <div className="stat"><span>{tr('SHOPPING TRIPS ')}<ReceiptText size={19}/></span><strong><Count value={s.trips} format={n => String(n).padStart(2, '0')}/></strong><small>{tr('Across ')}{s.stores.length}{tr(' stores')}</small></div>
+            <div className="stat"><span>{tr('AVERAGE SHOP ')}<ChartNoAxesCombined size={19}/></span><strong><Count value={s.averageTripCents} format={n => money(n, currency)}/></strong><small>{s.itemCount} {tr('items recorded')}</small></div>
+            <div className="stat"><span>{tr('PER WEEK ')}<CalendarDays size={19}/></span><strong><Count value={s.perWeekCents} format={n => money(n, currency)}/></strong><small>{tr('Average in this period')}</small></div>
         </div>
-        {s.trips ? <>
+        {s.trips ? <div className="spend-anim" key={period + month + currency}>
             <Timeline buckets={s.timeline.buckets} unit={s.timeline.unit} currency={currency}/>
+            <Weekdays days={s.weekdays} largest={s.largest} currency={currency}/>
             <div className="spending-layout">
                 <section className="chart-card">
                     <h2>{tr('By category')}</h2>
                     <p>{tr('Tap a category to see what was in it')}</p>
-                    <div className="rank-list">{s.categories.map(c => <div key={c.name} className={'rank-row' + (openCategory === c.name ? ' open' : '')}>
+                    <Donut categories={s.categories} total={s.categories.reduce((n, c) => n + c.cents, 0)} currency={currency}/>
+                    <div className="rank-list">{s.categories.map((c, ci) => <div key={c.name} className={'rank-row' + (openCategory === c.name ? ' open' : '')}>
                         <button type="button" onClick={() => setOpenCategory(openCategory === c.name ? '' : c.name)} aria-expanded={openCategory === c.name}>
-                            <span className="rank-head"><b>{tr(c.name)}</b><strong>{money(c.cents, currency)}</strong></span>
-                            <span className="rank-bar"><i style={{ width: c.cents / maxCategory * 100 + '%' }}/></span>
+                            <span className="rank-head"><b><i className="cat-dot" style={{ background: CATEGORY_COLORS[ci % CATEGORY_COLORS.length] }}/>{tr(c.name)}</b><strong>{money(c.cents, currency)}</strong></span>
+                            <span className="rank-bar"><i style={{ width: c.cents / maxCategory * 100 + '%', background: CATEGORY_COLORS[ci % CATEGORY_COLORS.length] }}/></span>
                             <small>{share(c.share)} {tr('of item spending')} <ChevronDown size={13}/></small>
                         </button>
                         {openCategory === c.name && <ul className="rank-detail">{c.products.map(p => <li key={p.name}><span>{p.name}</span><b>{money(p.cents, currency)}</b></li>)}</ul>}
@@ -119,7 +164,7 @@ export function SpendingView({ data, scan, busy, act }: {
                     <div><h3><TrendingDown size={16}/>{tr('Cheaper')}</h3>{drops.length ? drops.map(c => <div key={c.key} className="move-row"><span><b>{c.name}</b><small>{c.store} · {day(c.date)}</small></span><span className="cheaper">{percent(c.change)}<small>{money(c.previousCents, currency)} → {money(c.latestCents, currency)}/{unitText(c.unit)}</small></span></div>) : <p className="muted-note">{tr('No price drops recorded.')}</p>}</div>
                 </div>
             </section>}
-        </> : <Empty title={tr('The bigger picture starts with one shop.')} action={<button className="primary" onClick={scan}><ScanLine size={17}/>{tr('Scan a receipt')}</button>}>{tr('Scan a receipt in this period and currency to see where your money goes.')}</Empty>}
+        </div> : <Empty title={tr('The bigger picture starts with one shop.')} action={<button className="primary" onClick={scan}><ScanLine size={17}/>{tr('Scan a receipt')}</button>}>{tr('Scan a receipt in this period and currency to see where your money goes.')}</Empty>}
         <p className="spending-note"><ShieldCheck size={16}/>{tr('Based on saved receipts. Different currencies are never added together.')}</p>
     </>;
 }

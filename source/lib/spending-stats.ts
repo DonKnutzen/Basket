@@ -122,7 +122,15 @@ export type SpendingStats={
  currency:string;range:DateRange;receipts:Receipt[];totalCents:number;taxCents:number;trips:number;averageTripCents:number;
  perWeekCents:number;itemCount:number;previousTotalCents:number|null;timeline:ReturnType<typeof timeline>;
  categories:CategoryStat[];stores:StoreStat[];products:ProductStat[];comparisons:PriceComparison[];storeIndex:StoreIndex[];changes:PriceChange[];
+ weekdays:WeekdayStat[];largest:Receipt|null;
 };
+export type WeekdayStat={day:number;cents:number;trips:number};
+/** Spending per weekday, Monday = 0. */
+export function weekdays(receipts:readonly Receipt[]):WeekdayStat[]{
+ const days=Array.from({length:7},(_,day)=>({day,cents:0,trips:0}));
+ for(const r of receipts){const d=days[(new Date(r.date+'T12:00:00Z').getUTCDay()+6)%7];d.cents+=r.totalCents;d.trips++}
+ return days;
+}
 export function spendingStats(data:Pick<BasketData,'receipts'|'lines'>,period:PeriodKey,month:string,currency:string,today=localDate()):SpendingStats{
  const range=periodRange(period,month,today);
  const receipts=data.receipts.filter(r=>r.currency===currency&&inRange(r.date,range)).sort((a,b)=>b.date.localeCompare(a.date));
@@ -144,5 +152,6 @@ export function spendingStats(data:Pick<BasketData,'receipts'|'lines'>,period:Pe
  const comparisons=priceComparisons(priceLines);
  return {currency,range,receipts,totalCents,taxCents:sumBy(receipts,r=>r.taxCents),trips,averageTripCents:trips?Math.round(totalCents/trips):0,
   perWeekCents:Math.round(totalCents/weeks),itemCount:lines.length,previousTotalCents,timeline:timeline(receipts,range,today),
-  categories,stores,products:topProducts(lines),comparisons,storeIndex:storePriceIndex(comparisons),changes:priceChanges(priceLines)};
+  categories,stores,products:topProducts(lines),comparisons,storeIndex:storePriceIndex(comparisons),changes:priceChanges(priceLines),
+  weekdays:weekdays(receipts),largest:receipts.reduce<Receipt|null>((a,r)=>!a||r.totalCents>a.totalCents?r:a,null)};
 }

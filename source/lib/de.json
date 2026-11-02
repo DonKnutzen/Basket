@@ -865,5 +865,8 @@
   "Compact": "Kompakt",
   "Details": "Details",
   "Sum of items": "Summe der Artikel",
-  "Item {0}": "Artikel {0}"
+  "Item {0}": "Artikel {0}",
+  "By weekday": "Nach Wochentag",
+  "You spend the most on {0}": "Am meisten gibst du am {0} aus",
+  "Largest shop": "Größter Einkauf"
 }

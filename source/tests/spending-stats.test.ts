@@ -67,3 +67,12 @@ test('timeline uses weeks for short ranges and months for long ones, keeping emp
  const year=timeline(receipts.filter(r=>r.currency==='CAD'),periodRange('12m','','2026-10-31'),'2026-10-31');
  assert.equal(year.unit,'month');assert.equal(year.buckets.length,12);assert.equal(year.buckets[11].cents,6500);assert.equal(year.buckets[10].cents,1000);
 });
+
+test('weekday pattern and largest shop come from the saved receipts of the period',()=>{
+ const s=spendingStats(data,'month','2026-10','CAD','2026-10-31');
+ assert.equal(s.weekdays.length,7);
+ assert.deepEqual(s.weekdays[5],{day:5,cents:6500,trips:3});
+ assert.equal(s.weekdays.reduce((n,w)=>n+w.trips,0),3);
+ assert.equal(s.largest?.id,'r2');
+ assert.equal(spendingStats(data,'month','2026-08','CAD','2026-10-31').largest,null);
+});
