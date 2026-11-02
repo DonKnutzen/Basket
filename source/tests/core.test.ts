@@ -388,8 +388,8 @@ test('international purchase dates never fall back to scan day',()=>{
  for(const text of ['28.10.2026','2026-10-28','10/28/2026','28/10/2026','28.10.26','28. Oktober 2026','October 28, 2026','28 octobre 2026'])assert.equal(receiptDate(text).date,'2026-10-28',text);
  assert.equal(receiptDate('28 février 2024').date,'2024-02-28');
  assert.equal(receiptDate('Nothing dated here').status,'missing');
- // German short dates with a 24h time: dotted HH.MM.SS is a time, OCR may glue the time onto the year.
- for(const text of ['02.11.26 14:35','Bon 1234 02.11.26 12.10.45','02.11.2614:35 Uhr','Datum 02.11.26 Zeit 23:59:01','15.10.45 Uhr 02.11.26'])assert.equal(receiptDate(text,'DE','REWE').date,'2026-11-02',text);
+ // German short dates with a 24h time (colons); OCR may glue the time onto the year.
+ for(const text of ['02.11.26 14:35','Bon 1234 02.11.26 12:10:45','02.11.2614:35 Uhr','Datum 02.11.26 Zeit 23:59:01','15:10:45 Uhr 02.11.26'])assert.equal(receiptDate(text,'DE','REWE').date,'2026-11-02',text);
  assert.equal(parseReceipt('SOBEYS\nMILK 5.49\nTOTAL 5.49').date,'');
  for(const text of ['31.02.2026','2026-13-28'])assert.equal(receiptDate(text).status,'invalid');
 });

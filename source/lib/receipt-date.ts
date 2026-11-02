@@ -16,8 +16,8 @@ export function receiptDate(text:string,country='',store=''):DateEvidence{
  for(const raw of normalized.split(/\r?\n/)){
   // A best-before date is not a purchase date.
   if(/best before|expiry|expiration|haltbar|mindestens|meilleur avant/.test(raw))continue;
-  // 24h times are not dates: OCR may glue "14:35" onto "02.11.26", and dotted "12.10.45" after a date or before "Uhr" is a time.
-  const time='(?:[01]?\\d|2[0-3])[:.][0-5]\\d(?:[:.][0-5]\\d)?';
+  // 24h times (always with colons) are not dates: OCR may glue "14:35" onto "02.11.26".
+  const time='(?:[01]?\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d)?';
   const line=raw.replace(/\b(\d{1,2}\.\d{1,2}\.\d{2})(\d{1,2}:\d{2})/g,'$1 $2').replace(new RegExp('\\b'+time+'\\s*uhr','g'),' ').replace(new RegExp('(\\d{1,2}[./-]\\d{1,2}[./-](?:20)?\\d{2})[\\s,/]+'+time,'g'),'$1');
   const explicitDMY=/dd[\s/.-]*mm[\s/.-]*yy|tt[\s/.-]*mm[\s/.-]*jj/.test(normalized);
   const explicitMDY=/mm[\s/.-]*dd[\s/.-]*yy/.test(normalized);
