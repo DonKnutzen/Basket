@@ -101,7 +101,7 @@ test('Atlantic Superstore receipt: store, date, codes, flags, weights and HST',(
  assert.equal(d.total,'29.75');
  assert.deepEqual(d.lines.map(l=>l.amount),['1.29','3.99','6.49','1.99','11.98','3.49']);
  assert.ok(!d.lines.some(l=>/mrj|hst|^\d/i.test(l.name)),d.lines.map(l=>l.name).join('|'));
- const bananas=d.lines[3];assert.equal(bananas.name,'Bananas');assert.equal(bananas.measuredQuantity,'1.025');assert.equal(bananas.category,'Produce');
+ const bananas=d.lines[3];assert.equal(bananas.name,'Bananas');assert.equal(bananas.measuredQuantity,'1.025');assert.equal(bananas.category,'Fruit');
  const chicken=d.lines[4];assert.equal(chicken.quantity,'2');assert.equal(chicken.category,'Meat & fish');assert.match(chicken.name,/^Chicken Thighs$/);
  assert.equal(d.lines[2].category,'Dairy & eggs');
  assert.equal(d.lines[5].category,'Snacks & sweets');
@@ -135,7 +135,7 @@ test('ALDI receipt: two-digit year and German snack/meat categories',()=>{
  const d=parseReceipt(aldi);
  assert.equal(d.store,'Aldi Nord');assert.equal(d.date,'2026-10-29');assert.equal(d.total,'8.16');
  assert.equal(d.lines.length,4);assert.equal(difference(d),0);
- assert.deepEqual(d.lines.map(l=>l.category),['Dairy & eggs','Produce','Snacks & sweets','Meat & fish']);
+ assert.deepEqual(d.lines.map(l=>l.category),['Dairy & eggs','Fruit','Snacks & sweets','Meat & fish']);
 });
 test('Canadian chain receipts print month first, so a slash date is not ambiguous there',()=>{
  assert.equal(receiptDate('WALMART\n04/05/26 10:00','CA','Walmart').date,'2026-04-05');

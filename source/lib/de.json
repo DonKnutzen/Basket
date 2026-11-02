@@ -857,5 +857,8 @@
   "Recognized text": "Erkannter Text",
   "OCR confidence {0}%": "OCR-Sicherheit {0} %",
   "Copy text": "Text kopieren",
-  "Copied": "Kopiert"
+  "Copied": "Kopiert",
+  "Veggies": "Gemüse",
+  "Processed Food": "Verarbeitete Lebensmittel",
+  "Upload receipt image": "Bon-Bild hochladen"
 }

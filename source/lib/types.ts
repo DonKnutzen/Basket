@@ -1,8 +1,17 @@
-import {catalogCategory} from './product-catalog';
+import {catalogCategory,catalogExactProduct} from './product-catalog';
 import {locale} from './i18n';
 import {householdIcon} from './household-icons';
 import {drinkIcon} from './drink-icons';
 export const CATEGORIES=['Produce','Dairy & eggs','Meat & fish','Bakery','Snacks & sweets','Pantry','Frozen','Drinks','Household','Takeout','Fuel','Other'];
+// Receipts split produce into fruit and veggies, and track processed food on its own.
+export const RECEIPT_CATEGORIES=CATEGORIES.flatMap(c=>c==='Produce'?['Fruit','Veggies','Processed Food']:[c]);
+const PROCESSED=/\b(sushi|dinner|dnr|ready meal|meal kit|fertiggericht|instant|nuggets|lasagna|lasagne)\b/;
+const FRUIT=/apple|aepfel|apfel|banan|avocado|lemon|\blimes?\b|berry|berries|beere|orange|grape|fruit|obst|pear|birne|peach|mango|melon|kiwi|cherr|kirsch|plum|pflaume|pineapple|ananas|zitrone|mandarine|clementine|pommes?\b|poires?|citrons?/;
+export function receiptCategory(name:string,category?:string){
+ const n=normalize(name.replace(/ß/gi,'ss'));if(PROCESSED.test(n))return 'Processed Food';
+ const c=category||inferCategory(name);if(c!=='Produce')return c;
+ return catalogExactProduct(name)?.group==='Fruit'||FRUIT.test(n)?'Fruit':'Veggies';
+}
 // Chips, chocolate, candy and cookies, including common Canadian and German brands.
 const SNACKS=/\b(chips|crisps|doritos|lays|ruffles|pringles|cheetos|tostitos|old dutch|miss vickies|nachos?|popcorn|pretzels?|crackers?|goldfish|candy|candies|chocolates?|chocolate bars?|gummy|gummies|gummi|jelly beans|licorice|liquorice|marshmallows?|cookies?|oreo|chips ahoy|kit ?kat|snickers|twix|aero|coffee crisp|reeses?|smarties|skittles|maynards|swedish berries|cadbury|lindt|milka|ritter sport|kinder|haribo|toblerone|schokolade|schoko|sussigkeiten|suessigkeiten|gummibarchen|gummibaerchen|goldbaren|goldbaeren|kekse?|bonbons?|lakritz|riegel|salzstangen|flips|erdnussflips|kartoffelchips|paprikachips|tortillachips|pralinen?)\b/;
 const NOT_SNACKS=/\b(chocolate milk|schokomilch|chocolate chips|chocolate chip|schokotropfen|kakao|cocoa|baking|backen)\b/;
