@@ -1,0 +1,18 @@
+{
+  "store": "Kaufland",
+  "date": "2026-11-02",
+  "total": "24.63",
+  "tax": "0.00",
+  "items": [
+    {"label": "Toipa", "amount": "7.45"},
+    {"label": "Chio Tortilla", "amount": "1.00"},
+    {"label": "Afri Cola Mix", "amount": "0.89"},
+    {"label": "Pfandartikel", "amount": "0.15"},
+    {"label": "Barilla Spaghetto", "amount": "1.00"},
+    {"label": "Red Bull Energy", "amount": "2.98"},
+    {"label": "Pfandartikel", "amount": "0.50"},
+    {"label": "Bresso", "amount": "2.39"},
+    {"label": "Erdnussb", "amount": "3.59"},
+    {"label": "Demeter", "amount": "2.99"}
+  ]
+}

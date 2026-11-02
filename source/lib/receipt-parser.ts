@@ -108,7 +108,7 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  if(/^(price\s*\/\s*l(?:itre|iter)?|price per lit(?:re|er)|ppl|preis\s*\/\s*l|grundpreis|unit price)\s*:?$/i.test(label)){pending='';continue}// Keywords may follow up to two short junk words and read 0 for O: "A a SUBTOTAL", "T0TAL".
  const key=label.replace(/0/g,'O').replace(/^(?:\S{1,3} ){0,2}(?=\S{5})/,''),lastWord=key.split(' ').pop()!.toUpperCase();
  if(/^sub[ -]?total|^\S+ sub[ -]?total$/i.test(key)){subtotal=amount;ended=true;pending='';continue}
- const fuzzyTotal=total===undefined&&key.split(' ').length<=3&&!/sav|item|disc|point|reward|number/i.test(key)&&(edits(lastWord,'TOTAL')<=1||subtotal!==undefined&&amount>=subtotal&&edits(lastWord,'TOTAL')<=2);
+ const fuzzyTotal=total===undefined&&key.split(' ').length<=3&&!/sav|item|disc|point|reward|number/i.test(key)&&(edits(lastWord,'TOTAL')<=1||d.country==='DE'&&key.split(' ').length===1&&edits(lastWord,'SUMME')<=2&&amount*100>=d.lines.reduce((s,l)=>s+Math.round(+l.amount*100),0)||subtotal!==undefined&&amount>=subtotal&&edits(lastWord,'TOTAL')<=2);
  if(fuzzyTotal||/^(total|summe|gesamt|zu zahlen|balance due|amount due|grand total)\b(?!\s*(savings|saved|discount|items?|number))/i.test(key)){total=amount;ended=true;pending='';continue}
  const regular=label.match(/^(?:regular price|normalpreis|prix regulier)\s+(.+)$/i);
  if(regular){const matches=d.lines.filter(l=>normalize(l.label)===normalize(regular[1])||normalize(l.name)===normalize(regular[1]));if(matches.length===1&&amount>=toCents(matches[0].amount)){matches[0].regularPrice=amountText(amount);matches[0].sourceLines=[...(matches[0].sourceLines||[]),index+1]}else d.warnings.push('Regular price could not be uniquely associated: '+line);pending='';continue}
