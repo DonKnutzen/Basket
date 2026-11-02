@@ -3,12 +3,25 @@ import {locale} from './i18n';
 import {householdIcon} from './household-icons';
 import {drinkIcon} from './drink-icons';
 export const CATEGORIES=['Produce','Dairy & eggs','Meat & fish','Bakery','Snacks & sweets','Pantry','Frozen','Drinks','Household','Takeout','Fuel','Medicine','Clothing','Other'];
+// The twelve quick categories in the compact receipt review, each with its emoji.
+export const COMPACT_CATEGORIES=['Fruit','Veggies','Meat & fish','Dairy & eggs','Bakery','Pasta, rice & grains','Pantry','Oils, spices & sauces','Frozen','Snacks & sweets','Drinks','Household'];
+export const CATEGORY_EMOJI:Record<string,string>={'Fruit':'🍎','Veggies':'🥦','Meat & fish':'🥩','Dairy & eggs':'🥛','Bakery':'🍞','Pasta, rice & grains':'🍝','Pantry':'🥫','Oils, spices & sauces':'🧂','Frozen':'❄️','Snacks & sweets':'🍫','Drinks':'🥤','Household':'🧽','Processed Food':'🍱','Takeout':'🥡','Fuel':'⛽','Medicine':'💊','Clothing':'👕','Other':'🏷️'};
 // Receipts split produce into fruit and veggies, and track processed food on its own.
-export const RECEIPT_CATEGORIES=CATEGORIES.flatMap(c=>c==='Produce'?['Fruit','Veggies','Processed Food']:[c]);
+export const RECEIPT_CATEGORIES=CATEGORIES.flatMap(c=>c==='Produce'?['Fruit','Veggies','Processed Food']:c==='Pantry'?['Pasta, rice & grains',c,'Oils, spices & sauces']:[c]);
 const PROCESSED=/\b(sushi|dinner|dnr|ready meal|meal kit|fertiggericht|instant|nuggets|lasagna|lasagne)\b/;
 const FRUIT=/apple|aepfel|apfel|banan|avocado|lemon|\blimes?\b|berry|berries|beere|orange|grape|fruit|obst|pear|birne|peach|mango|melon|kiwi|cherr|kirsch|plum|pflaume|pineapple|ananas|zitrone|mandarine|clementine|pommes?\b|poires?|citrons?/;
+// Finer receipt groups: frozen goods, fresh herbs, soups and canned goods, nuts, oils/spices/sauces, and pasta/rice/grains.
+const FROZEN=/\b(tk|tiefkuhl\w*|tiefkuehl\w*|tiefgefroren|frozen|pizza|pizzen|eis|speiseeis|eiscreme|vanilleeis|schokoeis|erdbeereis|stracciatellaeis|magnum|ice cream|gelato|fischstabchen|fischstaebchen|surgeles?|congeles?|glaces?)\b/;
+const HERBS=/\b(basilikum|petersilie|schnittlauch|dill|koriander|minze|rosmarin|salbei|kresse|krauter|kraeuter|rucola|herbs?|parsley|cilantro|basil|chives)\b/;
+const SOUPS=/suppe|eintopf|bruhe|bruehe|\bsoups?\b|\bbroth\b|passata|passierte|tomatenmark|fertigsauce|pesto|konserve/;
+const NUTS=/\b(erdnuss|erdnusse|erdnuesse|nusse|nuesse|nussmischung|studentenfutter|cashew\w*|pistazien|macadamia|walnusse|walnuesse|haselnusse|haselnuesse|mandeln|nuts?|peanuts?|almonds?|cashews?|pistachios?|trail mix)\b/;
+const CONDIMENTS=/\b(\w*olivenol|\w*olivenoel|rapsol|rapsoel|sonnenblumenol|sonnenblumenoel|sesamol|sesamoel|leinol|leinoel|kurbiskernol|kuerbiskernol|kurbiskernoel|kuerbiskernoel|speiseol|speiseoel|bratol|bratoel|ol|oel|essig|\w*essig|balsamico|aceto|salz|meersalz|jodsalz|pfeffer|gewurz\w*|gewuerz\w*|paprikapulver|currypulver|chilipulver|zimt|kurkuma|oregano|kreuzkummel|muskat\w*|ketchup|senf|mayo|mayonnaise|remoulade|\w*dressing|sojasauce|sojasosse|worcester\w*|tabasco|sriracha|bbq|grillsauce|oil|olive oil|vinegar|salt|mustard|seasonings?|spices?|cumin|cinnamon|turmeric|garam masala|huile|vinaigre|sel)\b/;
+const GRAINS=/\b(nudeln?|pasta|spaghetti\w*|penne|fusilli|farfalle|tagliatelle|linguine|makkaroni|maccheroni|rigatoni|tortellini|ravioli|gnocchi|spatzle|spaetzle|lasagneplatten|reis|\w+reis|basmati\w*|couscous|bulgur|quinoa|hirse|polenta|haferflocken|hafer|musli|muesli|granola|cornflakes|cerealien|porridge|linsen|kichererbsen|kidneybohnen|bohnen|rice|noodles?|oats|oatmeal|cereals?|lentils|chickpeas|pates|riz|cereales|avoine|lentilles|haricots)\b/;
 export function receiptCategory(name:string,category?:string){
- const n=normalize(name.replace(/ß/gi,'ss'));if(PROCESSED.test(n))return 'Processed Food';
+ const n=normalize(name.replace(/ß/gi,'ss'));if(!category&&FROZEN.test(n))return 'Frozen';if(PROCESSED.test(n))return 'Processed Food';
+ if(category&&category!=='Pantry')return category;
+ if(!category){if(HERBS.test(n))return 'Veggies';if(SOUPS.test(n))return 'Pantry';if(NUTS.test(n)&&!NOT_SNACKS.test(n)&&!/gemahlen|gehackt|blattchen|blaettchen|ground/.test(n))return 'Snacks & sweets'}
+ if(CONDIMENTS.test(n))return 'Oils, spices & sauces';if(GRAINS.test(n))return 'Pasta, rice & grains';
  const c=category||inferCategory(name);if(c!=='Produce')return c;
  return catalogExactProduct(name)?.group==='Fruit'||FRUIT.test(n)?'Fruit':'Veggies';
 }
