@@ -853,5 +853,9 @@
   "That is your own e-mail address.": "Das ist deine eigene E-Mail-Adresse.",
   "You already sent a request to this address.": "An diese Adresse hast du schon eine Anfrage gesendet.",
   "This friend has not accepted yet.": "Diese Anfrage wurde noch nicht angenommen.",
-  "Request failed.": "Anfrage fehlgeschlagen."
+  "Request failed.": "Anfrage fehlgeschlagen.",
+  "Recognized text": "Erkannter Text",
+  "OCR confidence {0}%": "OCR-Sicherheit {0} %",
+  "Copy text": "Text kopieren",
+  "Copied": "Kopiert"
 }

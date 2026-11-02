@@ -1,0 +1,15 @@
+{
+  "source": "gleiches Foto, Tesseract 7 Desktop, alte Pipeline (Graustufen+Kontrast, PSM 6, data.text)",
+  "store": "Atlantic Superstore",
+  "date": "2026-10-31",
+  "total": "21.78",
+  "tax": "0.00",
+  "items": [
+    {"label": "ROOSTER SUSHI", "amount": "4.00"},
+    {"label": "THREE CHSE DNR", "amount": "2.00"},
+    {"label": "MARUKOME MISO", "amount": "3.29"},
+    {"label": "WHITE BATARD", "amount": "1.50"},
+    {"label": "D ITAL BUNS CRUS", "amount": "4.00"},
+    {"label": "OKA MUSHROOMS AN", "amount": "6.99"}
+  ]
+}
