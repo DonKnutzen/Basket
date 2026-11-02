@@ -13,11 +13,13 @@ const ABBREVIATIONS:Record<string,string>={chkn:'chicken',chk:'chicken',mlk:'mil
 // Strip register noise around a product label: leading PLU/UPC codes, inline
 // UPCs with Walmart flags (006259801047 F) and Loblaw/Sobeys tax flags (MRJ, HMRJ).
 // Loblaw prints a pack count before the UPC: "(2)06148306079 ROOSTER SUSHI MRJ".
-function cleanLabel(label:string){return label.replace(/^(?:\(\d{1,3}\))?\d{4,14}[\s/]+/,'').replace(/\s+\d{6,14}\s*[A-Z]{0,2}$/,'').replace(/\s+[A-Z]?MRJ\b/,'').replace(/\s+H?MR$/,'').replace(/(?<!\d)\s+[a-z]$/,'').trim()}
+function cleanLabel(label:string){return label.replace(/^(?:\(\d{1,3}\))?\d{4,14}[\s/]+/,'').replace(/\s+\d{6,14}\s*[A-Z]{0,2}$/,'').replace(/\s+[A-Z]?MRJ\b/,'').replace(/\s+H?MRU?$/,'').replace(/(?<!\d)\s+[a-z]$/,'').trim()}
 // Photo OCR reads table texture and fingers beside the paper as short junk words,
 // separated from the print by wide gaps: "— eas        ARCP: ($2.50)      -1.00 | —.".
-const JUNK_CHAR=/[~—–=|_[\]{}§“”"‘’^`<>«»¦\\]/;
-function junkSegment(s:string){if(/\d/.test(s))return false;if(!/[A-Za-z€$@&%#*+]/.test(s))return true;return s.length===1||JUNK_CHAR.test(s)||/[a-z]/.test(s)&&s.split(' ').every(t=>t.length<=3)}
+const JUNK_CHAR=/[~—–=|_[\]{}§“”"‘’^`<>«»¦£\\]/;
+const junkEdge=(t:string)=>JUNK_CHAR.test(t[0])||JUNK_CHAR.test(t[t.length-1]);
+// Judged on its real words only: "~~ TOTAL STORE REWARD" is content, "“STR ee" is not.
+function junkSegment(s:string){const words=s.split(' ').filter(t=>t&&/[A-Za-z0-9€$@&%#*+]/.test(t)&&!junkEdge(t));if(!words.length)return true;const w=words.join(' ');if(/\d/.test(w))return false;return w.length===1||/[a-z]/.test(w)&&words.every(t=>t.length<=3)}
 // Inside prices only: O→0, l/I→1, S→5, B→8.
 const PRICE_DIGITS:Record<string,string>={O:'0',o:'0',l:'1',I:'1',S:'5',B:'8'};
 const priceDigits=(s:string)=>s.replace(/[OolISB]/g,c=>PRICE_DIGITS[c]);
@@ -26,9 +28,9 @@ export function cleanOcrLine(line:string){
  while(segments.length>1&&junkSegment(segments[0])&&!(segments.length===2&&/^-?[$€]?\d+[.,]\d{2}$/.test(segments[1])))segments.shift();
  while(segments.length>1&&(junkSegment(segments[segments.length-1])||!/\d/.test(segments[segments.length-1])&&segments[segments.length-1].length<=5))segments.pop();
  const tokens=segments.join(' ').split(/\s+/).filter(t=>/[A-Za-z0-9$€@&%#*()+\-/]/.test(t));
- const junkEdge=(t:string)=>JUNK_CHAR.test(t[0])||JUNK_CHAR.test(t[t.length-1]);
  while(tokens.length>1&&junkEdge(tokens[0]))tokens.shift();
- while(tokens.length>1&&junkEdge(tokens[tokens.length-1]))tokens.pop();
+ // A single stray character right after a price ("2.00 4", "2.50 &") is noise or a tax flag; the parser needs neither.
+ while(tokens.length>1&&(junkEdge(tokens[tokens.length-1])||tokens.length>2&&tokens[tokens.length-1].length===1&&/^-?[$€]?\d+[.,]\d{2}$/.test(tokens[tokens.length-2])))tokens.pop();
  return tokens.map((t,i)=>i<tokens.length-3?t:t.replace(/^(-?[$€]?)([\dOolISB]{1,4})([.,])([\dOolISB]{2})$/,(m,sign,whole,dot,cents)=>/\d/.test(whole+cents)?sign+priceDigits(whole)+dot+priceDigits(cents):m)).join(' ')
   // "4. 00" (large fonts) and "BANANAS1.29" (missing gap), with optional tax flags after the price.
   .replace(/(\d[.,]) (\d{2})(?=(?: [A-Z*]{1,4}){0,2}$)/,'$1$2').replace(/([A-Za-z])(-?\d{1,4}[.,]\d{2})(?=(?: [A-Z*]{1,4}){0,2}$)/,'$1 $2');
@@ -37,7 +39,10 @@ export function cleanOcrLine(line:string){
 // the number ("CRUS MRJ 400") or a count line whose unit price explains it ("1@ $3.29 ea 329").
 function restoreDecimal(line:string,notes:string[]){
  const flagged=line.match(/^(.*\bH?MRJ) (\d{3,4})$/),counted=line.match(/^(\d{1,3}) ?@ ?\$?(\d+[.,]\d{2})((?: ?ea)?) (\d{3,5})$/);
- const digits=flagged?flagged[2]:counted&&Number(counted[1])*receiptCents(counted[2])===Number(counted[4])?counted[4]:'';
+ const expected=counted?Number(counted[1])*receiptCents(counted[2]):NaN;
+ // "1@ $3.29 ea 319": one digit misread; count × unit price is printed on the same line.
+ if(counted&&String(expected).length===counted[4].length&&[...counted[4]].filter((c,i)=>c!==String(expected)[i]).length===1){notes.push('OCR misread the line total, using count × unit price: '+line);return line.slice(0,-counted[4].length)+(expected/100).toFixed(2)}
+ const digits=flagged?flagged[2]:counted&&expected===Number(counted[4])?counted[4]:'';
  if(!digits)return line;
  notes.push('Decimal point inferred from OCR, check this price: '+line);
  return line.slice(0,-digits.length)+digits.slice(0,-2)+'.'+digits.slice(-2);

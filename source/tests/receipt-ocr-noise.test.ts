@@ -10,10 +10,23 @@ test('margin noise from table and fingers is stripped around the print',()=>{
  assert.equal(cleanOcrLine('a     I        $3.29 Imt 4, $3.99 ea                   LT.'),'$3.29 Imt 4, $3.99 ea');
  assert.equal(cleanOcrLine('a      06024901631 WHITE BATARD ~~ MRJ      2.50 [EEE'),'06024901631 WHITE BATARD MRJ 2.50');
  assert.equal(cleanOcrLine('21-GROCERY                                      BB'),'21-GROCERY');
- // Real content is kept: upper-case words, counts and tax flags.
- assert.equal(cleanOcrLine('BANANAS      1.55 C'),'BANANAS 1.55 C');
+ // Real content is kept: upper-case words and counts. One-letter tax flags after the price are dropped like noise.
+ assert.equal(cleanOcrLine('BANANAS      1.55 C'),'BANANAS 1.55');
+ assert.equal(cleanOcrLine('JUICE      3.99 GC'),'JUICE 3.99 GC');
  // A short trailing word after the price may be a tax flag; the parser ignores both.
  assert.equal(cleanOcrLine('2 @ $2.00                           4.00 EE'),'2 @ $2.00 4.00 EE');
+});
+
+test('second iPhone scan: junk marks glued to real words, stray characters after prices',()=>{
+ // "~~" before a real word must not throw the whole column away.
+ assert.equal(cleanOcrLine('-       ~~ TOTAL STORE REWARD                100 Pts     LT :'),'TOTAL STORE REWARD 100 Pts');
+ assert.equal(cleanOcrLine('~~ TOTAL         J     21.78 |'),'TOTAL J 21.78');
+ // One stray character right after the price: "2.00   4", "2.50 [= &".
+ assert.equal(cleanOcrLine('2@ $1.00 ea                     2.00   4'),'2@ $1.00 ea 2.00');
+ assert.equal(cleanOcrLine('Gen             06024901631 WHITE BATARD ~~ MRJ 2.50 [= &'),'06024901631 WHITE BATARD MRJ 2.50');
+ const d=parseReceipt('06340026083 D ITAL BUNS CRUS MRU 4.00\n88651800061 MARUKOME MISO MRJ\n$3.29 mt 4, $3.99 ea\n1@ $3.29 ea                    319 £8');
+ assert.deepEqual(d.lines.map(l=>l.label+'='+l.amount),['D ITAL BUNS CRUS=4.00','MARUKOME MISO 1@ $3.29 ea=3.29']);
+ assert.ok(d.warnings?.some(w=>/319/.test(w)),String(d.warnings));
 });
 
 test('O/l/I/S/B are read as digits only inside prices',()=>{
