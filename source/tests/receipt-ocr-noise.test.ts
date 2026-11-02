@@ -73,3 +73,14 @@ test('when items and total disagree, the most likely OCR fix is suggested but no
  const missed=parseReceipt('MILK 4.99\nTOTAL 7.49');
  assert.ok(missed.warnings?.some(w=>/2\.50/.test(w)),String(missed.warnings));
 });
+
+test('item names spanning several lines keep their name (Toast market receipts)',()=>{
+ // Count first, comma and pack size in the name, price alone on the next line.
+ assert.deepEqual(amounts('1 Hulled Sunflower Seeds, 910g - Organic\n$12.50\nTOTAL 12.50'),['1 Hulled Sunflower Seeds, 910g - Organic=12.50']);
+ // Weighed items: the unit price and "(Manual Weight)" wrap; OCR reads lb as 1b.
+ const d=parseReceipt('0.1 1b Garlic - Snowy River @ $20.00/1b\n(Manual Weight)   $2.00\n0.95 1b Osprey’s Roost Sausage -\nArgentinian Chorizo @ $13.39/1b (Manual\nWeight)   $12.72\nTOTAL 14.72');
+ assert.deepEqual(d.lines.map(l=>l.label+'='+l.amount),['0.1 lb Garlic - Snowy River @ $20.00/lb (Manual Weight)=2.00','0.95 lb Osprey’s Roost Sausage - Argentinian Chorizo @ $13.39/lb (Manual Weight)=12.72']);
+ assert.equal(d.lines[0].measuredQuantity,'0.1');
+ // A section header above an item is not glued to it.
+ assert.deepEqual(amounts('21-GROCERY\nMILK 4.00'),['MILK=4.00']);
+});

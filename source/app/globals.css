@@ -598,3 +598,20 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
 .friend-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .friend-row>span{display:flex;flex-direction:column;flex:1;min-width:150px}
 .friend-row small{color:var(--muted)}
+/* Receipt review: compact view, one row per item (name left, price right) for checking against the paper receipt. */
+.view-toggle{display:inline-flex;gap:2px;padding:3px;margin:4px 0 10px;border:1px solid #dbe3d1;border-radius:999px}
+.view-toggle button{padding:7px 16px;border-radius:999px;font-size:calc(13px * var(--text-scale));color:#678c51}
+.view-toggle button[aria-pressed="true"]{background:#678c51;color:white}
+.compact-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;padding:12px 14px;margin-bottom:8px;border:1px solid #e1ebd5;border-radius:10px;background:#f7faf2}
+.compact-summary span{display:flex;flex-direction:column;min-width:0}
+.compact-summary small{color:#8fa77b;font-size:calc(11px * var(--text-scale))}
+.compact-summary b{font-weight:500;color:var(--ink);overflow-wrap:anywhere}
+.compact-summary .items-sum b{color:#678c51}
+.compact-summary.mismatch{border-color:#d9962f;background:#fffaf0}
+.compact-summary.mismatch .items-sum b{color:#b5701b}
+.compact-line{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid #e1ebd5}
+.compact-name{flex:1;min-width:0;padding:9px 0;text-align:left;font-size:calc(14px * var(--text-scale));color:var(--ink);overflow-wrap:anywhere}
+.compact-name.open{display:block;width:100%;padding-top:13px;font-weight:600}
+/* 16px keeps iOS Safari from zooming into the field on focus. */
+.compact-amount{flex:0 0 96px;width:96px;padding:9px 10px;border-radius:6px;text-align:right;font-size:max(16px,calc(14px * var(--text-scale)))}
+.compact-lines .review-line.compact-expanded{padding-top:4px}

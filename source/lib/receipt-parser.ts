@@ -33,8 +33,13 @@ export function cleanOcrLine(line:string){
  while(tokens.length>1&&(junkEdge(tokens[tokens.length-1])||tokens.length>2&&tokens[tokens.length-1].length===1&&/^-?[$€]?\d+[.,]\d{2}$/.test(tokens[tokens.length-2])))tokens.pop();
  return tokens.map((t,i)=>i<tokens.length-3?t:t.replace(/^(-?[$€]?)([\dOolISB]{1,4})([.,])([\dOolISB]{2})$/,(m,sign,whole,dot,cents)=>/\d/.test(whole+cents)?sign+priceDigits(whole)+dot+priceDigits(cents):m)).join(' ')
   // "4. 00" (large fonts) and "BANANAS1.29" (missing gap), with optional tax flags after the price.
-  .replace(/(\d[.,]) (\d{2})(?=(?: [A-Z*]{1,4}){0,2}$)/,'$1$2').replace(/([A-Za-z])(-?\d{1,4}[.,]\d{2})(?=(?: [A-Z*]{1,4}){0,2}$)/,'$1 $2');
+  .replace(/(\d[.,]) (\d{2})(?=(?: [A-Z*]{1,4}){0,2}$)/,'$1$2').replace(/([A-Za-z])(-?\d{1,4}[.,]\d{2})(?=(?: [A-Z*]{1,4}){0,2}$)/,'$1 $2')
+  // OCR reads "lb" as "1b" after a weight or unit price: "0.1 1b", "21b Bag", "$20.00/1b".
+  .replace(/(\d ?|\/)1b\b/g,'$1lb');
 }
+// A wrapped item name continues on the next line: "Sausage -" / "(Manual" above, "Weight) 2.00" below.
+const openParens=(s:string)=>(s.match(/\(/g)||[]).length-(s.match(/\)/g)||[]).length;
+const continues=(above:string,below:string)=>/[-,&(]$/.test(above)||openParens(above)>0||/^\(/.test(below)||openParens(below)<0;
 // Lost decimal points are restored only with evidence: a Loblaw tax flag right before
 // the number ("CRUS MRJ 400") or a count line whose unit price explains it ("1@ $3.29 ea 329").
 function restoreDecimal(line:string,notes:string[]){
@@ -95,7 +100,8 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
   const weight=line.match(/^(\d+[.,]\d+)\s*(kg|lb)\s*@/i),last=d.lines[d.lines.length-1];
   if(weight&&last&&lastItemIndex===index-1&&!last.measuredQuantity){last.measuredQuantity=weight[1].replace(',','.');last.measuredUnit=weight[2].toLowerCase() as 'kg'|'lb';pending='';continue}
   const plain=cleanLabel(line);
-  if(!ended&&/^[a-zäöüé][a-zäöüé0-9 %&.'/-]{2,70}$/i.test(plain)&&!/^(www|tel|phone|thank|merci|danke|cashier|kasse|receipt|rewe|sobeys|walmart|no frills)/i.test(plain)){pending=plain;pendingIndex=index}else pending='';continue}
+  // Restaurant and market registers print the count or weight first and wrap long names: "1 Hulled Sunflower Seeds, 910g - Organic".
+  if(!ended&&/^[a-zäöüé0-9(][a-zäöüé0-9 %&.,'’()@$/-]{2,90}$/i.test(plain)&&/[a-zäöüé]{3}/i.test(plain)&&!/^(www|tel|phone|thank|merci|danke|cashier|kasse|receipt|rewe|sobeys|walmart|no frills)/i.test(plain)){pending=pending&&pendingIndex===index-1&&continues(pending,plain)?pending+' '+plain:plain;pendingIndex=index}else pending='';continue}
  let label=cleanLabel(m[1]),amount=receiptCents(m[2]);if(!Number.isFinite(amount))continue;
  if(/^(?:[a-z]\s*=\s*)?(hst|gst|pst|qst|tps|tvq|tax\b|mwst|ust|vat)/i.test(label)){// Included tax (fuel, German VAT) is already part of the line totals.
   if(d.country!=='DE'&&!/incl|inkl|included|enthalten|^(?:[a-z]\s*=\s*)?(mwst|ust)/i.test(label))tax+=amount;pending='';continue}
@@ -121,6 +127,7 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  if(pending&&/^\d+\s*[@x×]/i.test(label)){label=pending+' '+label;pending=''}
  else if(pending&&/^\d+(?:[.,]\d+)?\s*(kg|g|lb|l)\b/i.test(label)){label=pending+' '+label;pending=''}
  else if(pending&&/^\d{5,14}$/.test(label)){label=pending;pending=''}
+ else if(pending&&pendingIndex===index-1&&continues(pending,label)){label=pending+' '+label;pending=''}
  if(/^total\s+(savings|saved|discount|items?|number)|^(cash|change|debit|credit|visa|mastercard|amex|tender|payment|approved|auth|terminal|trans\b|you saved|savings|points|rewards|coupon|discount|rabais|items?\b|articles?\b|tel\b|phone|www\.|thank|merci|receipt|invoice|cashier)/i.test(label)||!/[a-z]/i.test(label)||/^\d+\s*[@x]\s*\$?\d/i.test(label))continue;
  // Loyalty stamps and points print as zero-priced lines: "24632 PHY STAMP EARN Q 0.00".
  if(amount===0&&/\b(stamps?|pts|points|rewards?|earn)\b/i.test(label)){pending='';continue}

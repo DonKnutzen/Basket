@@ -6,7 +6,7 @@ import {normalize} from '../lib/types';
 
 // Real OCR output from phone photos (tests/receipt-ocr-corpus/*.txt) with hand-checked
 // expectations (*.json). Raise MIN_* when the parser improves; never lower them.
-const MIN_TOTAL_RATE=1,MIN_ITEMS_RATE=3/4;
+const MIN_TOTAL_RATE=1,MIN_ITEMS_RATE=4/5;
 type Expected={store:string;date:string;total:string;tax:string;items:{label:string;amount:string}[]};
 const dir='tests/receipt-ocr-corpus';
 
