@@ -212,13 +212,13 @@ test('German localization preserves product names and internal category values a
  const {setLanguage,tr,phrase,getLanguage}=await import('../lib/i18n');
  const {money}=await import('../lib/types');
  try{
-  setLanguage('de');assert.equal(getLanguage(),'de');assert.equal(tr('Shopping lists'),'Einkaufslisten');assert.equal(tr('Dairy & eggs'),'Milchprodukte & Eier');
+  setLanguage('de');assert.equal(getLanguage(),'de');assert.equal(tr('Shopping lists'),'Einkaufslisten');assert.equal(tr('Dairy & eggs'),'Milchprodukte');assert.equal(tr('Fruit'),'Obst/Nüsse');
   assert.equal(phrase('Edit {0}','My Coke Zero'),'My Coke Zero bearbeiten');
   assert.equal(tr('My custom product'),'My custom product');assert.match(money(1234,'CAD'),/12,34/);
   const home=(await get()).body;await post('addItem',{id:'de-cola',listId:home.lists[0].id,name:'Cola Zero',category:'Drinks',quantity:'1,5 L'});
   const saved=(await get()).body.items[0];assert.equal(saved.name,'Cola Zero');assert.equal(saved.category,'Drinks');assert.equal(saved.quantity,'1,5 L');
   assert.equal(tr('The numbers add up.'),'Die Beträge stimmen überein.');
-  setLanguage('en');assert.equal(tr('Shopping lists'),'Shopping lists');assert.equal(phrase('Edit {0}','Cola Zero'),'Edit Cola Zero');
+  setLanguage('en');assert.equal(tr('Shopping lists'),'Shopping lists');assert.equal(tr('Vegetarian/Vegan alternatives'),'Veg.-Alternatives');assert.equal(phrase('Edit {0}','Cola Zero'),'Edit Cola Zero');
  }finally{setLanguage('en')}
 });
 
