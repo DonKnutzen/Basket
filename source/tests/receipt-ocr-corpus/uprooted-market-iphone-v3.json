@@ -1,0 +1,20 @@
+{
+  "source": "iPhone-Foto, Pipeline lib/receipt-ocr.ts (Papier-Zuschnitt mit Farbstrafe, PSM 4, binarisiert PSM 4/6)",
+  "store": "Uprooted Market & Cafe",
+  "date": "2026-10-31",
+  "total": "114.15",
+  "tax": "6.48",
+  "items": [
+    {"label": "Atlantic Sea Scallops", "amount": "22.95"},
+    {"label": "Latte", "amount": "4.25"},
+    {"label": "Salted Caramel", "amount": "1.00"},
+    {"label": "Scone", "amount": "2.50"},
+    {"label": "Coffee Cake", "amount": "3.50"},
+    {"label": "Garlic", "amount": "2.00"},
+    {"label": "Chorizo", "amount": "12.72"},
+    {"label": "Brussels Sprouts", "amount": "6.25"},
+    {"label": "Beets", "amount": "5.00"},
+    {"label": "Sunflower", "amount": "12.50"},
+    {"label": "Uprooted Logo", "amount": "35.00"}
+  ]
+}

@@ -20,12 +20,14 @@ export function otsuThreshold(values:ArrayLike<number>){
 }
 
 // Paper is the largest bright and colourless area: min(r,g,b) stays high on white paper
-// but drops on wood, skin and shadows. Falls back to the whole photo.
+// but drops on wood, skin and shadows. Colour is penalized twice over: on an unevenly lit
+// photo of a Shell receipt, beige wood was as bright as the shaded half of the paper.
+// Falls back to the whole photo.
 export function findReceiptBounds(rgba:ArrayLike<number>,width:number,height:number):Bounds{
  const full={x:0,y:0,width,height},cell=Math.max(2,Math.round(Math.max(width,height)/100)),gw=Math.ceil(width/cell),gh=Math.ceil(height/cell);
  const values=new Float64Array(gw*gh),counts=new Uint32Array(gw*gh);
- for(let y=0;y<height;y++)for(let x=0;x<width;x++){const i=(y*width+x)*4,c=Math.floor(y/cell)*gw+Math.floor(x/cell);values[c]+=Math.min(rgba[i],rgba[i+1],rgba[i+2]);counts[c]++}
- for(let c=0;c<values.length;c++)values[c]/=counts[c];
+ for(let y=0;y<height;y++)for(let x=0;x<width;x++){const i=(y*width+x)*4,c=Math.floor(y/cell)*gw+Math.floor(x/cell),min=Math.min(rgba[i],rgba[i+1],rgba[i+2]);values[c]+=min-2*(Math.max(rgba[i],rgba[i+1],rgba[i+2])-min);counts[c]++}
+ for(let c=0;c<values.length;c++)values[c]=Math.max(0,values[c]/counts[c]);
  const threshold=otsuThreshold(values),seen=new Uint8Array(values.length);
  let best:number[]=[];
  for(let start=0;start<values.length;start++){if(seen[start]||values[start]<=threshold)continue;

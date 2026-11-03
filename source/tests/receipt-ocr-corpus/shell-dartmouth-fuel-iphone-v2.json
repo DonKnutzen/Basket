@@ -1,0 +1,11 @@
+{
+  "source": "iPhone-Foto, Pipeline lib/receipt-ocr.ts (Papier-Zuschnitt mit Farbstrafe, PSM 4, binarisiert PSM 4/6); Datum nur in den Band-Nachlesen (.passes), PRICE/L als 1,788 statt 1,786 gelesen",
+  "store": "Shell",
+  "date": "2026-10-31",
+  "total": "63.19",
+  "tax": "0.00",
+  "fuel": {"litres": "35.380", "pricePerLitre": "1.786"},
+  "items": [
+    {"label": "TOTAL FUEL", "amount": "63.19"}
+  ]
+}

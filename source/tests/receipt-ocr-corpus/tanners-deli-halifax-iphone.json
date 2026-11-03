@@ -1,0 +1,11 @@
+{
+  "source": "iPhone-Foto, Pipeline lib/receipt-ocr.ts (Papier-Zuschnitt mit Farbstrafe, PSM 4, binarisiert PSM 4/6); Kartenbeleg ohne Artikel, nur Betrag und Trinkgeld",
+  "store": "TANNER'S DELI.COM",
+  "date": "2026-10-31",
+  "total": "26.20",
+  "tax": "0.00",
+  "items": [
+    {"label": "AMOUNT", "amount": "22.78"},
+    {"label": "TIP", "amount": "3.42"}
+  ]
+}

@@ -18,7 +18,8 @@ export function receiptDate(text:string,country='',store='',scan=new Date()):Dat
   if(/best before|expiry|expiration|haltbar|mindestens|meilleur avant/.test(raw))continue;
   // 24h times (always with colons) are not dates: OCR may glue "14:35" onto "02.11.26".
   const time='(?:[01]?\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d)?';
-  const line=raw.replace(/\b(\d{1,2}\.\d{1,2}\.\d{2})(\d{1,2}:\d{2})/g,'$1 $2').replace(new RegExp('\\b'+time+'\\s*uhr','g'),' ').replace(new RegExp('(\\d{1,2}[./-]\\d{1,2}[./-](?:20)?\\d{2})[\\s,/]+'+time,'g'),'$1');
+  // OCR spaces out dotted dates: "Datum: 02. 11. 26", "02. 11.26".
+  const line=raw.replace(/\b(\d{1,2})\.\s?(\d{1,2})\.\s?(20\d{2}|\d{2})(?=\D|$)/g,'$1.$2.$3').replace(/\b(\d{1,2}\.\d{1,2}\.\d{2})(\d{1,2}:\d{2})/g,'$1 $2').replace(new RegExp('\\b'+time+'\\s*uhr','g'),' ').replace(new RegExp('(\\d{1,2}[./-]\\d{1,2}[./-](?:20)?\\d{2})[\\s,/]+'+time,'g'),'$1');
   const explicitDMY=/dd[\s/.-]*mm[\s/.-]*yy|tt[\s/.-]*mm[\s/.-]*jj/.test(normalized);
   const explicitMDY=/mm[\s/.-]*dd[\s/.-]*yy/.test(normalized);
   for(const match of line.matchAll(/\b(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b|\b(\d{1,2})([./-])(\d{1,2})\5(20\d{2}|\d{2})\b/g)){
@@ -40,7 +41,13 @@ export function receiptDate(text:string,country='',store='',scan=new Date()):Dat
    }
   });
  }
- const candidates=[...new Set(found.flatMap(f=>f.candidates))];
+ let candidates=[...new Set(found.flatMap(f=>f.candidates))];
+ // Several OCR passes of one photo can disagree ("2006-10-31" next to "2026-10-31"): a reading
+ // in the future or more than a year before the scan loses against a plausible one.
+ if(candidates.length>1&&new Set(found.map(f=>f.source)).size>1){
+  const day=(offset:number)=>{const d=new Date(scan.getFullYear(),scan.getMonth(),scan.getDate()+offset);return iso(String(d.getFullYear()),String(d.getMonth()+1),String(d.getDate()))};
+  const plausible=candidates.filter(c=>c>=day(-366)&&c<=day(1));if(plausible.length)candidates=plausible;
+ }
  if(!found.length){
   // OCR can garble month and year after "Datum:" while the day survives ("Datum: 02.   a ein Ju").
   // Only a printed day from the past week is trusted, read against the scan date.

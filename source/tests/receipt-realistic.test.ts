@@ -2,6 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {parseReceipt,difference} from '../lib/receipt-parser';
 import {receiptDate} from '../lib/receipt-date';
+import {toCents} from '../lib/types';
 
 // Layouts modelled on real Halifax and Kiel receipts as Tesseract returns them:
 // department headers, PLU/UPC codes, tax flags, weighed lines and loyalty savings.
@@ -180,6 +181,22 @@ test('gas station receipts: fuel grade, litres, Fuel category and included tax',
  const a=parseReceipt(aral);
  assert.equal(a.store,'Aral');assert.equal(a.currency,'EUR');assert.equal(a.date,'2026-11-01');assert.equal(a.lines.length,1);
  assert.equal(a.lines[0].name,'Super E10');assert.equal(a.lines[0].measuredQuantity,'40.12');assert.equal(a.lines[0].category,'Fuel');assert.equal(difference(a),0);
+ assert.equal(e.lines[0].unitPrice,'1.690');assert.equal(a.lines[0].unitPrice,'1.789');assert.equal(i.lines[0].unitPrice,(toCents(i.lines[0].amount)/100/38.462).toFixed(3));
+});
+test('fuel price per litre: printed price is checked against total ÷ litres',()=>{
+ // Real Shell OCR: litres spaced out, dot-matrix 1.786 read as "§l,788", total on the payment line.
+ const shell=parseReceipt('WELCOME\nShell Canada\nDartmouth NS\nBronze\nPUMP No. 03\nLITRES   35. 380\nBRICETL   §l,788   N\nTOTAL FUEL   $63.19\nTOTAL SALE\nVisa   $63.13 63.19\nFUEL INCLUDES\nHS   -   fuel   1.76\nDATE: 2026/10/31');
+ assert.equal(shell.total,'63.19');assert.equal(shell.lines.length,1);assert.equal(shell.lines[0].measuredQuantity,'35.380');assert.equal(shell.lines[0].unitPrice,'1.786');
+ assert.ok(shell.warnings?.some(w=>w.includes('1.788')));assert.equal(shell.date,'2026-10-31');
+ const exact=parseReceipt('Shell Canada\nBronze\nLITRES l   35.380\nPRICE/L $1.786\nTOTAL FUEL $63.19\nTOTAL SALE $63.19');
+ assert.equal(exact.lines[0].unitPrice,'1.786');assert.ok(!exact.warnings?.some(w=>/price per litre/i.test(w)));
+ // Unreadable litres come from total ÷ printed price.
+ const derived=parseReceipt('Shell Canada\nBronze\nPRICE/L $1.786\nTOTAL FUEL $63.19\nTOTAL SALE $63.19');
+ assert.equal(derived.lines[0].measuredQuantity,'35.381');assert.equal(derived.lines[0].unitPrice,'1.786');
+});
+test('Kaufland prints pack counts with an asterisk: "2 * 1,49"',()=>{
+ const k=parseReceipt('Kaufland - Skandinaviendamm 299\n24109 Kiel\nRed Bull Energy\n2 * 1,49   2,98 A\nSumme   2,98\nDatum: 02. 11. 26 Zeit: 17:00:38');
+ assert.equal(k.lines.length,1);assert.equal(k.lines[0].quantity,'2');assert.equal(k.lines[0].amount,'2.98');assert.equal(k.date,'2026-11-02');
 });
 test('takeout receipts: restaurant chains and dine-in/take-out hints use the Takeout category',()=>{
  const tims=parseReceipt('TIM HORTONS #1234\nSPRING GARDEN RD HALIFAX NS\nTAKE OUT\n1 MED ORIGINAL 2.19\n1 BAGEL BELT 4.29\n1 TIMBITS 10 PK 3.39\nSUBTOTAL 9.87\nHST 15% 1.48\nTOTAL 11.35\n11/01/26 08:15');

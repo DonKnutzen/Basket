@@ -1,0 +1,20 @@
+{
+  "source": "iPhone-Foto, Pipeline lib/receipt-ocr.ts (Papier-Zuschnitt mit Farbstrafe, PSM 4, binarisiert PSM 4/6); Datum nur in den Band-Nachlesen (.passes)",
+  "store": "Kaufland",
+  "date": "2026-11-02",
+  "total": "24.63",
+  "tax": "0.00",
+  "items": [
+    {"label": "ToiPa", "amount": "7.45"},
+    {"label": "Chio Tortilla", "amount": "1.00"},
+    {"label": "Afri Cola Mix", "amount": "0.89"},
+    {"label": "Pfandartikel", "amount": "0.15"},
+    {"label": "Barilla Spaghetto", "amount": "1.00"},
+    {"label": "Red Bull Energy", "amount": "2.98"},
+    {"label": "Pfandartikel", "amount": "0.50"},
+    {"label": "Bresso", "amount": "2.39"},
+    {"label": "Erdnussb", "amount": "3.59"},
+    {"label": "Super-Sandwich", "amount": "1.69"},
+    {"label": "Demeter", "amount": "2.99"}
+  ]
+}

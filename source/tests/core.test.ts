@@ -397,6 +397,12 @@ test('international purchase dates never fall back to scan day',()=>{
  assert.equal(receiptDate('Datum: 02.   a ein Ju 00:38 Bon:40219','DE','Kaufland',scan).date,'2026-11-02');
  assert.equal(receiptDate('Datum: 30. ii 10:12','DE','Kaufland',scan).date,'2026-10-30');
  assert.equal(receiptDate('Datum: 15. ii 10:12','DE','Kaufland',scan).status,'missing');
+ // OCR spaces out dotted dates; English receipts print year first (2026/10/31, 2026-10-31).
+ for(const text of ['Datum: 02. 11. 26 Zeit: 17:00:38','Datum:02. 11.26 Zeit: 17:00:38'])assert.equal(receiptDate(text,'DE','Kaufland',scan).date,'2026-11-02',text);
+ for(const text of ['DATE: 3 2026/10/31','Ordered: 2026-10-31 2:51 p.m.'])assert.equal(receiptDate(text,'CA','Shell',scan).date,'2026-10-31',text);
+ // Merged OCR passes: a misread year two decades back loses against the plausible reading.
+ assert.equal(receiptDate('Ordered: 2006-10-31 2:61 p.m.\nOrdered: 2026-10-31 2:51 p.m.','CA','',scan).date,'2026-10-31');
+ assert.equal(receiptDate('DATE: 2026/10/31\nDATE: 2026/10/21','CA','Shell',scan).status,'ambiguous');
 });
 test('ambiguous Canadian dates and conflicting dates require confirmation',()=>{
  const ambiguous=receiptDate('04/05/2026','CA');assert.equal(ambiguous.date,'');assert.equal(ambiguous.status,'ambiguous');assert.deepEqual(ambiguous.candidates,['2026-05-04','2026-04-05']);
