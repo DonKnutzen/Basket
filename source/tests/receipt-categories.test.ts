@@ -18,7 +18,7 @@ test('receipts split produce into fruit, veggies and processed food',()=>{
 
 test('receipts sort groceries into the twelve shopping categories',()=>{
  for(const c of ['Fruit','Veggies','Meat & fish','Dairy & eggs','Bakery','Pasta, rice & grains','Pantry','Oils, spices & sauces','Frozen','Snacks & sweets','Drinks','Household'])assert.ok(RECEIPT_CATEGORIES.includes(c),c);
- const cases:[string,string][]=[['Erdbeeren','Fruit'],['Heidelbeeren 125g','Fruit'],['Petersilie','Veggies'],['Basilikum Topf','Veggies'],['Rucola','Veggies'],['Champignons','Veggies'],['Salami','Meat & fish'],['Thunfisch','Meat & fish'],['Gouda','Dairy & eggs'],['Butter','Dairy & eggs'],['Toastbrot','Bakery'],['Croissant','Bakery'],['Spaghetti','Pasta, rice & grains'],['Basmati Reis','Pasta, rice & grains'],['Haferflocken','Pasta, rice & grains'],['Müsli','Pasta, rice & grains'],['Kichererbsen','Pasta, rice & grains'],['Mehl','Pantry'],['Zucker','Pantry'],['Tomatensuppe','Pantry'],['Olivenöl','Oils, spices & sauces'],['Balsamico Essig','Oils, spices & sauces'],['Ketchup','Oils, spices & sauces'],['Salz','Oils, spices & sauces'],['Pfeffer schwarz','Oils, spices & sauces'],['Salatdressing','Oils, spices & sauces'],['TK Erbsen','Frozen'],['Pizza Margherita','Frozen'],['Vanilleeis','Frozen'],['Erdnüsse','Snacks & sweets'],['Kekse','Snacks & sweets'],['Mineralwasser','Drinks'],['Orangensaft','Drinks'],['Toilettenpapier','Household'],['Katzenfutter','Household'],['Duschgel','Household']];
+ const cases:[string,string][]=[['Erdbeeren','Fruit'],['Heidelbeeren 125g','Fruit'],['Petersilie','Veggies'],['Basilikum Topf','Veggies'],['Rucola','Veggies'],['Champignons','Veggies'],['Salami','Meat & fish'],['Thunfisch','Meat & fish'],['Gouda','Dairy & eggs'],['Butter','Dairy & eggs'],['Toastbrot','Bakery'],['Croissant','Bakery'],['Spaghetti','Pasta, rice & grains'],['Basmati Reis','Pasta, rice & grains'],['Haferflocken','Pasta, rice & grains'],['Müsli','Pasta, rice & grains'],['Kichererbsen','Pasta, rice & grains'],['Mehl','Pantry'],['Zucker','Pantry'],['Tomatensuppe','Pantry'],['Olivenöl','Oils, spices & sauces'],['Balsamico Essig','Oils, spices & sauces'],['Ketchup','Oils, spices & sauces'],['Salz','Oils, spices & sauces'],['Pfeffer schwarz','Oils, spices & sauces'],['Salatdressing','Oils, spices & sauces'],['TK Erbsen','Frozen'],['Pizza Margherita','Frozen'],['Vanilleeis','Frozen'],['Erdnüsse','Fruit'],['Kekse','Snacks & sweets'],['Mineralwasser','Drinks'],['Orangensaft','Drinks'],['Toilettenpapier','Household'],['Katzenfutter','Household'],['Duschgel','Household']];
  const wrong=cases.filter(([n,c])=>receiptCategory(n)!==c).map(([n,c])=>`${n}: ${receiptCategory(n)} != ${c}`);
  assert.deepEqual(wrong,[]);
 });
@@ -29,4 +29,13 @@ test('plant-based items get the vegetarian/vegan alternatives category after dai
  assert.ok(RECEIPT_CATEGORIES.includes(V));
  const i=RECEIPT_CATEGORIES.indexOf('Dairy & eggs');
  assert.deepEqual(RECEIPT_CATEGORIES.slice(i,i+5),['Dairy & eggs',V,'Meat & fish','Snacks & sweets','Drinks']);
+});
+
+test('receipt nuts and seeds land in Fruit/Nuts in any language, nut products stay apart',()=>{
+ for(const name of['Sonnenblumenkerne','SONNENBL.KERNE','Sunflower Seeds','Kürbiskerne','Pinienkerne','Mandeln','Mandeln gemahlen','Almonds','Walnüsse','Haselnüsse','Cashewkerne','Erdnüsse geröstet','Peanuts','Pistazien','Studentenfutter','Chiasamen','Leinsamen','Amandes','Noix','Graines de tournesol','Almendras','Pipas de girasol','Mandorle','Semi di girasole'])assert.equal(receiptCategory(name),'Fruit',name);
+ assert.equal(receiptCategory('Mandelmilch'),'Vegetarian/Vegan alternatives');
+ assert.equal(receiptCategory('Almond Milk'),'Vegetarian/Vegan alternatives');
+ assert.equal(receiptCategory('Sonnenblumenöl'),'Oils, spices & sauces');
+ assert.equal(receiptCategory('Cumin Seeds'),'Oils, spices & sauces');
+ assert.equal(receiptCategory('Erdnussbutter'),'Pantry');
 });
