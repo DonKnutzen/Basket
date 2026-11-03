@@ -106,8 +106,10 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  let store=named?.s||(pumped?FUEL_BRAND_HINTS.find(([re])=>re.test(text))?.[1]:'')||raw.slice(0,4).map(l=>l.replace(GREETING,'').trim()).find(l=>/[a-z]{3}/i.test(l)&&!/[\d@$]/.test(l)&&l.length<60&&!NOT_STORE.test(l)&&!PLACE.test(l)&&!(pumped&&FUEL_GRADE.test(l)))||'';
  if(store==='Superstore'&&/\b(NS|NB|PE|NL|nova scotia|halifax|dartmouth|bedford|sackville|atlantic)\b|\(\s*902\s*\)/i.test(text))store='Atlantic Superstore';
  const d:ReceiptDraft={id:newId(),store,date:'',total:'',tax:'0.00',currency:'',lines:[],rawText:text};
- const country=/\b(canada|nova scotia|quebec|ontario|halifax|dartmouth|sobeys|no frills|superstore|nslc|bedford|sackville|truro|antigonish|wolfville|kentville|irving|wilsons)\b|\(\s*902\s*\)|\b[A-Z]\d[A-Z]\s?\d[A-Z]\d\b/i.test(text)?'CA':/\b(deutschland|germany|rewe|edeka|kaufland|alnatura|aldi|lidl|penny|netto|gmbh|kiel|hamburg|l(?:ü|ue)beck|bremen|rostock|flensburg|combi|famila|marktkauf|budni|bünting|jibi|hoyer|aral|tankstelle|mwst)\b/i.test(text)?'DE':'';
- d.country=country;d.currency=/\bCAD\b/i.test(text)?'CAD':/€|\bEUR\b/i.test(text)?'EUR':country==='CA'?'CAD':country==='DE'?'EUR':'';
+ // Place names and area codes are often garbled ("Darts NS", "(302)"); province codes ending a line,
+ // Canadian sales taxes, Interac, "litres" and Shell's Canadian grades still give the country away.
+ const country=/\b(canada|nova scotia|quebec|ontario|halifax|dartmouth|sobeys|no frills|superstore|nslc|bedford|sackville|truro|antigonish|wolfville|kentville|irving|wilsons|hst|gst|pst|qst|interac|litres?|bronze)\b|\(\s*902\s*\)|\b[A-Z]\d[A-Z]\s?\d[A-Z]\d\b/i.test(text)||/\b(?:NS|NB|PE|NL|QC|ON|MB|SK|AB|BC)\s*$/m.test(text)?'CA':/\b(deutschland|germany|rewe|edeka|kaufland|alnatura|aldi|lidl|penny|netto|gmbh|kiel|hamburg|l(?:ü|ue)beck|bremen|rostock|flensburg|combi|famila|marktkauf|budni|bünting|jibi|hoyer|aral|tankstelle|mwst)\b/i.test(text)?'DE':'';
+ d.country=country;d.currency=/\bCAD\b/i.test(text)?'CAD':/€|\bEUR\b/i.test(text)?'EUR':country==='CA'?'CAD':country==='DE'?'EUR':/\$\s?\d+[.,]\d{2}/.test(text)?'CAD':'';
  d.dateEvidence=receiptDate(text,country,store);d.date=d.dateEvidence.date;
  const lostLines:ReceiptDraft['lines']=[];let lastItemIndex=-2,pendingQuantity:{n:number;unit:number}|null=null;
  const takeout=TAKEOUT_PLACES.includes(store)||TAKEOUT_HINT.test(text);

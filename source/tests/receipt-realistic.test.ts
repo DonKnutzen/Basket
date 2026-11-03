@@ -194,6 +194,14 @@ test('fuel price per litre: printed price is checked against total ÷ litres',()
  const derived=parseReceipt('Shell Canada\nBronze\nPRICE/L $1.786\nTOTAL FUEL $63.19\nTOTAL SALE $63.19');
  assert.equal(derived.lines[0].measuredQuantity,'35.381');assert.equal(derived.lines[0].unitPrice,'1.786');
 });
+test('currency without readable place names: province code, Canadian tax and $ amounts',()=>{
+ // Real browser OCR of the Shell receipt: "Dartmouth NS" and "(902)" garbled.
+ const shell=parseReceipt('Hi\n132 N\nDarts   NS\n(302)"\n434 7035\nBronze\nPUMP N 0.   03\nLI TRES   35. 380\nTOTAL SALE   6 3.19\n63.19   :\nTYPE: PURCHASE\nVisa');
+ assert.equal(shell.country,'CA');assert.equal(shell.currency,'CAD');
+ assert.equal(parseReceipt('CORNER STORE\nMILK $5.49\nHST 0.82\nTOTAL $6.31').currency,'CAD');
+ assert.equal(parseReceipt('KIOSK\nCOLA $2.49\nTOTAL $2.49').currency,'CAD');
+ assert.equal(parseReceipt('Kaufland Kiel\nPreis EUR\nCola 0,89 A\nSumme 0,89').currency,'EUR');
+});
 test('Kaufland prints pack counts with an asterisk: "2 * 1,49"',()=>{
  const k=parseReceipt('Kaufland - Skandinaviendamm 299\n24109 Kiel\nRed Bull Energy\n2 * 1,49   2,98 A\nSumme   2,98\nDatum: 02. 11. 26 Zeit: 17:00:38');
  assert.equal(k.lines.length,1);assert.equal(k.lines[0].quantity,'2');assert.equal(k.lines[0].amount,'2.98');assert.equal(k.date,'2026-11-02');
