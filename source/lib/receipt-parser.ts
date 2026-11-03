@@ -73,7 +73,7 @@ const NOT_STORE=/^(?:receipt|kassenbon|beleg|customer copy|merchant copy|duplica
 export function parseReceipt(text:string,products:Product[]=[],aliases:BasketData['aliases']=[],knownStores:string[]=[]):ReceiptDraft{
  // Large total fonts often OCR with a space after the decimal point: "TOTAL 21. 78".
  const ocrNotes:string[]=[];
- const lostPrice=new Set<string>();const raw=text.split(/\r?\n/).map(l=>{const c=restoreDecimal(cleanOcrLine(l),ocrNotes);if(/\S\s{3,}[A-Z$§]{1,3}\s*$/.test(l)&&!/\d[.,]\s?\d{2}/.test(l))lostPrice.add(c);return c}).filter(Boolean);
+ const lostPrice=new Set<string>();const raw=text.split(/\r?\n/).map(l=>{const c=restoreDecimal(cleanOcrLine(l),ocrNotes);if(/\S\s{3,}(?:\$\S{1,4}|[A-Za-z§]{1,3})\s*$/.test(l)&&!/\d[.,]\s?\d{2}/.test(l))lostPrice.add(c);return c}).filter(Boolean);
  const header=raw.slice(0,8).join('\n');
  const named=[...new Set([...knownStores.filter(s=>s.trim().length>2&&!GREETING.test(s)&&!NOT_STORE.test(s)),...STORES])].map(s=>({s,at:header.search(new RegExp('(?:^|[^a-z])'+s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?:$|[^a-z])','i'))})).filter(h=>h.at>=0).sort((a,b)=>a.at-b.at||b.s.length-a.s.length)[0];
  let store=named?.s||raw.slice(0,4).map(l=>l.replace(GREETING,'').trim()).find(l=>/[a-z]{3}/i.test(l)&&!/[\d@$]/.test(l)&&l.length<60&&!NOT_STORE.test(l))||'';
@@ -101,7 +101,7 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  if(/^[$€]?\d+[.,]\d{2}\s+(?:[lI1T|]?mt|limit)\b/i.test(line))continue;
  let m=line.match(/^(.+?)\s+(-?\$?(?:\d{1,3}(?:[.,]\d{3})+|\d{1,6})[.,]\d{2})\s*(?:€|EUR|CAD)?(?:\s*[A-Z*]{1,4}){0,2}$/i);if(!m&&pending&&/^-?[$€]?\d+(?:[.,]\d{3})*[.,]\d{2}\s*(?:€|EUR|CAD)?$/.test(line))m=[line,pending,line.replace(/\s*(?:€|EUR|CAD)$/,'')] as RegExpMatchArray;
  // OCR may garble a lone price into letters ("$3.50" -> "SD"): keep the item, its price is derived from the subtotal below.
- const lost=!m&&!ended&&!/^-?[$€]?\d+[.,]\d{2}$/.test(raw[index+1]||'')&&lostPrice.has(line)&&line.match(/^(\d{1,2}\s+[a-z].{2,60})$/i);if(lost){m=[line,lost[1],'0.00'] as RegExpMatchArray;pending=''}
+ const lost=!m&&!ended&&!/^-?[$€]?\d+[.,]\d{2}$/.test(raw[index+1]||'')&&lostPrice.has(line)&&(line.match(/^(.{0,40}[a-z]{3}.{0,40}?)\s+\$[^\s.,]{1,4}$/i)||line.match(/^(\d{1,2}\s+[a-z].{2,60})$/i));if(lost){m=[line,lost[1],'0.00'] as RegExpMatchArray;pending=''}
  if(!m){
   // Walmart prints the weight below the item: "1.090 kg @ 1 kg /1.30".
   const weight=line.match(/^(\d+[.,]\d+)\s*(kg|lb)\s*@/i),last=d.lines[d.lines.length-1];
@@ -152,7 +152,7 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  const alias=aliases.find(a=>a.store===normalize(d.store)&&a.label===normalize(label));const p=products.find(p=>p.id===alias?.productId)||products.find(p=>normalize(p.name)===normalize(name)&&!p.packSize&&!p.brand&&!p.variant&&!p.quality);
  d.lines.push({id:newId(),sourceLines:pendingIndex===index-1?[pendingIndex+1,index+1]:[index+1],label,name:p?.name||name.toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase()),quantity,amount:(amount/100).toFixed(2),category:takeout?'Takeout':receiptCategory(name,p?.category),packSize:pack&&!weighed?pack[1]+' '+pack[2]:p?.packSize||'',brand:p?.brand,variant:p?.variant,quality:quality||p?.quality,measuredQuantity:pack&&weighed?pack[1].replace(',','.'):undefined,measuredUnit:pack&&weighed?pack[2].toLowerCase() as 'kg'|'g'|'lb':undefined,matched:!!p});lastItemIndex=index;if(lost)lostLines.push(d.lines[d.lines.length-1]);pending='';}
  if(lostLines.length===1&&subtotal!==undefined){const gap=subtotal-d.lines.reduce((s,l)=>s+toCents(l.amount),0);if(gap>0&&gap<subtotal){lostLines[0].amount=amountText(gap);d.warnings.push('Price unreadable, derived from subtotal: '+lostLines[0].label)}}
- for(const l of lostLines)if(!toCents(l.amount))d.lines.splice(d.lines.indexOf(l),1);
+ for(const l of lostLines)if(!toCents(l.amount)){l.amount='';d.warnings.push('Price unreadable, please enter it: '+l.label)}
  d.tax=(tax/100).toFixed(2);d.total=total!==undefined?amountText(total):'';if(total===undefined)d.warnings.push('No printed final total was recognized.');if(!d.lines.length)d.warnings.push('No purchased item was recognized.');if(d.total&&difference(d)!==0){d.warnings.push('Printed total differs from recognized positions; no balancing item was invented.');const fix=suggestFix(d);if(fix)d.warnings.push(fix)}return d;
 }
 export function difference(d:ReceiptDraft){return toCents(d.total||'0')-toCents(d.tax||'0')-d.lines.reduce((s,l)=>s+(toCents(l.amount)||0),0)}

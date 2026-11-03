@@ -95,3 +95,8 @@ test('a price OCR turned into letters is derived from the subtotal',()=>{
 test('a zero "Amount Due" after payment does not replace the printed total',()=>{
  assert.equal(parseReceipt('1 Scone   $2.50\nSubtotal   $2.50\nTotal   25%   $2. 50\nCredit   -$2.50\nAmount Due   $0.00').total,'2.50');
 });
+
+test('several unreadable prices keep their items for manual entry',()=>{
+ const d=parseReceipt('=   1 latte (802)   af\n~~   dd Salted Caramel   $1400\n.   1 Scone   $e\na   1 Coffee Cake   $3.50\nSubtotal   $11.25\nTotal   $11.25');
+ assert.deepEqual(d.lines.map(l=>l.label+'='+l.amount),['1 latte (802)=','dd Salted Caramel=','1 Scone=','1 Coffee Cake=3.50']);
+});
