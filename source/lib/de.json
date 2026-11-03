@@ -1,5 +1,8 @@
 {
   "Language": "Sprache",
+  "Receipt type": "Belegart",
+  "Groceries": "Lebensmittel",
+  "Gas": "Tanken",
   "Choose your app language.": "Wähle die Sprache der App.",
   "Text size": "Schriftgröße",
   "Small": "Klein",

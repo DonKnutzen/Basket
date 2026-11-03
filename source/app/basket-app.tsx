@@ -84,7 +84,7 @@ function applyDemo(data: BasketData, a: string, b: any) { const d = structuredCl
     d.budgets = d.budgets.filter(x => x.id !== b.id); if (a === 'saveReceipt') {
     const r = b.draft;
     const shopping = shoppingSummary(r, d.lists.find(x => x.id === r.listId)?.name, r.lines.filter((l: any) => !d.products.some(p => p.normalized === productIdentity({...l,...observationFromDraft(l)}))).map((l: any) => l.name));
-    d.receipts.unshift({ shopping,country:r.country,branch:r.branch,dateEvidence:r.dateEvidence,id: r.id, store: r.store, date: r.date, totalCents: toCents(r.total), taxCents: toCents(r.tax || '0'), currency: r.currency, createdBy: d.user.name });
+    d.receipts.unshift({ shopping,kind:r.kind,country:r.country,branch:r.branch,dateEvidence:r.dateEvidence,id: r.id, store: r.store, date: r.date, totalCents: toCents(r.total), taxCents: toCents(r.tax || '0'), currency: r.currency, createdBy: d.user.name });
     for (const l of r.lines) {
         const norm = productIdentity({...l,...observationFromDraft(l)});
         let p = d.products.find(p => p.normalized === norm);

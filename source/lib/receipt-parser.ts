@@ -67,12 +67,16 @@ const FUEL_GRADE=/\b(regular|unleaded|premium|supreme|ultimate|v-?power|mid-?gra
 function fuelGrade(text:string,generic=true){const t=text.toLowerCase();return /diesel/.test(t)?'Diesel':/super\s*plus|premium|supreme|ultimate|v-?power/.test(t)?'Premium gasoline':/mid-?grade|\bplus\b/.test(t)?'Mid-grade gasoline':/e10/.test(t)?'Super E10':/\bsuper\b|\be5\b/.test(t)?'Super E5':/regular|unleaded|bleifrei|benzin|gasoline|petrol/.test(t)||generic&&/\bgas\b|fuel|kraftstoff/.test(t)?'Regular gasoline':''}
 function fuelLitres(label:string,text:string){const m=label.match(/(\d+[.,]\d{1,3})\s*(?:l|litres?|liters?|ltr)\b/i)||text.match(/(?:litres?|liters?|volume|menge|ltr)\s*:?\s*(\d+[.,]\d{1,3})/i)||text.match(/(\d+[.,]\d{2,3})\s*(?:l|litres?|liters?|ltr)\b/i);return m?m[1].replace(',','.'):undefined}
 function expandAbbreviations(name:string){return name.split(' ').map(w=>ABBREVIATIONS[w.toLowerCase()]||w).join(' ')}
-export function parseReceipt(text:string,products:Product[]=[],aliases:BasketData['aliases']=[]):ReceiptDraft{
+// Lines above the store name that are never the store itself: "WELCOME" over a Shell logo, "Thank you".
+const GREETING=/^(?:welcome|willkommen|bienvenue|thank\s*you|thanks|danke)(?:\s+(?:to|at|bei|in|for shopping at))?\b[\s!,.:-]*/i;
+const NOT_STORE=/^(?:receipt|kassenbon|beleg|customer copy|merchant copy|duplicate|copy|sale|transaction|order|tel|phone)\b/i;
+export function parseReceipt(text:string,products:Product[]=[],aliases:BasketData['aliases']=[],knownStores:string[]=[]):ReceiptDraft{
  // Large total fonts often OCR with a space after the decimal point: "TOTAL 21. 78".
  const ocrNotes:string[]=[];
  const lostPrice=new Set<string>();const raw=text.split(/\r?\n/).map(l=>{const c=restoreDecimal(cleanOcrLine(l),ocrNotes);if(/\S\s{3,}[A-Z$§]{1,3}\s*$/.test(l)&&!/\d[.,]\s?\d{2}/.test(l))lostPrice.add(c);return c}).filter(Boolean);
  const header=raw.slice(0,8).join('\n');
- let store=STORES.find(s=>new RegExp('(?:^|[^a-z])'+s+'(?:$|[^a-z])','i').test(header))||raw.slice(0,3).find(l=>/[a-z]{3}/i.test(l)&&!/[\d@$]/.test(l)&&l.length<60)||'';
+ const named=[...new Set([...knownStores.filter(s=>s.trim().length>2&&!GREETING.test(s)&&!NOT_STORE.test(s)),...STORES])].map(s=>({s,at:header.search(new RegExp('(?:^|[^a-z])'+s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?:$|[^a-z])','i'))})).filter(h=>h.at>=0).sort((a,b)=>a.at-b.at||b.s.length-a.s.length)[0];
+ let store=named?.s||raw.slice(0,4).map(l=>l.replace(GREETING,'').trim()).find(l=>/[a-z]{3}/i.test(l)&&!/[\d@$]/.test(l)&&l.length<60&&!NOT_STORE.test(l))||'';
  if(store==='Superstore'&&/\b(NS|NB|PE|NL|nova scotia|halifax|dartmouth|bedford|sackville|atlantic)\b|\(\s*902\s*\)/i.test(text))store='Atlantic Superstore';
  const d:ReceiptDraft={id:newId(),store,date:'',total:'',tax:'0.00',currency:'',lines:[],rawText:text};
  const country=/\b(canada|nova scotia|quebec|ontario|halifax|dartmouth|sobeys|no frills|superstore|nslc)\b|\b[A-Z]\d[A-Z]\s?\d[A-Z]\d\b/i.test(text)?'CA':/\b(deutschland|germany|rewe|edeka|kaufland|alnatura|aldi|lidl|penny|netto|gmbh|kiel|aral|tankstelle|mwst)\b/i.test(text)?'DE':'';
@@ -81,6 +85,7 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  const lostLines:ReceiptDraft['lines']=[];let lastItemIndex=-2,pendingQuantity:{n:number;unit:number}|null=null;
  const takeout=TAKEOUT_PLACES.includes(store)||TAKEOUT_HINT.test(text);
  const fuelReceipt=FUEL_STATIONS.includes(store)||FUEL_GRADE.test(text)&&/\b(pump|säule|saule|zapfs\w*|litres?|liters?|ltr|price\s*\/\s*l)\b/i.test(text);
+ d.kind=fuelReceipt?'fuel':takeout?'takeout':'groceries';
 
  let tax=0,total:number|undefined,subtotal:number|undefined;d.warnings=[...ocrNotes];d.unassignedAdjustments=[];let pending='';let pendingIndex=0;let ended=false;
  const amountText=(n:number)=>(n/100).toFixed(2);
