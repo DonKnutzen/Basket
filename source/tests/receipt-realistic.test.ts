@@ -194,6 +194,14 @@ test('fuel price per litre: printed price is checked against total ÷ litres',()
  const derived=parseReceipt('Shell Canada\nBronze\nPRICE/L $1.786\nTOTAL FUEL $63.19\nTOTAL SALE $63.19');
  assert.equal(derived.lines[0].measuredQuantity,'35.381');assert.equal(derived.lines[0].unitPrice,'1.786');
 });
+test('Uprooted Market: the Sunflower Seeds price printed one line below the name',()=>{
+ const receipt=(block:string)=>parseReceipt(`Uprooted Market & Cafe\nMusquodoboit Harbour, NS B0J 2L0\n1 Beets, Golden - 2lb Bag   $5.00\n${block}\n1 Uprooted Logo - Tote Bag - Sage   $35.00\nSubtotal   $52.50\nHST 2025   $0.00\nTotal   $52.50`);
+ // Clean, then real browser OCR with noise before the price ("NE   $12.50"), then the price garbled away ("gs   RB").
+ for(const block of ['1 Hulled Sunflower Seeds, 910g - Organic\n$12.50','1 Hul led Sunflower Go   Seeds, 910g - Organic\nNE   $12.50','1 Hulled Sunflower Seeds, 910g - Organic   :\ngs   RB']){
+  const d=receipt(block),seeds=d.lines.filter(l=>/sunflower/i.test(l.label));
+  assert.equal(seeds.length,1,block);assert.equal(seeds[0].amount,'12.50',block);assert.equal(d.lines.length,3,block);assert.equal(difference(d),0,block);
+ }
+});
 test('currency without readable place names: province code, Canadian tax and $ amounts',()=>{
  // Real browser OCR of the Shell receipt: "Dartmouth NS" and "(902)" garbled.
  const shell=parseReceipt('Hi\n132 N\nDarts   NS\n(302)"\n434 7035\nBronze\nPUMP N 0.   03\nLI TRES   35. 380\nTOTAL SALE   6 3.19\n63.19   :\nTYPE: PURCHASE\nVisa');

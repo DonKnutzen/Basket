@@ -130,7 +130,9 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  if(/^[$€]?\d+[.,]\d{2}\s+(?:[lI1T|]?mt|limit)\b/i.test(line))continue;
  let m=line.match(/^(.+?)\s+(-?\$?(?:\d{1,3}(?:[.,]\d{3})+|\d{1,6})[.,]\d{2})\s*(?:€|EUR|CAD)?(?:\s*[A-Z*]{1,4}){0,2}$/i);if(!m&&pending&&/^-?[$€]?\d+(?:[.,]\d{3})*[.,]\d{2}\s*(?:€|EUR|CAD)?$/.test(line))m=[line,pending,line.replace(/\s*(?:€|EUR|CAD)$/,'')] as RegExpMatchArray;
  // OCR may garble a lone price into letters ("$3.50" -> "SD"): keep the item, its price is derived from the subtotal below.
- const lost=!m&&!ended&&!/^-?[$€]?\d+[.,]\d{2}$/.test(raw[index+1]||'')&&lostPrice.has(line)&&(line.match(/^(.{0,40}[a-z]{3}.{0,40}?)\s+\$[^\s.,]{1,4}$/i)||line.match(/^(\d{1,2}\s+[a-z].{2,60})$/i));if(lost){m=[line,lost[1],'0.00'] as RegExpMatchArray;pending=''}
+ // A long name wraps its price onto the next line ("1 Hulled Sunflower Seeds, 910g - Organic" / "$12.50"); when OCR garbles that price line ("gs RB"), the item stays for the subtotal.
+ const wrapped=!m&&!ended&&pending&&pendingIndex===index-1&&/^\d{1,2}\s+[a-z]/i.test(pending)&&lostPrice.has(line)&&!/[a-z]{3}/i.test(line)?[line,pending] as RegExpMatchArray:null;
+ const lost=wrapped||!m&&!ended&&!/^-?[$€]?\d+[.,]\d{2}$/.test(raw[index+1]||'')&&lostPrice.has(line)&&(line.match(/^(.{0,40}[a-z]{3}.{0,40}?)\s+\$[^\s.,]{1,4}$/i)||line.match(/^(\d{1,2}\s+[a-z].{2,60})$/i));if(lost){m=[line,lost[1],'0.00'] as RegExpMatchArray;pending=''}
  if(!m){
   // Walmart prints the weight below the item: "1.090 kg @ 1 kg /1.30".
   const weight=line.match(/^(\d+[.,]\d+)\s*(kg|lb)\s*@/i),last=d.lines[d.lines.length-1];
@@ -142,6 +144,8 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
   // Restaurant and market registers print the count or weight first and wrap long names: "1 Hulled Sunflower Seeds, 910g - Organic".
   if(!ended&&/^[a-zäöüé0-9(][a-zäöüé0-9 %&.,'’()@$/-]{2,90}$/i.test(plain)&&/[a-zäöüé]{3}/i.test(plain)&&!/^(www|tel|phone|thank|merci|danke|cashier|kasse|receipt|rewe|sobeys|walmart|no frills)/i.test(plain)){pending=pending&&pendingIndex===index-1&&continues(pending,plain)?pending+' '+plain:plain;pendingIndex=index}else pending='';continue}
  let label=cleanLabel(m[1]),amount=receiptCents(m[2]);if(!Number.isFinite(amount))continue;
+ // OCR noise before a wrapped price ("NE   $12.50") is no item name: the price belongs to the name line above.
+ if(pending&&pendingIndex===index-1&&/^[^\s\d]{1,3}$/.test(label)&&/^\d{1,2}\s+[a-zäöüé]{3}/i.test(pending)&&!awaitingTotal){label=pending;pending=''}
  if(awaitingTotal){awaitingTotal=false;if(total===undefined&&amount>0&&/^(?:visa|vis|mastercard|amex|debit|credit|interac|cash|tender|payment|kartenzahlung|bar|ec)\b/i.test(label)){total=amount;pending='';continue}}
  if(/^(?:[a-z]\s*=\s*)?(hst|gst|pst|qst|tps|tvq|tax\b|mwst|ust|vat)/i.test(label)){// Included tax (fuel, German VAT) is already part of the line totals.
   if(d.country!=='DE'&&!/incl|inkl|included|enthalten|^(?:[a-z]\s*=\s*)?(mwst|ust)/i.test(label))tax+=amount;pending='';continue}
@@ -164,8 +168,9 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
   if(amount<0&&candidates.length===1){const l=candidates[0],paid=toCents(l.amount),reduction=-amount;if(reduction<=paid){const alreadyIncluded=l.regularPrice!==undefined&&toCents(l.regularPrice)-paid===reduction;l.regularPrice=l.regularPrice||l.amount;l.discount=amountText(toCents(l.discount||'0')+reduction);l.amount=alreadyIncluded?l.amount:amountText(paid-reduction);l.saleStatus='reduced';l.sourceLines=[...(l.sourceLines||[]),index+1]}else{d.unassignedAdjustments.push({label,amount:amountText(amount),sourceLine:index+1});d.warnings.push('Discount exceeds the associated item price.')}}
   else{d.unassignedAdjustments.push({label,amount:amountText(amount),sourceLine:index+1});d.warnings.push('Discount cannot be uniquely assigned: '+line)}pending='';continue;
  }
- if(amount<0)d.warnings.push('Negative purchase/return position: '+line);
+ // After the total, a negative amount is the payment ("Credit -$114.15"), not a return.
  if(ended){pending='';continue}
+ if(amount<0)d.warnings.push('Negative purchase/return position: '+line);
  if(pending&&/^\d+\s*[@x×*]/i.test(label)){label=pending+' '+label;pending=''}
  else if(pending&&/^\d+(?:[.,]\d+)?\s*(kg|g|lb|l)\b/i.test(label)){label=pending+' '+label;pending=''}
  else if(pending&&/^\d{5,14}$/.test(label)){label=pending;pending=''}
