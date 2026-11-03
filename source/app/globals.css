@@ -623,7 +623,7 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
 .quick-cat{position:relative;flex:0 0 auto;width:40px;height:34px;display:grid;place-items:center;border-radius:8px;border:1px solid #d6e3c8;font-size:20px;line-height:1}
 .quick-cat select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;cursor:pointer}
 .receipt-lines>div>span{flex:1;min-width:0}.receipt-lines>div>.quick-cat{margin-right:-8px}
-.line-name-btn{display:flex;align-items:center;gap:6px;max-width:100%;padding:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}.line-name-btn b{overflow-wrap:anywhere}.line-name-btn svg{flex:0 0 auto;color:var(--muted)}.line-name-edit{width:100%;box-sizing:border-box;font-size:16px;padding:6px 8px;border:1px solid #d6e3c8;border-radius:8px}
+.line-name-btn{display:flex;align-items:center;gap:6px;max-width:100%;padding:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}.line-name-btn b{overflow-wrap:anywhere}.line-name-btn svg{flex:0 0 auto;color:var(--muted)}.line-price-btn{display:flex;align-items:center;gap:4px;padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer;white-space:nowrap}.line-price-edit{width:6.5em;box-sizing:border-box;font-size:16px;padding:6px 8px;border:1px solid #d6e3c8;border-radius:8px;text-align:right}.line-name-edit{width:100%;box-sizing:border-box;font-size:16px;padding:6px 8px;border:1px solid #d6e3c8;border-radius:8px}
 
 .donut-icon{font-size:22px;line-height:1;margin-bottom:2px}
 .cat-mix{display:flex;height:12px;border-radius:99px;overflow:hidden;gap:2px;margin:4px 0 16px}.cat-mix i{display:block;min-width:3px;animation:card-in .6s ease both}
