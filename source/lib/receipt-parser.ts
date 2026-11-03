@@ -70,7 +70,7 @@ function expandAbbreviations(name:string){return name.split(' ').map(w=>ABBREVIA
 export function parseReceipt(text:string,products:Product[]=[],aliases:BasketData['aliases']=[]):ReceiptDraft{
  // Large total fonts often OCR with a space after the decimal point: "TOTAL 21. 78".
  const ocrNotes:string[]=[];
- const raw=text.split(/\r?\n/).map(l=>restoreDecimal(cleanOcrLine(l),ocrNotes)).filter(Boolean);
+ const lostPrice=new Set<string>();const raw=text.split(/\r?\n/).map(l=>{const c=restoreDecimal(cleanOcrLine(l),ocrNotes);if(/\S\s{3,}[A-Z$§]{1,3}\s*$/.test(l)&&!/\d[.,]\s?\d{2}/.test(l))lostPrice.add(c);return c}).filter(Boolean);
  const header=raw.slice(0,8).join('\n');
  let store=STORES.find(s=>new RegExp('(?:^|[^a-z])'+s+'(?:$|[^a-z])','i').test(header))||raw.slice(0,3).find(l=>/[a-z]{3}/i.test(l)&&!/[\d@$]/.test(l)&&l.length<60)||'';
  if(store==='Superstore'&&/\b(NS|NB|PE|NL|nova scotia|halifax|dartmouth|bedford|sackville|atlantic)\b|\(\s*902\s*\)/i.test(text))store='Atlantic Superstore';
@@ -78,7 +78,7 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  const country=/\b(canada|nova scotia|quebec|ontario|halifax|dartmouth|sobeys|no frills|superstore|nslc)\b|\b[A-Z]\d[A-Z]\s?\d[A-Z]\d\b/i.test(text)?'CA':/\b(deutschland|germany|rewe|edeka|kaufland|alnatura|aldi|lidl|penny|netto|gmbh|kiel|aral|tankstelle|mwst)\b/i.test(text)?'DE':'';
  d.country=country;d.currency=/\bCAD\b/i.test(text)?'CAD':/€|\bEUR\b/i.test(text)?'EUR':country==='CA'?'CAD':country==='DE'?'EUR':'';
  d.dateEvidence=receiptDate(text,country,store);d.date=d.dateEvidence.date;
- let lastItemIndex=-2,pendingQuantity:{n:number;unit:number}|null=null;
+ const lostLines:ReceiptDraft['lines']=[];let lastItemIndex=-2,pendingQuantity:{n:number;unit:number}|null=null;
  const takeout=TAKEOUT_PLACES.includes(store)||TAKEOUT_HINT.test(text);
  const fuelReceipt=FUEL_STATIONS.includes(store)||FUEL_GRADE.test(text)&&/\b(pump|säule|saule|zapfs\w*|litres?|liters?|ltr|price\s*\/\s*l)\b/i.test(text);
 
@@ -95,6 +95,8 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  // Loblaw limit notes between an item and its count line: "$1.00 lmt 6, $2.00 ea".
  if(/^[$€]?\d+[.,]\d{2}\s+(?:[lI1T|]?mt|limit)\b/i.test(line))continue;
  let m=line.match(/^(.+?)\s+(-?\$?(?:\d{1,3}(?:[.,]\d{3})+|\d{1,6})[.,]\d{2})\s*(?:€|EUR|CAD)?(?:\s*[A-Z*]{1,4}){0,2}$/i);if(!m&&pending&&/^-?[$€]?\d+(?:[.,]\d{3})*[.,]\d{2}\s*(?:€|EUR|CAD)?$/.test(line))m=[line,pending,line.replace(/\s*(?:€|EUR|CAD)$/,'')] as RegExpMatchArray;
+ // OCR may garble a lone price into letters ("$3.50" -> "SD"): keep the item, its price is derived from the subtotal below.
+ const lost=!m&&!ended&&!/^-?[$€]?\d+[.,]\d{2}$/.test(raw[index+1]||'')&&lostPrice.has(line)&&line.match(/^(\d{1,2}\s+[a-z].{2,60})$/i);if(lost){m=[line,lost[1],'0.00'] as RegExpMatchArray;pending=''}
  if(!m){
   // Walmart prints the weight below the item: "1.090 kg @ 1 kg /1.30".
   const weight=line.match(/^(\d+[.,]\d+)\s*(kg|lb)\s*@/i),last=d.lines[d.lines.length-1];
@@ -109,7 +111,7 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  const key=label.replace(/0/g,'O').replace(/^(?:\S{1,3} ){0,2}(?=\S{5})/,''),lastWord=key.split(' ').pop()!.toUpperCase();
  if(/^sub[ -]?total|^\S+ sub[ -]?total$/i.test(key)){subtotal=amount;ended=true;pending='';continue}
  const fuzzyTotal=total===undefined&&key.split(' ').length<=3&&!/sav|item|disc|point|reward|number/i.test(key)&&(edits(lastWord,'TOTAL')<=1||d.country==='DE'&&key.split(' ').length===1&&edits(lastWord,'SUMME')<=2&&amount*100>=d.lines.reduce((s,l)=>s+Math.round(+l.amount*100),0)||subtotal!==undefined&&amount>=subtotal&&edits(lastWord,'TOTAL')<=2);
- if(fuzzyTotal||/^(total|summe|gesamt|zu zahlen|balance due|amount due|grand total)\b(?!\s*(savings|saved|discount|items?|number))/i.test(key)){total=amount;ended=true;pending='';continue}
+ if(fuzzyTotal||/^(total|summe|gesamt|zu zahlen|balance due|amount due|grand total)\b(?!\s*(savings|saved|discount|items?|number))/i.test(key)){if(total===undefined||amount)total=amount;ended=true;pending='';continue}
  const regular=label.match(/^(?:regular price|normalpreis|prix regulier)\s+(.+)$/i);
  if(regular){const matches=d.lines.filter(l=>normalize(l.label)===normalize(regular[1])||normalize(l.name)===normalize(regular[1]));if(matches.length===1&&amount>=toCents(matches[0].amount)){matches[0].regularPrice=amountText(amount);matches[0].sourceLines=[...(matches[0].sourceLines||[]),index+1]}else d.warnings.push('Regular price could not be uniquely associated: '+line);pending='';continue}
  const discount=label.match(/^(?:discount|rabatt|rabais|coupon|arcp:?|member savings|loyalty discount|scene\+?\s*savings|instant savings|sale savings|savings|preisvorteil|ersparnis|aktionsrabatt)(?:\s+(.+))?$/i);
@@ -143,7 +145,9 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  const quality=/\b(bio|organic|org)\b/i.test(name)?'organic':undefined;
  const canonical=catalogExactProduct(name.replace(/\b(bio|organic|org)\b/ig,'').trim());if(canonical)name=canonical.en;
  const alias=aliases.find(a=>a.store===normalize(d.store)&&a.label===normalize(label));const p=products.find(p=>p.id===alias?.productId)||products.find(p=>normalize(p.name)===normalize(name)&&!p.packSize&&!p.brand&&!p.variant&&!p.quality);
- d.lines.push({id:newId(),sourceLines:pendingIndex===index-1?[pendingIndex+1,index+1]:[index+1],label,name:p?.name||name.toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase()),quantity,amount:(amount/100).toFixed(2),category:takeout?'Takeout':receiptCategory(name,p?.category),packSize:pack&&!weighed?pack[1]+' '+pack[2]:p?.packSize||'',brand:p?.brand,variant:p?.variant,quality:quality||p?.quality,measuredQuantity:pack&&weighed?pack[1].replace(',','.'):undefined,measuredUnit:pack&&weighed?pack[2].toLowerCase() as 'kg'|'g'|'lb':undefined,matched:!!p});lastItemIndex=index;pending='';}
+ d.lines.push({id:newId(),sourceLines:pendingIndex===index-1?[pendingIndex+1,index+1]:[index+1],label,name:p?.name||name.toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase()),quantity,amount:(amount/100).toFixed(2),category:takeout?'Takeout':receiptCategory(name,p?.category),packSize:pack&&!weighed?pack[1]+' '+pack[2]:p?.packSize||'',brand:p?.brand,variant:p?.variant,quality:quality||p?.quality,measuredQuantity:pack&&weighed?pack[1].replace(',','.'):undefined,measuredUnit:pack&&weighed?pack[2].toLowerCase() as 'kg'|'g'|'lb':undefined,matched:!!p});lastItemIndex=index;if(lost)lostLines.push(d.lines[d.lines.length-1]);pending='';}
+ if(lostLines.length===1&&subtotal!==undefined){const gap=subtotal-d.lines.reduce((s,l)=>s+toCents(l.amount),0);if(gap>0&&gap<subtotal){lostLines[0].amount=amountText(gap);d.warnings.push('Price unreadable, derived from subtotal: '+lostLines[0].label)}}
+ for(const l of lostLines)if(!toCents(l.amount))d.lines.splice(d.lines.indexOf(l),1);
  d.tax=(tax/100).toFixed(2);d.total=total!==undefined?amountText(total):'';if(total===undefined)d.warnings.push('No printed final total was recognized.');if(!d.lines.length)d.warnings.push('No purchased item was recognized.');if(d.total&&difference(d)!==0){d.warnings.push('Printed total differs from recognized positions; no balancing item was invented.');const fix=suggestFix(d);if(fix)d.warnings.push(fix)}return d;
 }
 export function difference(d:ReceiptDraft){return toCents(d.total||'0')-toCents(d.tax||'0')-d.lines.reduce((s,l)=>s+(toCents(l.amount)||0),0)}

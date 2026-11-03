@@ -84,3 +84,14 @@ test('item names spanning several lines keep their name (Toast market receipts)'
  // A section header above an item is not glued to it.
  assert.deepEqual(amounts('21-GROCERY\nMILK 4.00'),['MILK=4.00']);
 });
+
+test('a price OCR turned into letters is derived from the subtotal',()=>{
+ const d=parseReceipt('1 Scone   $2.50\n1 Coffee Cake   SD\n0.1 1b Garlic - Snowy River @ $20.00/1b\n(Manual Weight)   $2.00\nSubtotal...   $8.00\nHST   $0.00\nTotal   $8.00');
+ assert.deepEqual(d.lines.map(l=>l.amount),['2.50','3.50','2.00']);
+ assert.match(d.lines[1].label,/Coffee Cake$/);
+ assert.match(d.lines[2].label,/Garlic/);assert.doesNotMatch(d.lines[2].label,/Coffee/);
+});
+
+test('a zero "Amount Due" after payment does not replace the printed total',()=>{
+ assert.equal(parseReceipt('1 Scone   $2.50\nSubtotal   $2.50\nTotal   25%   $2. 50\nCredit   -$2.50\nAmount Due   $0.00').total,'2.50');
+});
