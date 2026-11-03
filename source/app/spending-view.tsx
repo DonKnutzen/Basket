@@ -15,7 +15,18 @@ const day = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString(locale()
 const monthName = (m: string, style: 'short' | 'long' = 'long') => new Date(m + '-15T12:00:00').toLocaleDateString(locale(), { month: style, year: style === 'long' ? 'numeric' : '2-digit' });
 const unitText = (unit: string) => unit === 'kg' || unit === 'L' ? unit : unit === 'piece' ? tr('piece') : unit;
 
-const CATEGORY_COLORS = ['#285640', '#5f8f5a', '#8fae86', '#c2a25a', '#d98b5f', '#7d9bb3', '#a98bb5', '#b8c4a8', '#6f7f63', '#d4c49a'];
+/** Fixed colour + emoji per category, so meat is always red and fruit/veggies always green. */
+const CATEGORY_LOOK: Record<string, [string, string]> = {
+    'Fruit': ['#e8833a', '🍎'], 'Veggies': ['#4f9d4a', '🥦'], 'Produce': ['#6aab4f', '🥕'], 'Processed Food': ['#b08a5a', '🥫'],
+    'Meat & fish': ['#c8423b', '🥩'], 'Dairy & eggs': ['#6fa8dc', '🧀'], 'Bakery': ['#c99a4b', '🥖'], 'Snacks & sweets': ['#d9649a', '🍫'],
+    'Pasta, rice & grains': ['#e0b84a', '🍝'], 'Pantry': ['#9c7b55', '🫙'], 'Oils, spices & sauces': ['#c7a227', '🫒'], 'Frozen': ['#5bb3c9', '🧊'],
+    'Drinks': ['#3f7fbf', '🥤'], 'Household': ['#8a7cc0', '🧽'], 'Takeout': ['#e06d4f', '🥡'], 'Fuel': ['#5d6b75', '⛽'],
+    'Medicine': ['#3fae9c', '💊'], 'Clothing': ['#a0688f', '👕'], 'Other': ['#9aa58f', '🛒'],
+};
+const FALLBACK_COLORS = ['#285640', '#7d9bb3', '#a98bb5', '#d4c49a', '#6f7f63'];
+const catColor = (name: string, i = 0) => CATEGORY_LOOK[name]?.[0] || FALLBACK_COLORS[i % FALLBACK_COLORS.length];
+const catIcon = (name: string) => CATEGORY_LOOK[name]?.[1] || '🛒';
+const FRESH = new Set(['Fruit', 'Veggies', 'Produce']);
 const weekdayName = (d: number, style: 'short' | 'long' = 'short') => new Date(Date.UTC(2024, 0, 1 + d)).toLocaleDateString(locale(), { weekday: style, timeZone: 'UTC' });
 
 /** Counts smoothly from the previous value to the new one. */
@@ -38,10 +49,39 @@ function Donut({ categories, total, currency }: { categories: CategoryStat[]; to
     let offset = 0;
     return <div className="donut" role="img" aria-label={categories.map(x => tr(x.name) + ' ' + share(x.share)).join('; ')}>
         <svg viewBox="0 0 140 140"><circle cx="70" cy="70" r={r} className="donut-track"/>
-            {categories.map((x, i) => { const len = x.share * c, el = <circle key={x.name} cx="70" cy="70" r={r} stroke={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} strokeDasharray={`${Math.max(0, len - 1.5)} ${c}`} strokeDashoffset={-offset} style={{ animationDelay: i * 70 + 'ms' }}/>; offset += len; return el; })}
+            {categories.map((x, i) => { const len = x.share * c, el = <circle key={x.name} cx="70" cy="70" r={r} stroke={catColor(x.name, i)} strokeDasharray={`${Math.max(0, len - 1.5)} ${c}`} strokeDashoffset={-offset} style={{ animationDelay: i * 70 + 'ms' }}/>; offset += len; return el; })}
         </svg>
-        <div className="donut-center"><small>{tr('Items')}</small><b><Count value={total} format={n => money(n, currency)}/></b></div>
+        <div className="donut-center">{categories[0] && <span className="donut-icon">{catIcon(categories[0].name)}</span>}<small>{tr('Items')}</small><b><Count value={total} format={n => money(n, currency)}/></b></div>
     </div>;
+}
+
+/** One stacked bar with every category in its colour – the basket mix at a glance. */
+function CategoryMix({ categories }: { categories: CategoryStat[] }) {
+    return <div className="cat-mix" aria-hidden="true">{categories.map((c, i) => <i key={c.name} style={{ flexGrow: c.share, background: catColor(c.name, i) }}/>)}</div>;
+}
+
+/** Small insight tiles computed from the period stats. */
+function Insights({ s, currency }: { s: ReturnType<typeof spendingStats>; currency: string }) {
+    const itemCents = s.categories.reduce((n, c) => n + c.cents, 0);
+    const fresh = itemCents ? s.categories.filter(c => FRESH.has(c.name)).reduce((n, c) => n + c.cents, 0) / itemCents : 0;
+    const meat = itemCents ? (s.categories.find(c => c.name === 'Meat & fish')?.cents || 0) / itemCents : 0;
+    const perTrip = s.trips ? s.itemCount / s.trips : 0;
+    const perItem = s.itemCount ? Math.round(itemCents / s.itemCount) : 0;
+    const fav = s.stores[0];
+    const tiles: [string, string, string, string][] = [
+        ['🥦', tr('Fruit & veggies share'), share(fresh), '#4f9d4a'],
+        ['🥩', tr('Meat & fish share'), share(meat), '#c8423b'],
+        ['🧺', tr('Items per shop'), perTrip.toLocaleString(locale(), { maximumFractionDigits: 1 }), '#c99a4b'],
+        ['🏷️', tr('Average item price'), money(perItem, currency), '#3f7fbf'],
+    ];
+    return <section className="chart-card insights-card">
+        <h2>{tr('At a glance')}</h2>
+        <p>{fav ? phrase('{0} is your favourite store ({1} of spending)', fav.name, share(fav.share)) : tr('Average in this period')}</p>
+        <div className="insight-grid">{tiles.map(([icon, label, value, color]) => <div key={label} className="insight" style={{ '--accent': color } as React.CSSProperties}>
+            <span className="insight-icon">{icon}</span><small>{label}</small><b>{value}</b>
+        </div>)}</div>
+        <div className="fresh-meter"><span><small>{tr('Fruit & veggies share')}</small><b>{share(fresh)}</b></span><span className="fresh-track"><i style={{ width: Math.min(100, fresh * 100) + '%' }}/></span></div>
+    </section>;
 }
 
 function Weekdays({ days, largest, currency }: { days: WeekdayStat[]; largest: Receipt | null; currency: string }) {
@@ -114,6 +154,7 @@ export function SpendingView({ data, scan, busy, act }: {
             <div className="stat"><span>{tr('PER WEEK ')}<CalendarDays size={19}/></span><strong><Count value={s.perWeekCents} format={n => money(n, currency)}/></strong><small>{tr('Average in this period')}</small></div>
         </div>
         {s.trips ? <div className="spend-anim" key={period + month + currency}>
+            <Insights s={s} currency={currency}/>
             <Timeline buckets={s.timeline.buckets} unit={s.timeline.unit} currency={currency}/>
             <Weekdays days={s.weekdays} largest={s.largest} currency={currency}/>
             <div className="spending-layout">
@@ -121,10 +162,11 @@ export function SpendingView({ data, scan, busy, act }: {
                     <h2>{tr('By category')}</h2>
                     <p>{tr('Tap a category to see what was in it')}</p>
                     <Donut categories={s.categories} total={s.categories.reduce((n, c) => n + c.cents, 0)} currency={currency}/>
-                    <div className="rank-list">{s.categories.map((c, ci) => <div key={c.name} className={'rank-row' + (openCategory === c.name ? ' open' : '')}>
+                    <CategoryMix categories={s.categories}/>
+                    <div className="rank-list">{s.categories.map((c, ci) => <div key={c.name} className={'rank-row cat-row' + (openCategory === c.name ? ' open' : '')} style={{ '--accent': catColor(c.name, ci) } as React.CSSProperties}>
                         <button type="button" onClick={() => setOpenCategory(openCategory === c.name ? '' : c.name)} aria-expanded={openCategory === c.name}>
-                            <span className="rank-head"><b><i className="cat-dot" style={{ background: CATEGORY_COLORS[ci % CATEGORY_COLORS.length] }}/>{tr(c.name)}</b><strong>{money(c.cents, currency)}</strong></span>
-                            <span className="rank-bar"><i style={{ width: c.cents / maxCategory * 100 + '%', background: CATEGORY_COLORS[ci % CATEGORY_COLORS.length] }}/></span>
+                            <span className="rank-head"><b><span className="cat-icon">{catIcon(c.name)}</span>{tr(c.name)}</b><strong>{money(c.cents, currency)}</strong></span>
+                            <span className="rank-bar"><i style={{ width: c.cents / maxCategory * 100 + '%', background: catColor(c.name, ci) }}/></span>
                             <small>{share(c.share)} {tr('of item spending')} <ChevronDown size={13}/></small>
                         </button>
                         {openCategory === c.name && <ul className="rank-detail">{c.products.map(p => <li key={p.name}><span>{p.name}</span><b>{money(p.cents, currency)}</b></li>)}</ul>}
@@ -134,7 +176,7 @@ export function SpendingView({ data, scan, busy, act }: {
                 <section className="chart-card">
                     <h2>{tr('By store')}</h2>
                     <p>{tr('Your places to shop')}</p>
-                    {s.stores.map(st => <div className="store-bar" key={st.name}><div><b>{st.name}</b><strong>{money(st.cents, currency)}</strong></div><span><i style={{ width: `${st.cents / maxStore * 100}%`, background: 'var(--green)' }}/></span><small>{st.trips} {st.trips === 1 ? tr('trip') : tr('trips')} · {tr('Ø per shop')} {money(st.averageCents, currency)} · {share(st.share)}</small></div>)}
+                    {s.stores.map((st, si) => <div className="store-bar" key={st.name}><div><b>{st.name}</b><strong>{money(st.cents, currency)}</strong></div><span><i style={{ width: `${st.cents / maxStore * 100}%`, background: si === 0 ? 'var(--green)' : '#8fae86' }}/></span><small>{st.trips} {st.trips === 1 ? tr('trip') : tr('trips')} · {tr('Ø per shop')} {money(st.averageCents, currency)} · {share(st.share)}</small></div>)}
                 </section>
             </div>
             <div className="spending-layout">

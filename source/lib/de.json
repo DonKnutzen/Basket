@@ -882,5 +882,11 @@
   "Item {0}": "Artikel {0}",
   "By weekday": "Nach Wochentag",
   "You spend the most on {0}": "Am meisten gibst du am {0} aus",
-  "Largest shop": "Größter Einkauf"
+  "Largest shop": "Größter Einkauf",
+  "At a glance": "Auf einen Blick",
+  "{0} is your favourite store ({1} of spending)": "{0} ist dein Lieblingsladen ({1} der Ausgaben)",
+  "Fruit & veggies share": "Anteil Obst & Gemüse",
+  "Meat & fish share": "Anteil Fleisch & Fisch",
+  "Items per shop": "Artikel pro Einkauf",
+  "Average item price": "Ø Preis pro Artikel"
 }
