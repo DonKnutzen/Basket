@@ -83,3 +83,12 @@ test('spending opens on the latest month with receipts when the current month ha
  assert.equal(defaultSpendingMonth([],'CAD','2026-11-02'),'2026-11');
  assert.equal(defaultSpendingMonth([receipt('x','A','2026-12-01',100)],'CAD','2026-11-02'),'2026-11');
 });
+
+test('spending splits by receipt type with stores per type and only food categories for groceries',()=>{
+ const rs=[{...receipt('k1','Sobeys','2026-10-02',3000),kind:'groceries' as const},{...receipt('k2','Irving','2026-10-03',5000),kind:'fuel' as const},receipt('k3','Pizza Delight','2026-10-04',2500),{...receipt('k4','Pizza Delight','2026-10-05',1500),kind:'takeout' as const}];
+ const ls=[line('k1','Sobeys','2026-10-02','Apples',1000,'Produce'),line('k1','Sobeys','2026-10-02','Soap',800,'Household'),line('k1','Sobeys','2026-10-02','Milk',1200,'Dairy & eggs'),line('k3','Pizza Delight','2026-10-04','Pizza',2500,'Takeout')];
+ const s=spendingStats({receipts:rs,lines:ls},'month','2026-10','CAD','2026-10-31');
+ assert.deepEqual(s.kinds.map(k=>[k.kind,k.cents]),[['fuel',5000],['takeout',4000],['groceries',3000]]);
+ assert.deepEqual(s.kinds.find(k=>k.kind==='takeout')!.stores.map(x=>[x.name,x.cents,x.trips]),[['Pizza Delight',4000,2]]);
+ assert.deepEqual(s.kinds.find(k=>k.kind==='groceries')!.categories.map(c=>c.name),['Dairy & eggs','Produce']);
+});

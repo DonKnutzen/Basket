@@ -1,10 +1,11 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
-import { ShoppingBasket, ReceiptText, ChartNoAxesCombined, CalendarDays, ScanLine, ShieldCheck, TrendingUp, TrendingDown, ChevronDown, Store } from 'lucide-react';
+import { ReceiptText, ScanLine, ShieldCheck, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Store } from 'lucide-react';
 import { tr, phrase, locale } from '../lib/i18n';
 import { localDate, money, type BasketData, type Receipt } from '../lib/types';
 import { monthOptions } from '../lib/budgets';
-import { defaultSpendingMonth, receiptCurrencies, spendingStats, type PeriodKey, type TimeBucket, type WeekdayStat, type CategoryStat } from '../lib/spending-stats';
+import { defaultSpendingMonth, receiptCurrencies, spendingStats, type PeriodKey, type TimeBucket, type WeekdayStat, type KindStat } from '../lib/spending-stats';
+import type { ReceiptKind } from '../lib/types';
 import BudgetPanel from './budget-panel';
 import { Empty, Intro } from './basket-app';
 
@@ -26,7 +27,6 @@ const CATEGORY_LOOK: Record<string, [string, string]> = {
 const FALLBACK_COLORS = ['#285640', '#7d9bb3', '#a98bb5', '#d4c49a', '#6f7f63'];
 const catColor = (name: string, i = 0) => CATEGORY_LOOK[name]?.[0] || FALLBACK_COLORS[i % FALLBACK_COLORS.length];
 const catIcon = (name: string) => CATEGORY_LOOK[name]?.[1] || '🛒';
-const FRESH = new Set(['Fruit', 'Veggies', 'Produce']);
 const weekdayName = (d: number, style: 'short' | 'long' = 'short') => new Date(Date.UTC(2024, 0, 1 + d)).toLocaleDateString(locale(), { weekday: style, timeZone: 'UTC' });
 
 /** Counts smoothly from the previous value to the new one. */
@@ -44,43 +44,45 @@ function useCountUp(target: number, ms = 750) {
 }
 function Count({ value, format }: { value: number; format: (n: number) => string }) { return <>{format(useCountUp(value))}</>; }
 
-function Donut({ categories, total, currency }: { categories: CategoryStat[]; total: number; currency: string }) {
+const KIND_LOOK: Record<ReceiptKind, [string, string, string]> = { groceries: ['#4f9d4a', '🛒', 'Groceries'], takeout: ['#e06d4f', '🥡', 'Takeout'], fuel: ['#5d6b75', '⛽', 'Fuel'], other: ['#8a7cc0', '🧾', 'Other'] };
+type Slice = { key: string; label: string; icon: string; color: string; cents: number; sub: string };
+
+/** Ring + toggle chips + list; switched-off slices drop out of the ring, total and shares. */
+function SliceChart({ slices, currency, onOpen }: { slices: Slice[]; currency: string; onOpen?: (key: string) => void }) {
+    const [hidden, setHidden] = useState<Set<string>>(new Set());
+    const shown = slices.filter(x => !hidden.has(x.key)), total = shown.reduce((n, x) => n + x.cents, 0);
     const r = 52, c = 2 * Math.PI * r;
     let offset = 0;
-    return <div className="donut" role="img" aria-label={categories.map(x => tr(x.name) + ' ' + share(x.share)).join('; ')}>
-        <svg viewBox="0 0 140 140"><circle cx="70" cy="70" r={r} className="donut-track"/>
-            {categories.map((x, i) => { const len = x.share * c, el = <circle key={x.name} cx="70" cy="70" r={r} stroke={catColor(x.name, i)} strokeDasharray={`${Math.max(0, len - 1.5)} ${c}`} strokeDashoffset={-offset} style={{ animationDelay: i * 70 + 'ms' }}/>; offset += len; return el; })}
-        </svg>
-        <div className="donut-center">{categories[0] && <span className="donut-icon">{catIcon(categories[0].name)}</span>}<small>{tr('Items')}</small><b><Count value={total} format={n => money(n, currency)}/></b></div>
-    </div>;
+    const toggle = (key: string) => setHidden(h => { const n = new Set(h); if (n.has(key)) n.delete(key); else n.add(key); return n; });
+    return <>
+        <div className="donut" role="img" aria-label={shown.map(x => x.label + ' ' + money(x.cents, currency)).join('; ')}>
+            <svg viewBox="0 0 140 140"><circle cx="70" cy="70" r={r} className="donut-track"/>
+                {shown.map(x => { const len = total ? x.cents / total * c : 0, el = <circle key={x.key} cx="70" cy="70" r={r} stroke={x.color} strokeDasharray={`${Math.max(0, len - 1.5)} ${c}`} strokeDashoffset={-offset}/>; offset += len; return el; })}
+            </svg>
+            <div className="donut-center"><small>{tr('Total')}</small><b><Count value={total} format={n => money(n, currency)}/></b></div>
+        </div>
+        <div className="slice-chips" role="group">{slices.map(x => <button type="button" key={x.key} className="slice-chip" aria-pressed={!hidden.has(x.key)} style={{ '--accent': x.color } as React.CSSProperties} onClick={() => toggle(x.key)}>{x.icon} {x.label}</button>)}</div>
+        <div className="slice-list">{shown.map(x => { const body = <><span className="slice-dot" style={{ background: x.color }}/><span className="slice-name"><b>{x.label}</b><small>{x.sub}</small></span><span className="slice-amount"><b>{money(x.cents, currency)}</b><small>{share(total ? x.cents / total : 0)}</small></span>{onOpen && <ChevronRight size={16}/>}</>;
+            return onOpen ? <button type="button" key={x.key} className="slice-row" onClick={() => onOpen(x.key)}>{body}</button> : <div key={x.key} className="slice-row">{body}</div>; })}</div>
+    </>;
 }
 
-/** One stacked bar with every category in its colour – the basket mix at a glance. */
-function CategoryMix({ categories }: { categories: CategoryStat[] }) {
-    return <div className="cat-mix" aria-hidden="true">{categories.map((c, i) => <i key={c.name} style={{ flexGrow: c.share, background: catColor(c.name, i) }}/>)}</div>;
-}
-
-/** Small insight tiles computed from the period stats. */
-function Insights({ s, currency }: { s: ReturnType<typeof spendingStats>; currency: string }) {
-    const itemCents = s.categories.reduce((n, c) => n + c.cents, 0);
-    const fresh = itemCents ? s.categories.filter(c => FRESH.has(c.name)).reduce((n, c) => n + c.cents, 0) / itemCents : 0;
-    const meat = itemCents ? (s.categories.find(c => c.name === 'Meat & fish')?.cents || 0) / itemCents : 0;
-    const perTrip = s.trips ? s.itemCount / s.trips : 0;
-    const perItem = s.itemCount ? Math.round(itemCents / s.itemCount) : 0;
-    const fav = s.stores[0];
-    const tiles: [string, string, string, string][] = [
-        ['🥦', tr('Fruit & veggies share'), share(fresh), '#4f9d4a'],
-        ['🥩', tr('Meat & fish share'), share(meat), '#c8423b'],
-        ['🧺', tr('Items per shop'), perTrip.toLocaleString(locale(), { maximumFractionDigits: 1 }), '#c99a4b'],
-        ['🏷️', tr('Average item price'), money(perItem, currency), '#3f7fbf'],
-    ];
-    return <section className="chart-card insights-card">
-        <h2>{tr('At a glance')}</h2>
-        <p>{fav ? phrase('{0} is your favourite store ({1} of spending)', fav.name, share(fav.share)) : tr('Average in this period')}</p>
-        <div className="insight-grid">{tiles.map(([icon, label, value, color]) => <div key={label} className="insight" style={{ '--accent': color } as React.CSSProperties}>
-            <span className="insight-icon">{icon}</span><small>{label}</small><b>{value}</b>
-        </div>)}</div>
-        <div className="fresh-meter"><span><small>{tr('Fruit & veggies share')}</small><b>{share(fresh)}</b></span><span className="fresh-track"><i style={{ width: Math.min(100, fresh * 100) + '%' }}/></span></div>
+function KindBreakdown({ kinds, currency }: { kinds: KindStat[]; currency: string }) {
+    const [open, setOpen] = useState<ReceiptKind | ''>('');
+    const k = kinds.find(x => x.kind === open);
+    if (!k) return <section className="chart-card kind-card">
+        <h2>{tr('By category')}</h2>
+        <SliceChart currency={currency} onOpen={key => setOpen(key as ReceiptKind)} slices={kinds.map(x => ({ key: x.kind, label: tr(KIND_LOOK[x.kind][2]), icon: KIND_LOOK[x.kind][1], color: KIND_LOOK[x.kind][0], cents: x.cents, sub: x.trips + ' ' + tr('trips') }))}/>
+    </section>;
+    const byCategory = k.kind === 'groceries' && k.categories.length > 0;
+    const slices: Slice[] = byCategory
+        ? k.categories.map((x, i) => ({ key: x.name, label: tr(x.name), icon: catIcon(x.name), color: catColor(x.name, i), cents: x.cents, sub: x.products.slice(0, 3).map(p => p.name).join(', ') }))
+        : k.stores.map((x, i) => ({ key: x.name, label: x.name, icon: '📍', color: FALLBACK_COLORS[i % FALLBACK_COLORS.length], cents: x.cents, sub: x.trips + ' ' + tr('trips') }));
+    return <section className="chart-card kind-card">
+        <button type="button" className="kind-back" onClick={() => setOpen('')}><ChevronLeft size={18}/>{tr('By category')}</button>
+        <h2>{KIND_LOOK[k.kind][1]} {tr(KIND_LOOK[k.kind][2])}</h2>
+        <p>{byCategory ? tr('Food only') : tr('By store')}</p>
+        <SliceChart key={k.kind} currency={currency} slices={slices}/>
     </section>;
 }
 
@@ -130,49 +132,25 @@ export function SpendingView({ data, scan, busy, act }: {
     const [period, setPeriod] = useState<PeriodKey>('month');
     const [chosenMonth, setMonth] = useState('');
     const [chosenCurrency, setCurrency] = useState('');
-    const [openCategory, setOpenCategory] = useState('');
     const [allComparisons, setAllComparisons] = useState(false);
     const currency = chosenCurrency || currencies[0] || 'CAD';
     const month = chosenMonth || defaultSpendingMonth(data.receipts, currency);
     const s = spendingStats(data, period, month, currency);
-    const delta = s.previousTotalCents ? (s.totalCents - s.previousTotalCents) / s.previousTotalCents : null;
-    const periodText = period === 'month' ? monthName(month) : period === 'all' ? tr('All time') : tr(PERIODS.find(p => p.id === period)!.label);
-    const maxCategory = s.categories[0]?.cents || 1, maxStore = s.stores[0]?.cents || 1, maxProduct = s.products[0]?.cents || 1;
+    const maxStore = s.stores[0]?.cents || 1, maxProduct = s.products[0]?.cents || 1;
     const comparisons = allComparisons ? s.comparisons : s.comparisons.slice(0, 6);
     const rises = s.changes.filter(c => c.change > 0).slice(0, 5), drops = s.changes.filter(c => c.change < 0).slice(0, 5);
     return <>
         <Intro eyebrow="SMALL SHOPS. A CLEARER PICTURE." title={tr('Where it all goes')} action={<div className="period">
             {period === 'month' && <select value={month} onChange={e => setMonth(e.target.value)} aria-label={tr('Spending month')}>{months.map(m => <option key={m} value={m}>{monthName(m)}</option>)}</select>}
             <select value={currency} onChange={e => setCurrency(e.target.value)} aria-label={tr('Spending currency')}>{(currencies.length ? currencies : ['CAD', 'EUR']).map(c => <option key={c} value={c}>{tr(c)}</option>)}</select>
-        </div>}>{tr('Every scanned receipt flows in here: totals, categories, stores and prices.')}</Intro>
+        </div>}>{null}</Intro>
         <div className="period-chips" role="group" aria-label={tr('Period')}>{PERIODS.map(p => <button type="button" key={p.id} aria-pressed={period === p.id} className={period === p.id ? 'active' : ''} onClick={() => setPeriod(p.id)}>{tr(p.label)}</button>)}</div>
-        {period === 'month' && <BudgetPanel data={data} month={month} currency={currency} busy={busy} act={act}/>}
-        <div className="stats stats-four">
-            <div className="stat featured"><span>{tr('TOTAL SPENT ')}<ShoppingBasket size={19}/></span><strong><Count value={s.totalCents} format={n => money(n, currency)}/></strong><small>{delta === null ? periodText : phrase('{0} vs. previous period', percent(delta))}</small></div>
-            <div className="stat"><span>{tr('SHOPPING TRIPS ')}<ReceiptText size={19}/></span><strong><Count value={s.trips} format={n => String(n).padStart(2, '0')}/></strong><small>{tr('Across ')}{s.stores.length}{tr(' stores')}</small></div>
-            <div className="stat"><span>{tr('AVERAGE SHOP ')}<ChartNoAxesCombined size={19}/></span><strong><Count value={s.averageTripCents} format={n => money(n, currency)}/></strong><small>{s.itemCount} {tr('items recorded')}</small></div>
-            <div className="stat"><span>{tr('PER WEEK ')}<CalendarDays size={19}/></span><strong><Count value={s.perWeekCents} format={n => money(n, currency)}/></strong><small>{tr('Average in this period')}</small></div>
-        </div>
         {s.trips ? <div className="spend-anim" key={period + month + currency}>
-            <Insights s={s} currency={currency}/>
+            <KindBreakdown kinds={s.kinds} currency={currency}/>
+            {period === 'month' && <BudgetPanel data={data} month={month} currency={currency} busy={busy} act={act}/>}
             <Timeline buckets={s.timeline.buckets} unit={s.timeline.unit} currency={currency}/>
             <Weekdays days={s.weekdays} largest={s.largest} currency={currency}/>
             <div className="spending-layout">
-                <section className="chart-card">
-                    <h2>{tr('By category')}</h2>
-                    <p>{tr('Tap a category to see what was in it')}</p>
-                    <Donut categories={s.categories} total={s.categories.reduce((n, c) => n + c.cents, 0)} currency={currency}/>
-                    <CategoryMix categories={s.categories}/>
-                    <div className="rank-list">{s.categories.map((c, ci) => <div key={c.name} className={'rank-row cat-row' + (openCategory === c.name ? ' open' : '')} style={{ '--accent': catColor(c.name, ci) } as React.CSSProperties}>
-                        <button type="button" onClick={() => setOpenCategory(openCategory === c.name ? '' : c.name)} aria-expanded={openCategory === c.name}>
-                            <span className="rank-head"><b><span className="cat-icon">{catIcon(c.name)}</span>{tr(c.name)}</b><strong>{money(c.cents, currency)}</strong></span>
-                            <span className="rank-bar"><i style={{ width: c.cents / maxCategory * 100 + '%', background: catColor(c.name, ci) }}/></span>
-                            <small>{share(c.share)} {tr('of item spending')} <ChevronDown size={13}/></small>
-                        </button>
-                        {openCategory === c.name && <ul className="rank-detail">{c.products.map(p => <li key={p.name}><span>{p.name}</span><b>{money(p.cents, currency)}</b></li>)}</ul>}
-                    </div>)}</div>
-                    <p className="chart-note">{tr('Tax is separate: ')}{money(s.taxCents, currency)}{tr('. Amounts reflect reviewed line totals.')}</p>
-                </section>
                 <section className="chart-card">
                     <h2>{tr('By store')}</h2>
                     <p>{tr('Your places to shop')}</p>
