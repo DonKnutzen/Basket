@@ -28,3 +28,14 @@ test('market with café counter and server/tip line stays groceries with item ca
  const t=applyReceiptKind(d,'takeout');assert.ok(t.lines.every(l=>l.category==='Takeout'));
  assert.equal(applyReceiptKind(t,'groceries').lines.find(l=>l.label.includes('Garlic'))?.category,'Veggies');
 });
+
+test('Shell receipt without the brand line: grade names the chain, the city is never the store',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const d=parseReceipt(readFileSync('tests/receipt-ocr-corpus/shell-dartmouth-fuel-iphone.txt','utf8'),[],[],['Dartmouth']);
+ assert.equal(d.store,'Shell');assert.equal(d.kind,'fuel');assert.equal(d.country,'CA');assert.equal(d.date,'2026-10-31');
+ assert.equal(d.lines.length,1);assert.equal(d.lines[0].name,'Regular gasoline');assert.equal(d.lines[0].amount,'63.19');
+ assert.equal(parseReceipt('WELCOME\nKiel\nZapfsäule 4\nSuper E10 40,00 l\nSUMME EUR 70,00').store,'');
+ for(const [header,store] of [['Combi Markt\nKiel','Combi'],['Budni\nHamburg','Budni'],['famila Nordost','famila'],['Marktkauf Kiel','Marktkauf'],['Sky Supermarkt','Sky'],['Netto Marken-Discount','Netto'],['Hoyer Tankstelle','Hoyer'],['Pete\'s Frootique\nBedford NS','Pete\'s Frootique'],['NEEDS CONVENIENCE','Needs'],['Wilsons Gas Stops','Wilsons'],['Canadian Tire Gas+','Canadian Tire Gas+']] as const)
+  assert.equal(parseReceipt(header+'\nBREAD 3.50\nTOTAL 3.50').store,store,header);
+ assert.equal(parseReceipt('Combi Markt\nBREAD 3,50\nSUMME 3,50').country,'DE');
+});

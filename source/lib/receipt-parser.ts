@@ -3,13 +3,17 @@ import {receiptDate} from './receipt-date';
 import {newId,normalize,inferCategory,receiptCategory,toCents,type ReceiptDraft,type ReceiptKind,type Product,type BasketData} from './types';
 export function newLine(){return {id:newId(),label:'',name:'',quantity:'1',amount:'',category:'Other',packSize:''}}
 // Order matters: the first chain found in the receipt header wins, so longer names come first.
-const FUEL_STATIONS=['Irving','Esso','Petro-Canada','Shell','Ultramar','Circle K','Pioneer','Costco Gas','Aral','JET','TotalEnergies','Avia','Agip','HEM','Orlen','Westfalen','Star Tankstelle'];
+const FUEL_STATIONS=['Irving','Esso','Petro-Canada','Shell','Ultramar','Circle K','Pioneer','Costco Gas','Aral','JET','TotalEnergies','Avia','Agip','HEM','Orlen','Westfalen','Star Tankstelle','Hoyer','Q1','bft','Tamoil','Sprint','Raiffeisen Tankstelle','Wilsons','Canadian Tire Gas+','Gas+','Mobil','Husky','Chevron','Co-op Gas'];
+// Grade names and loyalty programs that only one chain prints, for receipts whose logo line OCR lost.
+const FUEL_BRAND_HINTS:[RegExp,string][]=[[/\b(bronze|silver|v-?power)\b/i,'Shell'],[/\bsynergy\b|supreme\s*\+/i,'Esso'],[/petro-?points/i,'Petro-Canada']];
+// Towns printed alone under a lost store name; never the store itself.
+const PLACE=/^(?:dartmouth|halifax|bedford|sackville|lower sackville|cole harbou?r|truro|sydney|kentville|wolfville|antigonish|new glasgow|bridgewater|yarmouth|amherst|windsor|lunenburg|kiel|hamburg|l(?:ü|ue)beck|bremen|hannover|rostock|flensburg|schwerin|neum(?:ü|ue)nster|rendsburg|eckernf(?:ö|oe)rde|oldenburg|osnabr(?:ü|ue)ck|bremerhaven|cuxhaven|norderstedt|wismar|stralsund|greifswald|husum|heide|itzehoe|elmshorn|pinneberg|plön|preetz)(?:[\s,]+(?:ns|nb|pe|nl|nova scotia|canada|deutschland))?\s*$/i;
 const TAKEOUT_PLACES=['Tim Hortons','McDonald\'s','McDonalds','Subway','A&W','Wendy\'s','Wendys','Burger King','KFC','Popeyes','Starbucks','Domino\'s','Dominos','Pizza Hut','Pizza Pizza','Greco','Mary Brown\'s','Harvey\'s','Dairy Queen','Taco Bell','Chipotle','Five Guys','Freshii','DoorDash','SkipTheDishes','Skip The Dishes','Uber Eats','Lieferando','Wolt'];
 // Restaurant receipts without a known chain name still say how the food was served.
 // Shop names that sell groceries even when the receipt also has a café counter (server, tip).
 const GROCERY_SHOP=/\b(market|grocer[sy]?|grocery|farm|co-?op|butcher|bulk|deli|epicerie|markt|hofladen)\b/i;
 const TAKEOUT_HINT=/\b(dine[- ]?in|take[- ]?out|to go|eat[- ]?in|zum mitnehmen|au(?:ss|ß)er haus|gratuity|trinkgeld|table\s*#?\s*\d+|server\s*:)/i;
-const STORES=[...FUEL_STATIONS,...TAKEOUT_PLACES,'Atlantic Superstore','Real Canadian Superstore','No Frills','Walmart','Sobeys','Costco','Gateway','Giant Tiger','Food Basics','Shoppers Drug Mart','Dollarama','Bulk Barn','Save Easy','Lawtons','Metro','IGA','Provigo','Maxi','Loblaws','FreshCo','REWE Center','REWE','Aldi Nord','Aldi Süd','Aldi','Lidl','EDEKA','Netto','Penny','Kaufland','Globus','HIT','tegut','Denns Biomarkt','Alnatura','Rossmann','famila','NSLC','Foodland','Independent','Superstore'];
+const STORES=[...FUEL_STATIONS,...TAKEOUT_PLACES,'Atlantic Superstore','Real Canadian Superstore','No Frills','Walmart','Sobeys','Costco','Gateway','Giant Tiger','Food Basics','Shoppers Drug Mart','Dollarama','Bulk Barn','Save Easy','Lawtons','Metro','IGA','Provigo','Maxi','Loblaws','FreshCo','REWE Center','REWE','Aldi Nord','Aldi Süd','Aldi','Lidl','EDEKA','Netto','Penny','Kaufland','Globus','HIT','tegut','Denns Biomarkt','Alnatura','Rossmann','famila','NSLC','Foodland','Independent','Superstore','Combi','Budni','Budnikowsky','Marktkauf','Sky','E center','EDEKA Center','Nahkauf','REWE City','Bünting','Jibi','Hol ab','Norma','Citti','dm-drogerie markt','Müller','Pete\'s Frootique','Pharmasave','Canadian Tire','Needs','Kent','Home Hardware','Sobeys Urban Fresh'];
 // Register abbreviations seen on Loblaw, Sobeys and Walmart receipts. Whole words only.
 const ABBREVIATIONS:Record<string,string>={chkn:'chicken',chk:'chicken',mlk:'milk',grnd:'ground',grd:'ground',bf:'beef',brst:'breast',bnls:'boneless',sknls:'skinless',blk:'black',wht:'white',brd:'bread',chs:'cheese',ched:'cheddar',yog:'yogurt',ygrt:'yogurt',choc:'chocolate',crm:'cream',ckie:'cookie',ckies:'cookies',crkr:'cracker',crkrs:'crackers',jce:'juice',ornge:'orange',lrg:'large',btr:'butter',marg:'margarine',saus:'sausage',trky:'turkey',bcn:'bacon',mshrm:'mushroom',mshrms:'mushrooms',grn:'green',veg:'vegetable',frz:'frozen',swt:'sweet',pots:'potatoes',bnna:'banana',bnnas:'bananas',chse:'cheese',dnr:'dinner'};
 // Strip register noise around a product label: leading PLU/UPC codes, inline
@@ -64,9 +68,9 @@ function suggestFix(d:ReceiptDraft){
  if(diff>0)return `Possibly a missed item or fee of ${(diff/100).toFixed(2)}. Check the receipt.`;
 }
 // Fuel: the grade names a line, the litres come from the line or a "Litres: 40.123" field.
-const FUEL_GRADE=/\b(regular|unleaded|premium|supreme|ultimate|v-?power|mid-?grade|plus|diesel|super(?:\s*plus|\s*e10|\s*e5)?|e10|e5|benzin|bleifrei|gasoline|petrol)\b/i;
+const FUEL_GRADE=/\b(regular|unleaded|premium|supreme|ultimate|v-?power|mid-?grade|plus|diesel|super(?:\s*plus|\s*e10|\s*e5)?|e10|e5|bronze|silver|benzin|bleifrei|gasoline|petrol)\b/i;
 // generic=false ignores plain "fuel"/"gas" so an explicit grade elsewhere on the receipt wins.
-function fuelGrade(text:string,generic=true){const t=text.toLowerCase();return /diesel/.test(t)?'Diesel':/super\s*plus|premium|supreme|ultimate|v-?power/.test(t)?'Premium gasoline':/mid-?grade|\bplus\b/.test(t)?'Mid-grade gasoline':/e10/.test(t)?'Super E10':/\bsuper\b|\be5\b/.test(t)?'Super E5':/regular|unleaded|bleifrei|benzin|gasoline|petrol/.test(t)||generic&&/\bgas\b|fuel|kraftstoff/.test(t)?'Regular gasoline':''}
+function fuelGrade(text:string,generic=true){const t=text.toLowerCase();return /diesel/.test(t)?'Diesel':/super\s*plus|premium|supreme|ultimate|v-?power/.test(t)?'Premium gasoline':/mid-?grade|\bplus\b|\bsilver\b/.test(t)?'Mid-grade gasoline':/e10/.test(t)?'Super E10':/\bsuper\b|\be5\b/.test(t)?'Super E5':/regular|unleaded|bronze|bleifrei|benzin|gasoline|petrol/.test(t)||generic&&/\bgas\b|fuel|kraftstoff/.test(t)?'Regular gasoline':''}
 function fuelLitres(label:string,text:string){const m=label.match(/(\d+[.,]\d{1,3})\s*(?:l|litres?|liters?|ltr)\b/i)||text.match(/(?:litres?|liters?|volume|menge|ltr)\s*:?\s*(\d+[.,]\d{1,3})/i)||text.match(/(\d+[.,]\d{2,3})\s*(?:l|litres?|liters?|ltr)\b/i);return m?m[1].replace(',','.'):undefined}
 function expandAbbreviations(name:string){return name.split(' ').map(w=>ABBREVIATIONS[w.toLowerCase()]||w).join(' ')}
 // Lines above the store name that are never the store itself: "WELCOME" over a Shell logo, "Thank you".
@@ -77,16 +81,17 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  const ocrNotes:string[]=[];
  const lostPrice=new Set<string>();const raw=text.split(/\r?\n/).map(l=>{const c=restoreDecimal(cleanOcrLine(l),ocrNotes);if(/\S\s{3,}(?:\$\S{1,4}|[A-Za-z§]{1,3})\s*$/.test(l)&&!/\d[.,]\s?\d{2}/.test(l))lostPrice.add(c);return c}).filter(Boolean);
  const header=raw.slice(0,8).join('\n');
- const named=[...new Set([...knownStores.filter(s=>s.trim().length>2&&!GREETING.test(s)&&!NOT_STORE.test(s)),...STORES])].map(s=>({s,at:header.search(new RegExp('(?:^|[^a-z])'+s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?:$|[^a-z])','i'))})).filter(h=>h.at>=0).sort((a,b)=>a.at-b.at||b.s.length-a.s.length)[0];
- let store=named?.s||raw.slice(0,4).map(l=>l.replace(GREETING,'').trim()).find(l=>/[a-z]{3}/i.test(l)&&!/[\d@$]/.test(l)&&l.length<60&&!NOT_STORE.test(l))||'';
+ const named=[...new Set([...knownStores.filter(s=>s.trim().length>2&&!GREETING.test(s)&&!NOT_STORE.test(s)&&!PLACE.test(s.trim())),...STORES])].map(s=>({s,at:header.search(new RegExp('(?:^|[^a-z])'+s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?:$|[^a-z])','i'))})).filter(h=>h.at>=0).sort((a,b)=>a.at-b.at||b.s.length-a.s.length)[0];
+ const pumped=/\b(pump|säule|saule|zapfs\w*|litres?|liters?|ltr|price\s*\/\s*l)\b/i.test(text);
+ let store=named?.s||(pumped?FUEL_BRAND_HINTS.find(([re])=>re.test(text))?.[1]:'')||raw.slice(0,4).map(l=>l.replace(GREETING,'').trim()).find(l=>/[a-z]{3}/i.test(l)&&!/[\d@$]/.test(l)&&l.length<60&&!NOT_STORE.test(l)&&!PLACE.test(l)&&!(pumped&&FUEL_GRADE.test(l)))||'';
  if(store==='Superstore'&&/\b(NS|NB|PE|NL|nova scotia|halifax|dartmouth|bedford|sackville|atlantic)\b|\(\s*902\s*\)/i.test(text))store='Atlantic Superstore';
  const d:ReceiptDraft={id:newId(),store,date:'',total:'',tax:'0.00',currency:'',lines:[],rawText:text};
- const country=/\b(canada|nova scotia|quebec|ontario|halifax|dartmouth|sobeys|no frills|superstore|nslc)\b|\b[A-Z]\d[A-Z]\s?\d[A-Z]\d\b/i.test(text)?'CA':/\b(deutschland|germany|rewe|edeka|kaufland|alnatura|aldi|lidl|penny|netto|gmbh|kiel|aral|tankstelle|mwst)\b/i.test(text)?'DE':'';
+ const country=/\b(canada|nova scotia|quebec|ontario|halifax|dartmouth|sobeys|no frills|superstore|nslc|bedford|sackville|truro|antigonish|wolfville|kentville|irving|wilsons)\b|\(\s*902\s*\)|\b[A-Z]\d[A-Z]\s?\d[A-Z]\d\b/i.test(text)?'CA':/\b(deutschland|germany|rewe|edeka|kaufland|alnatura|aldi|lidl|penny|netto|gmbh|kiel|hamburg|l(?:ü|ue)beck|bremen|rostock|flensburg|combi|famila|marktkauf|budni|bünting|jibi|hoyer|aral|tankstelle|mwst)\b/i.test(text)?'DE':'';
  d.country=country;d.currency=/\bCAD\b/i.test(text)?'CAD':/€|\bEUR\b/i.test(text)?'EUR':country==='CA'?'CAD':country==='DE'?'EUR':'';
  d.dateEvidence=receiptDate(text,country,store);d.date=d.dateEvidence.date;
  const lostLines:ReceiptDraft['lines']=[];let lastItemIndex=-2,pendingQuantity:{n:number;unit:number}|null=null;
  const takeout=TAKEOUT_PLACES.includes(store)||TAKEOUT_HINT.test(text);
- const fuelReceipt=FUEL_STATIONS.includes(store)||FUEL_GRADE.test(text)&&/\b(pump|säule|saule|zapfs\w*|litres?|liters?|ltr|price\s*\/\s*l)\b/i.test(text);
+ const fuelReceipt=FUEL_STATIONS.includes(store)||FUEL_GRADE.test(text)&&pumped;
  d.kind=fuelReceipt?'fuel':takeout?'takeout':'groceries';
 
  let tax=0,total:number|undefined,subtotal:number|undefined;d.warnings=[...ocrNotes];d.unassignedAdjustments=[];let pending='';let pendingIndex=0;let ended=false;
@@ -117,8 +122,10 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  if(/^(price\s*\/\s*l(?:itre|iter)?|price per lit(?:re|er)|ppl|preis\s*\/\s*l|grundpreis|unit price)\s*:?$/i.test(label)){pending='';continue}// Keywords may follow up to two short junk words and read 0 for O: "A a SUBTOTAL", "T0TAL".
  const key=label.replace(/0/g,'O').replace(/^(?:\S{1,3} ){0,2}(?=\S{5})/,''),lastWord=key.split(' ').pop()!.toUpperCase();
  if(/^sub[ -]?total|^\S+ sub[ -]?total$/i.test(key)){subtotal=amount;ended=true;pending='';continue}
- const fuzzyTotal=total===undefined&&key.split(' ').length<=3&&!/sav|item|disc|point|reward|number/i.test(key)&&(edits(lastWord,'TOTAL')<=1||d.country==='DE'&&key.split(' ').length===1&&edits(lastWord,'SUMME')<=2&&amount*100>=d.lines.reduce((s,l)=>s+Math.round(+l.amount*100),0)||subtotal!==undefined&&amount>=subtotal&&edits(lastWord,'TOTAL')<=2);
- if(fuzzyTotal||/^(total|summe|gesamt|zu zahlen|balance due|amount due|grand total)\b(?!\s*(savings|saved|discount|items?|number))/i.test(key)){if(total===undefined||amount)total=amount;ended=true;pending='';continue}
+ // "TOTAL FUEL 63.19" is the pump line on Canadian fuel receipts; "TOTAL SALE" follows.
+ const fuelTotal=fuelReceipt&&/^total\s+(fuel|gas|kraftstoff)\b/i.test(key);
+ const fuzzyTotal=!fuelTotal&&total===undefined&&key.split(' ').length<=3&&!/sav|item|disc|point|reward|number/i.test(key)&&(edits(lastWord,'TOTAL')<=1||d.country==='DE'&&key.split(' ').length===1&&edits(lastWord,'SUMME')<=2&&amount*100>=d.lines.reduce((s,l)=>s+Math.round(+l.amount*100),0)||subtotal!==undefined&&amount>=subtotal&&edits(lastWord,'TOTAL')<=2);
+ if(fuzzyTotal||!fuelTotal&&/^(total|summe|amt$|gesamt|zu zahlen|balance due|amount due|grand total)\b(?!\s*(savings|saved|discount|items?|number))/i.test(key)){if(total===undefined||amount)total=amount;ended=true;pending='';continue}
  const regular=label.match(/^(?:regular price|normalpreis|prix regulier)\s+(.+)$/i);
  if(regular){const matches=d.lines.filter(l=>normalize(l.label)===normalize(regular[1])||normalize(l.name)===normalize(regular[1]));if(matches.length===1&&amount>=toCents(matches[0].amount)){matches[0].regularPrice=amountText(amount);matches[0].sourceLines=[...(matches[0].sourceLines||[]),index+1]}else d.warnings.push('Regular price could not be uniquely associated: '+line);pending='';continue}
  const discount=label.match(/^(?:discount|rabatt|rabais|coupon|arcp:?|member savings|loyalty discount|scene\+?\s*savings|instant savings|sale savings|savings|preisvorteil|ersparnis|aktionsrabatt)(?:\s+(.+))?$/i);
@@ -137,7 +144,7 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  else if(pending&&/^\d+(?:[.,]\d+)?\s*(kg|g|lb|l)\b/i.test(label)){label=pending+' '+label;pending=''}
  else if(pending&&/^\d{5,14}$/.test(label)){label=pending;pending=''}
  else if(pending&&pendingIndex===index-1&&continues(pending,label)){label=pending+' '+label;pending=''}
- if(/^total\s+(savings|saved|discount|items?|number)|^(cash|change|debit|credit|visa|mastercard|amex|tender|payment|approved|auth|terminal|trans\b|you saved|savings|points|rewards|coupon|discount|rabais|items?\b|articles?\b|tel\b|phone|www\.|thank|merci|receipt|invoice|cashier)/i.test(label)||!/[a-z]/i.test(label)||/^\d+\s*[@x]\s*\$?\d/i.test(label))continue;
+ if(/^total\s+(savings|saved|discount|items?|number)|^(cash|change|debit|credit|visa|vis\b|mastercard|amex|tender|payment|approved|auth|terminal|trans\b|you saved|savings|points|rewards|coupon|discount|rabais|items?\b|articles?\b|tel\b|phone|www\.|thank|merci|receipt|invoice|cashier)/i.test(label)||!/[a-z]/i.test(label)||/^\d+\s*[@x]\s*\$?\d/i.test(label))continue;
  // Loyalty stamps and points print as zero-priced lines: "24632 PHY STAMP EARN Q 0.00".
  if(amount===0&&/\b(stamps?|pts|points|rewards?|earn)\b/i.test(label)){pending='';continue}
  if(fuelReceipt&&(FUEL_GRADE.test(label)||/\b(fuel|pump|säule|saule|tank\w*|gas sale|kraftstoff)\b/i.test(label))){
