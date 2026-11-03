@@ -635,7 +635,8 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
 .fresh-track{display:block;height:10px;border-radius:99px;background:color-mix(in srgb,#4f9d4a 14%,transparent);overflow:hidden}.fresh-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#8fc96b,#3f8f3c);transition:width .6s ease}
 
 .kind-picker{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px;margin-bottom:12px;border-radius:12px;background:var(--line)}
-.kind-picker button{min-height:40px;padding:6px 4px;border:0;border-radius:9px;background:transparent;color:var(--ink);font:inherit;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kind-picker button{min-height:52px;padding:6px 2px;border:0;border-radius:9px;background:transparent;color:var(--ink);font:inherit;font-size:13px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0}
+.kind-picker button span{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kind-picker button[aria-checked="true"]{background:var(--green);color:#fff}
 .compact-name>span:first-child{display:inline-flex;align-items:center;gap:6px}
 .compact-edit{flex:none;color:var(--muted,#888);opacity:.8}

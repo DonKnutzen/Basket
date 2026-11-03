@@ -1,4 +1,4 @@
-import {normalize,type Item,type ReceiptDraft,type ReceiptShopping} from './types';
+import {normalize,RECEIPT_KINDS,type Item,type ReceiptDraft,type ReceiptKind,type ReceiptShopping} from './types';
 // Compare only positive evidence. Unbought list items never become forgotten purchases.
 export function purchaseType(name:string,items:Pick<Item,'name'>[]){
  const key=normalize(name);
@@ -14,4 +14,13 @@ export function readShopping(raw:unknown):ReceiptShopping|undefined{
  if(!s||!Array.isArray(s.extraItems)||!Array.isArray(s.firstPurchases))return;
  return {listName:typeof s.listName==='string'?s.listName:undefined,extraItems:s.extraItems.filter((x:unknown)=>typeof x==='string'),firstPurchases:s.firstPurchases.filter((x:unknown)=>typeof x==='string')};
  }catch{return}
+}
+export function readReceiptKind(raw:unknown):ReceiptKind|undefined{
+ if(typeof raw!=='string')return;
+ try{const value=JSON.parse(raw);return value?.kind==='basket-receipt-v1'&&RECEIPT_KINDS.includes(value.receiptKind)?value.receiptKind:undefined}catch{return}
+}
+export function withReceiptKind(raw:unknown,receiptKind:ReceiptKind){
+ let value:any;try{value=JSON.parse(String(raw))}catch{}
+ if(value?.kind!=='basket-receipt-v1')value={kind:'basket-receipt-v1',text:typeof raw==='string'?raw:''};
+ return JSON.stringify({...value,receiptKind});
 }
