@@ -39,3 +39,10 @@ test('receipt nuts and seeds land in Fruit/Nuts in any language, nut products st
  assert.equal(receiptCategory('Cumin Seeds'),'Oils, spices & sauces');
  assert.equal(receiptCategory('Erdnussbutter'),'Pantry');
 });
+
+test('stored legacy categories Produce/Other are re-split into fruit and veggies',()=>{
+ for(const n of ['Carrots','Broccoli','Celery','Organic Kale'])assert.equal(receiptCategory(n,'Produce'),'Veggies',n);
+ assert.equal(receiptCategory('Bananas','Produce'),'Fruit');
+ assert.equal(receiptCategory('Carrots','Other'),'Veggies');
+ assert.equal(receiptCategory('Celery'),'Veggies');
+});
