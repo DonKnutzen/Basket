@@ -38,9 +38,9 @@ export function defaultSpendingMonth(receipts:readonly Receipt[],currency:string
  return months.includes(current)?current:months[months.length-1]||current;
 }
 
-export type TimeBucket={key:string;from:string;to:string;cents:number;trips:number};
+export type TimeBucket={key:string;from:string;to:string;cents:number;trips:number;kinds:Partial<Record<ReceiptKind,number>>};
 /** Weeks (Monday start) for ranges up to ~3 months, months beyond; empty periods are kept as zero. */
-export function timeline(receipts:readonly Receipt[],range:DateRange,today=localDate()):{unit:'week'|'month';buckets:TimeBucket[]}{
+export function timeline(receipts:readonly Receipt[],range:DateRange,today=localDate(),lines:readonly PriceLine[]=[]):{unit:'week'|'month';buckets:TimeBucket[]}{
  const dates=receipts.map(r=>r.date).sort();
  const from=range.from||dates[0]||today,to=range.to<today?range.to:today;
  const end=to<from?from:to;
@@ -48,20 +48,20 @@ export function timeline(receipts:readonly Receipt[],range:DateRange,today=local
  const buckets:TimeBucket[]=[];
  if(unit==='week'){
   const weekday=(new Date(from+'T12:00:00Z').getUTCDay()+6)%7;
-  for(let start=addDays(from,-weekday);start<=end;start=addDays(start,7))buckets.push({key:start,from:start,to:addDays(start,6),cents:0,trips:0});
+  for(let start=addDays(from,-weekday);start<=end;start=addDays(start,7))buckets.push({key:start,from:start,to:addDays(start,6),cents:0,trips:0,kinds:{}});
  }else{
   const [y,first]=parts(from);
-  for(let m=first,start=monthStart(y,m);start<=end;m++,start=monthStart(y,m))buckets.push({key:start.slice(0,7),from:start,to:monthEnd(y,m),cents:0,trips:0});
+  for(let m=first,start=monthStart(y,m);start<=end;m++,start=monthStart(y,m))buckets.push({key:start.slice(0,7),from:start,to:monthEnd(y,m),cents:0,trips:0,kinds:{}});
  }
- for(const r of receipts){const b=buckets.find(b=>r.date>=b.from&&r.date<=b.to);if(b){b.cents+=r.totalCents;b.trips++}}
+ for(const r of receipts){const b=buckets.find(b=>r.date>=b.from&&r.date<=b.to);if(b){const k=kindOf(r,lines);b.cents+=r.totalCents;b.trips++;b.kinds[k]=(b.kinds[k]||0)+r.totalCents}}
  return {unit,buckets};
 }
 
 export type CategoryStat={name:string;cents:number;share:number;products:{name:string;cents:number}[]};
-export type StoreStat={name:string;cents:number;trips:number;averageCents:number;share:number};
+export type StoreStat={name:string;cents:number;trips:number;averageCents:number;share:number;lastDate:string;products:{name:string;cents:number}[]};
 export type ProductStat={key:string;name:string;category:string;cents:number;quantity:number;purchases:number;stores:string[]};
 export type StorePrice={store:string;unitCents:number;purchases:number;lastDate:string};
-export type PriceComparison={key:string;name:string;unit:string;stores:StorePrice[];spread:number};
+export type PriceComparison={key:string;name:string;category:string;unit:string;stores:StorePrice[];spread:number};
 export type StoreIndex={store:string;index:number;products:number};
 export type PriceChange={key:string;name:string;unit:string;store:string;previousCents:number;latestCents:number;change:number;date:string};
 
@@ -78,19 +78,20 @@ function topProducts(lines:readonly PriceLine[]):ProductStat[]{
 /** A product is comparable across stores per kg, per litre, per piece, or per identical pack. */
 function priceKey(l:PriceLine){const basis=comparisonBasis(l);if(!basis||l.amountCents<=0)return null;return {key:productNameKey(l.productName||l.label)+'|'+basis.unit+(basis.unit==='recorded unit'?'|'+normalize(l.packSize):''),unit:basis.unit==='recorded unit'?(l.packSize||'item'):basis.unit,cents:basis.cents}}
 
-export function priceComparisons(lines:readonly PriceLine[]):PriceComparison[]{
- const groups=new Map<string,{name:string;unit:string;stores:Map<string,{total:number;n:number;lastDate:string}>}>();
+/** Products bought at `minStores` or more stores; with 1 every recorded unit price is listed. */
+export function priceComparisons(lines:readonly PriceLine[],minStores=2):PriceComparison[]{
+ const groups=new Map<string,{name:string;category:string;unit:string;stores:Map<string,{total:number;n:number;lastDate:string}>}>();
  for(const l of lines){
   const p=priceKey(l);if(!p)continue;
-  let g=groups.get(p.key);if(!g){g={name:l.productName||l.label,unit:p.unit,stores:new Map()};groups.set(p.key,g)}
+  let g=groups.get(p.key);if(!g){g={name:l.productName||l.label,category:l.category,unit:p.unit,stores:new Map()};groups.set(p.key,g)}
   const s=g.stores.get(l.store)||{total:0,n:0,lastDate:''};s.total+=p.cents;s.n++;if(l.date>s.lastDate)s.lastDate=l.date;g.stores.set(l.store,s);
  }
  const rows:PriceComparison[]=[];
  for(const [key,g] of groups){
-  if(g.stores.size<2)continue;
+  if(g.stores.size<minStores)continue;
   const stores=[...g.stores].map(([store,s])=>({store,unitCents:Math.round(s.total/s.n),purchases:s.n,lastDate:s.lastDate})).sort((a,b)=>a.unitCents-b.unitCents||a.store.localeCompare(b.store));
   const low=stores[0].unitCents,high=stores[stores.length-1].unitCents;
-  rows.push({key,name:g.name,unit:g.unit,stores,spread:low>0?(high-low)/low:0});
+  rows.push({key,name:g.name,category:g.category,unit:g.unit,stores,spread:low>0?(high-low)/low:0});
  }
  return rows.sort((a,b)=>b.spread-a.spread||a.name.localeCompare(b.name));
 }
@@ -133,9 +134,10 @@ const kindOf=(r:Receipt,lines:readonly PriceLine[]):ReceiptKind=>{
  if(own.length&&own.every(l=>l.category==='Takeout'))return 'takeout';
  return 'groceries';
 };
-function storeStats(receipts:readonly Receipt[]):StoreStat[]{
+function storeStats(receipts:readonly Receipt[],lines:readonly PriceLine[]=[]):StoreStat[]{
  const total=sumBy(receipts,r=>r.totalCents);
- return [...new Set(receipts.map(r=>r.store))].map(name=>{const own=receipts.filter(r=>r.store===name);const cents=sumBy(own,r=>r.totalCents);return {name,cents,trips:own.length,averageCents:Math.round(cents/own.length),share:total>0?cents/total:0}}).sort((a,b)=>b.cents-a.cents);
+ return [...new Set(receipts.map(r=>r.store))].map(name=>{const own=receipts.filter(r=>r.store===name),ids=new Set(own.map(r=>r.id));const cents=sumBy(own,r=>r.totalCents);
+  return {name,cents,trips:own.length,averageCents:Math.round(cents/own.length),share:total>0?cents/total:0,lastDate:own.reduce((d,r)=>r.date>d?r.date:d,''),products:topProducts(lines.filter(l=>ids.has(l.receiptId))).slice(0,3).map(p=>({name:p.name,cents:p.cents}))}}).sort((a,b)=>b.cents-a.cents);
 }
 function categoryStats(lines:readonly PriceLine[],names:readonly string[]):CategoryStat[]{
  const lineTotal=sumBy(lines,l=>l.amountCents);
@@ -145,12 +147,12 @@ function kindStats(receipts:readonly Receipt[],lines:readonly PriceLine[]):KindS
  const total=sumBy(receipts,r=>r.totalCents);
  return RECEIPT_KINDS.map(kind=>{const own=receipts.filter(r=>kindOf(r,lines)===kind),ids=new Set(own.map(r=>r.id));const cents=sumBy(own,r=>r.totalCents);
   const ownLines=lines.filter(l=>ids.has(l.receiptId)&&(kind!=='groceries'||!NON_FOOD.has(l.category)));
-  return {kind,cents,trips:own.length,share:total>0?cents/total:0,stores:storeStats(own),categories:categoryStats(ownLines,CATEGORIES)}}).filter(k=>k.trips>0).sort((a,b)=>b.cents-a.cents);
+  return {kind,cents,trips:own.length,share:total>0?cents/total:0,stores:storeStats(own,ownLines),categories:categoryStats(ownLines,CATEGORIES)}}).filter(k=>k.trips>0).sort((a,b)=>b.cents-a.cents);
 }
 export type SpendingStats={
  currency:string;range:DateRange;receipts:Receipt[];totalCents:number;taxCents:number;trips:number;averageTripCents:number;
  perWeekCents:number;itemCount:number;previousTotalCents:number|null;timeline:ReturnType<typeof timeline>;
- categories:CategoryStat[];stores:StoreStat[];products:ProductStat[];comparisons:PriceComparison[];storeIndex:StoreIndex[];changes:PriceChange[];
+ categories:CategoryStat[];stores:StoreStat[];products:ProductStat[];comparisons:PriceComparison[];unitPrices:PriceComparison[];storeIndex:StoreIndex[];changes:PriceChange[];
  kinds:KindStat[];weekdays:WeekdayStat[];largest:Receipt|null;
 };
 export type WeekdayStat={day:number;cents:number;trips:number};
@@ -173,14 +175,13 @@ export function spendingStats(data:Pick<BasketData,'receipts'|'lines'>,period:Pe
  const weeks=Math.max(1,(daysBetween(first,last<first?first:last)+1)/7);
  const lineTotal=sumBy(lines,l=>l.amountCents);
  const categories=CATEGORIES.map(name=>{const own=lines.filter(l=>l.category===name);const cents=sumBy(own,l=>l.amountCents);return {name,cents,share:lineTotal>0?cents/lineTotal:0,products:topProducts(own).slice(0,5).map(p=>({name:p.name,cents:p.cents}))}}).filter(c=>c.cents>0).sort((a,b)=>b.cents-a.cents);
- const storeNames=[...new Set(receipts.map(r=>r.store))];
- const stores=storeNames.map(name=>{const own=receipts.filter(r=>r.store===name);const cents=sumBy(own,r=>r.totalCents);return {name,cents,trips:own.length,averageCents:Math.round(cents/own.length),share:totalCents>0?cents/totalCents:0}}).sort((a,b)=>b.cents-a.cents);
+ const stores=storeStats(receipts,lines);
  // Store price comparisons use every purchase in this currency: one month rarely has the same product at two stores.
  const currencyIds=new Set(data.receipts.filter(r=>r.currency===currency&&(r.date<=range.to)).map(r=>r.id));
  const priceLines=data.lines.filter(l=>currencyIds.has(l.receiptId));
- const comparisons=priceComparisons(priceLines);
+ const unitPrices=priceComparisons(priceLines,1),comparisons=unitPrices.filter(c=>c.stores.length>1);
  return {currency,range,receipts,totalCents,taxCents:sumBy(receipts,r=>r.taxCents),trips,averageTripCents:trips?Math.round(totalCents/trips):0,
-  perWeekCents:Math.round(totalCents/weeks),itemCount:lines.length,previousTotalCents,timeline:timeline(receipts,range,today),
-  categories,stores,products:topProducts(lines),comparisons,storeIndex:storePriceIndex(comparisons),changes:priceChanges(priceLines),
+  perWeekCents:Math.round(totalCents/weeks),itemCount:lines.length,previousTotalCents,timeline:timeline(receipts,range,today,lines),
+  categories,stores,products:topProducts(lines),comparisons,unitPrices,storeIndex:storePriceIndex(comparisons),changes:priceChanges(priceLines),
   kinds:kindStats(receipts,lines),weekdays:weekdays(receipts),largest:receipts.reduce<Receipt|null>((a,r)=>!a||r.totalCents>a.totalCents?r:a,null)};
 }
