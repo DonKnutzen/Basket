@@ -16,10 +16,10 @@ export function shoppingGroup(name:string,preferences:readonly IconPreference[]=
  if(DRINK_ICONS.some(([icon])=>icon===key))return 'Drinks';
  if(key==='berries'&&/(^| )(tomato|tomatoes|tomate|tomaten|cherrytomaten)( |$)/.test(normalize(name)))return 'Vegetables';
  if(iconGroups[key])return iconGroups[key]!;
- return ({Produce:'Vegetables','Dairy & eggs':'Dairy & eggs','Meat & fish':'Meat',Bakery:'Bakery',Pantry:'Pantry',Drinks:'Drinks',Household:'Household'} as Record<string,ShoppingGroup>)[category||'']||'Other';
+ return ({Produce:'Vegetables','Dairy & eggs':'Dairy & eggs','Vegetarian/Vegan alternatives':'Plant-based alternatives','Meat & fish':'Meat',Bakery:'Bakery',Pantry:'Pantry',Drinks:'Drinks',Household:'Household'} as Record<string,ShoppingGroup>)[category||'']||'Other';
 }
 export function foodGroupClass(name:string,preferences:readonly IconPreference[]=[],category?:string){return 'food-group-'+SHOPPING_GROUPS.indexOf(shoppingGroup(name,preferences,category));}
-const storageGroups:Record<string,string>={Fruit:'Produce',Vegetables:'Produce','Salads & herbs':'Produce',Meat:'Meat & fish','Fish & seafood':'Meat & fish','Plant-based alternatives':'Pantry','Pasta, rice & grains':'Pantry',Pulses:'Pantry','Cans & jars':'Pantry','Oils & vinegar':'Pantry','Sauces & condiments':'Pantry',Spices:'Pantry','Baking ingredients':'Pantry','Breakfast & spreads':'Pantry','Nuts, seeds & dried fruit':'Pantry','Ready meals':'Pantry','Snacks & sweets':'Pantry','Personal care':'Household','Baby & pets':'Household','Other supermarket items':'Household'};
+const storageGroups:Record<string,string>={Fruit:'Produce',Vegetables:'Produce','Salads & herbs':'Produce',Meat:'Meat & fish','Fish & seafood':'Meat & fish','Plant-based alternatives':'Vegetarian/Vegan alternatives','Pasta, rice & grains':'Pantry',Pulses:'Pantry','Cans & jars':'Pantry','Oils & vinegar':'Pantry','Sauces & condiments':'Pantry',Spices:'Pantry','Baking ingredients':'Pantry','Breakfast & spreads':'Pantry','Nuts, seeds & dried fruit':'Pantry','Ready meals':'Pantry','Snacks & sweets':'Pantry','Personal care':'Household','Baby & pets':'Household','Other supermarket items':'Household'};
 export function shoppingCategory(name:string,preferences:readonly IconPreference[]=[],category?:string):string{
  // A display group is not a persisted category: e.g. Haferdrink is displayed under
  // Plant-based alternatives but its catalogue receipt/budget category is Dairy & eggs.

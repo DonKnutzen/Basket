@@ -18,3 +18,13 @@ test('receipt kind is detected',()=>{
  assert.equal(parseReceipt('TIM HORTONS\n1 Coffee 2.00\nTOTAL 2.00').kind,'takeout');
  assert.equal(parseReceipt('NO FRILLS\nBREAD 3.50\nTOTAL 3.50').kind,'groceries');
 });
+
+test('market with café counter and server/tip line stays groceries with item categories',async()=>{
+ const {readFileSync}=await import('node:fs');const {applyReceiptKind}=await import('../lib/receipt-parser');
+ const d=parseReceipt(readFileSync('tests/receipt-ocr-corpus/uprooted-market-iphone-v2.txt','utf8'));
+ assert.equal(d.kind,'groceries');
+ const cat=(n:string)=>d.lines.find(l=>l.label.includes(n))?.category;
+ assert.equal(cat('Garlic'),'Veggies');assert.equal(cat('Scallops'),'Meat & fish');
+ const t=applyReceiptKind(d,'takeout');assert.ok(t.lines.every(l=>l.category==='Takeout'));
+ assert.equal(applyReceiptKind(t,'groceries').lines.find(l=>l.label.includes('Garlic'))?.category,'Veggies');
+});

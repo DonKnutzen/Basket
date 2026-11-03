@@ -22,3 +22,11 @@ test('receipts sort groceries into the twelve shopping categories',()=>{
  const wrong=cases.filter(([n,c])=>receiptCategory(n)!==c).map(([n,c])=>`${n}: ${receiptCategory(n)} != ${c}`);
  assert.deepEqual(wrong,[]);
 });
+
+test('plant-based items get the vegetarian/vegan alternatives category after dairy',()=>{
+ const V='Vegetarian/Vegan alternatives';
+ for(const n of ['Reismilch','Rice Milk','Haferdrink','Beyond Meat Burger','Tofu natur','Veganer Aufschnitt'])assert.equal(receiptCategory(n),V,n);
+ assert.ok(RECEIPT_CATEGORIES.includes(V));
+ const i=RECEIPT_CATEGORIES.indexOf('Dairy & eggs');
+ assert.deepEqual(RECEIPT_CATEGORIES.slice(i,i+5),['Dairy & eggs',V,'Meat & fish','Snacks & sweets','Drinks']);
+});

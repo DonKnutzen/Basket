@@ -18,7 +18,7 @@ const unitText = (unit: string) => unit === 'kg' || unit === 'L' ? unit : unit =
 /** Fixed colour + emoji per category, so meat is always red and fruit/veggies always green. */
 const CATEGORY_LOOK: Record<string, [string, string]> = {
     'Fruit': ['#e8833a', '🍎'], 'Veggies': ['#4f9d4a', '🥦'], 'Produce': ['#6aab4f', '🥕'], 'Processed Food': ['#b08a5a', '🥫'],
-    'Meat & fish': ['#c8423b', '🥩'], 'Dairy & eggs': ['#6fa8dc', '🧀'], 'Bakery': ['#c99a4b', '🥖'], 'Snacks & sweets': ['#d9649a', '🍫'],
+    'Meat & fish': ['#c8423b', '🥩'], 'Dairy & eggs': ['#6fa8dc', '🧀'], 'Vegetarian/Vegan alternatives': ['#5aa469', '🌱'], 'Bakery': ['#c99a4b', '🥖'], 'Snacks & sweets': ['#d9649a', '🍫'],
     'Pasta, rice & grains': ['#e0b84a', '🍝'], 'Pantry': ['#9c7b55', '🫙'], 'Oils, spices & sauces': ['#c7a227', '🫒'], 'Frozen': ['#5bb3c9', '🧊'],
     'Drinks': ['#3f7fbf', '🥤'], 'Household': ['#8a7cc0', '🧽'], 'Takeout': ['#e06d4f', '🥡'], 'Fuel': ['#5d6b75', '⛽'],
     'Medicine': ['#3fae9c', '💊'], 'Clothing': ['#a0688f', '👕'], 'Other': ['#9aa58f', '🛒'],

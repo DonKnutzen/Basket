@@ -1,11 +1,13 @@
 import {catalogExactProduct} from './product-catalog';
 import {receiptDate} from './receipt-date';
-import {newId,normalize,inferCategory,receiptCategory,toCents,type ReceiptDraft,type Product,type BasketData} from './types';
+import {newId,normalize,inferCategory,receiptCategory,toCents,type ReceiptDraft,type ReceiptKind,type Product,type BasketData} from './types';
 export function newLine(){return {id:newId(),label:'',name:'',quantity:'1',amount:'',category:'Other',packSize:''}}
 // Order matters: the first chain found in the receipt header wins, so longer names come first.
 const FUEL_STATIONS=['Irving','Esso','Petro-Canada','Shell','Ultramar','Circle K','Pioneer','Costco Gas','Aral','JET','TotalEnergies','Avia','Agip','HEM','Orlen','Westfalen','Star Tankstelle'];
 const TAKEOUT_PLACES=['Tim Hortons','McDonald\'s','McDonalds','Subway','A&W','Wendy\'s','Wendys','Burger King','KFC','Popeyes','Starbucks','Domino\'s','Dominos','Pizza Hut','Pizza Pizza','Greco','Mary Brown\'s','Harvey\'s','Dairy Queen','Taco Bell','Chipotle','Five Guys','Freshii','DoorDash','SkipTheDishes','Skip The Dishes','Uber Eats','Lieferando','Wolt'];
 // Restaurant receipts without a known chain name still say how the food was served.
+// Shop names that sell groceries even when the receipt also has a café counter (server, tip).
+const GROCERY_SHOP=/\b(market|grocer[sy]?|grocery|farm|co-?op|butcher|bulk|deli|epicerie|markt|hofladen)\b/i;
 const TAKEOUT_HINT=/\b(dine[- ]?in|take[- ]?out|to go|eat[- ]?in|zum mitnehmen|au(?:ss|ß)er haus|gratuity|trinkgeld|table\s*#?\s*\d+|server\s*:)/i;
 const STORES=[...FUEL_STATIONS,...TAKEOUT_PLACES,'Atlantic Superstore','Real Canadian Superstore','No Frills','Walmart','Sobeys','Costco','Gateway','Giant Tiger','Food Basics','Shoppers Drug Mart','Dollarama','Bulk Barn','Save Easy','Lawtons','Metro','IGA','Provigo','Maxi','Loblaws','FreshCo','REWE Center','REWE','Aldi Nord','Aldi Süd','Aldi','Lidl','EDEKA','Netto','Penny','Kaufland','Globus','HIT','tegut','Denns Biomarkt','Alnatura','Rossmann','famila','NSLC','Foodland','Independent','Superstore'];
 // Register abbreviations seen on Loblaw, Sobeys and Walmart receipts. Whole words only.
@@ -146,15 +148,22 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  const served=takeout&&!qty&&name.match(/^(\d{1,2})\s+([a-z].*)$/i);if(served){quantity=served[1];name=served[2]}
  if(pendingQuantity&&quantity==='1'&&Math.abs(amount-pendingQuantity.n*pendingQuantity.unit)<=1)quantity=String(pendingQuantity.n);pendingQuantity=null;
  const pack=name.match(/\b(\d+(?:[.,]\d+)?)\s*(kg|g|lb|ml|l)\b/i);const weighed=!!pack&&/[x×@]\s*\d|\/\s*(kg|lb)/i.test(label);
- if(pack){name=name.slice(0,pack.index).trim()+(!weighed?name.slice((pack.index||0)+pack[0].length):'');name=name.trim()}
+ if(pack){const head=name.slice(0,pack.index).trim(),tail=name.slice((pack.index||0)+pack[0].length);name=head?head+(!weighed?tail:''):tail.replace(/@.*$/,'');name=name.trim()}
  const quality=/\b(bio|organic|org)\b/i.test(name)?'organic':undefined;
  const canonical=catalogExactProduct(name.replace(/\b(bio|organic|org)\b/ig,'').trim());if(canonical)name=canonical.en;
  const alias=aliases.find(a=>a.store===normalize(d.store)&&a.label===normalize(label));const p=products.find(p=>p.id===alias?.productId)||products.find(p=>normalize(p.name)===normalize(name)&&!p.packSize&&!p.brand&&!p.variant&&!p.quality);
- d.lines.push({id:newId(),sourceLines:pendingIndex===index-1?[pendingIndex+1,index+1]:[index+1],label,name:p?.name||name.toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase()),quantity,amount:(amount/100).toFixed(2),category:takeout?'Takeout':receiptCategory(name,p?.category),packSize:pack&&!weighed?pack[1]+' '+pack[2]:p?.packSize||'',brand:p?.brand,variant:p?.variant,quality:quality||p?.quality,measuredQuantity:pack&&weighed?pack[1].replace(',','.'):undefined,measuredUnit:pack&&weighed?pack[2].toLowerCase() as 'kg'|'g'|'lb':undefined,matched:!!p});lastItemIndex=index;if(lost)lostLines.push(d.lines[d.lines.length-1]);pending='';}
+ d.lines.push({id:newId(),sourceLines:pendingIndex===index-1?[pendingIndex+1,index+1]:[index+1],label,name:p?.name||name.toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase()),quantity,amount:(amount/100).toFixed(2),category:receiptCategory(name,p?.category),packSize:pack&&!weighed?pack[1]+' '+pack[2]:p?.packSize||'',brand:p?.brand,variant:p?.variant,quality:quality||p?.quality,measuredQuantity:pack&&weighed?pack[1].replace(',','.'):undefined,measuredUnit:pack&&weighed?pack[2].toLowerCase() as 'kg'|'g'|'lb':undefined,matched:!!p});lastItemIndex=index;if(lost)lostLines.push(d.lines[d.lines.length-1]);pending='';}
  if(lostLines.length===1&&subtotal!==undefined){const gap=subtotal-d.lines.reduce((s,l)=>s+toCents(l.amount),0);if(gap>0&&gap<subtotal){lostLines[0].amount=amountText(gap);d.warnings.push('Price unreadable, derived from subtotal: '+lostLines[0].label)}}
  for(const l of lostLines)if(!toCents(l.amount)){l.amount='';d.warnings.push('Price unreadable, please enter it: '+l.label)}
+ if(d.kind==='takeout'&&!TAKEOUT_PLACES.includes(store)&&(GROCERY_SHOP.test(store)||d.lines.length>=4&&d.lines.filter(l=>l.category!=='Other').length>=d.lines.length*0.6))d.kind='groceries';
+ d.lines=applyReceiptKind(d,d.kind!).lines
  d.tax=(tax/100).toFixed(2);d.total=total!==undefined?amountText(total):'';if(total===undefined)d.warnings.push('No printed final total was recognized.');if(!d.lines.length)d.warnings.push('No purchased item was recognized.');if(d.total&&difference(d)!==0){d.warnings.push('Printed total differs from recognized positions; no balancing item was invented.');const fix=suggestFix(d);if(fix)d.warnings.push(fix)}return d;
 }
 export function difference(d:ReceiptDraft){return toCents(d.total||'0')-toCents(d.tax||'0')-d.lines.reduce((s,l)=>s+(toCents(l.amount)||0),0)}
 
 export function receiptCents(text:string){const value=text.replace(/[$€\s]/g,'');const decimal=value.match(/[.,](\d{2})$/);if(!decimal)return NaN;const whole=value.slice(0,-3).replace(/[.,]/g,'');return /^-?\d+$/.test(whole)?Number(whole)*100+(whole.startsWith('-')?-1:1)*Number(decimal[1]):NaN}
+
+// Switching the receipt type moves line categories between Takeout and the item's own category.
+export function applyReceiptKind<T extends {kind?:ReceiptKind;lines:ReceiptDraft['lines']}>(d:T,kind:ReceiptKind):T{
+ return {...d,kind,lines:d.lines.map(l=>kind==='takeout'?(l.category==='Fuel'?l:{...l,category:'Takeout'}):l.category==='Takeout'?{...l,category:receiptCategory(l.name||l.label)}:l)};
+}
