@@ -27,7 +27,7 @@ import { WEIGHED_CATEGORIES, parseAmount, weightText, pricePerUnit, weightForPri
 import { shoppingSummary } from '../lib/receipt-shopping';
 import { householdSharing } from '../lib/household-display';
 import { browserAuth, basketFetch, setIdentityPreference } from '../lib/supabase-browser';
-const TABS = [{ id: 'lists', label: 'Shopping lists', short: 'Lists', icon: ListChecks }, { id: 'receipts', label: 'Receipts', short: 'Receipts', icon: ReceiptText }, { id: 'spending', label: 'Spending', short: 'Spending', icon: ChartNoAxesCombined }, { id: 'recipes', label: 'Recipes', short: 'Recipes', icon: ChefHat }, { id: 'prices', label: 'Price book', short: 'Prices', icon: BookOpen }];
+const TABS = [{ id: 'lists', label: 'Shopping lists', short: 'Lists', icon: ListChecks }, { id: 'receipts', label: 'Receipts', short: 'Receipts', icon: ReceiptText }, { id: 'spending', label: 'Spending', short: 'Spending', icon: ChartNoAxesCombined }, { id: 'prices', label: 'Price book', short: 'Prices', icon: BookOpen }, { id: 'recipes', label: 'Recipes', short: 'Recipes', icon: ChefHat }];
 export function Modal({ title, subtitle, children, close, wide = false }: {
     title: string;
     subtitle?: string;

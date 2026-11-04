@@ -15,6 +15,18 @@ const percent = (value: number, digits = 0) => new Intl.NumberFormat(locale(), {
 const share = (value: number) => new Intl.NumberFormat(locale(), { style: 'percent', maximumFractionDigits: 0 }).format(value);
 const day = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString(locale(), { day: 'numeric', month: 'short' });
 const monthName = (m: string, style: 'short' | 'long' = 'long') => new Date(m + '-15T12:00:00').toLocaleDateString(locale(), { month: style, year: style === 'long' ? 'numeric' : '2-digit' });
+/** True on phone widths, where the spending cards stack and long lists are cut shorter. */
+function useNarrow() {
+    const [narrow, setNarrow] = useState(false);
+    useEffect(() => {
+        const mq = window.matchMedia?.('(max-width: 650px)');
+        if (!mq) return;
+        const update = () => setNarrow(mq.matches);
+        update(); mq.addEventListener('change', update);
+        return () => mq.removeEventListener('change', update);
+    }, []);
+    return narrow;
+}
 const unitText = (unit: string) => unit === 'kg' || unit === 'L' ? unit : unit === 'piece' ? tr('piece') : unit;
 
 /** Fixed colour + emoji per category, so meat is always red and fruit/veggies always green. */
@@ -175,8 +187,8 @@ const matchesFilter = (c: PriceComparison, f: PriceFilter) => f === 'all' || (f 
 
 /** Store price level as bars around the average, then the products bought at more than one store. */
 function CheaperStore({ comparisons, index, color, currency }: { comparisons: PriceComparison[]; index: StoreIndex[]; color: (s: string) => string; currency: string }) {
-    const [filter, setFilter] = useState<PriceFilter>('all'), [q, setQ] = useState(''), [all, setAll] = useState(false);
-    const rows = comparisons.filter(c => matchesFilter(c, filter) && normalize(c.name).includes(normalize(q))), shown = all ? rows : rows.slice(0, 6);
+    const [filter, setFilter] = useState<PriceFilter>('all'), [q, setQ] = useState(''), [all, setAll] = useState(false), limit = useNarrow() ? 3 : 6;
+    const rows = comparisons.filter(c => matchesFilter(c, filter) && normalize(c.name).includes(normalize(q))), shown = all ? rows : rows.slice(0, limit);
     const span = Math.max(5, ...index.map(x => Math.abs(x.index - 100)));
     return <section className="chart-card">
         <h2>{tr('Which store is cheaper?')}</h2>
@@ -205,7 +217,7 @@ function CheaperStore({ comparisons, index, color, currency }: { comparisons: Pr
                 </div>; })}
                 {!rows.length && <p className="muted-note">{tr('No products match.')}</p>}
             </div>
-            {rows.length > 6 && <button type="button" className="secondary compare-more" onClick={() => setAll(v => !v)}>{all ? tr('Show fewer') : phrase('Show all {0} products', rows.length)}</button>}
+            {rows.length > limit && <button type="button" className="secondary compare-more" onClick={() => setAll(v => !v)}>{all ? tr('Show fewer') : phrase('Show all {0} products', rows.length)}</button>}
         </> : <p className="muted-note">{tr('Buy the same product at two different stores and Basket compares the prices here.')}</p>}
     </section>;
 }
@@ -236,10 +248,10 @@ function KiloPrices({ prices, color, currency }: { prices: PriceComparison[]; co
 
 /** Top products as category-coloured bars; tap one for its unit prices per store. */
 function MostBought({ products, prices, color, currency }: { products: ProductStat[]; prices: PriceComparison[]; color: (s: string) => string; currency: string }) {
-    const [by, setBy] = useState<'spend' | 'count'>('spend'), [open, setOpen] = useState('');
-    const list = [...products].sort((a, b) => by === 'spend' ? b.cents - a.cents : b.purchases - a.purchases || b.cents - a.cents).slice(0, 8);
+    const [by, setBy] = useState<'spend' | 'count'>('spend'), [open, setOpen] = useState(''), [all, setAll] = useState(false), limit = useNarrow() ? 5 : 8;
+    const top = [...products].sort((a, b) => by === 'spend' ? b.cents - a.cents : b.purchases - a.purchases || b.cents - a.cents).slice(0, 8), list = all ? top : top.slice(0, limit);
     const max = Math.max(...list.map(p => by === 'spend' ? p.cents : p.purchases), 1);
-    return <section className="chart-card">
+    return <section className="chart-card rank-card">
         <div className="card-head"><div><h2>{tr('Most bought')}</h2><p>{tr('Products with the highest spending in this period')}</p></div>
             <div className="unit-toggle" role="radiogroup" aria-label={tr('Sort')}><button type="button" role="radio" aria-checked={by === 'spend'} onClick={() => setBy('spend')}>{tr('Amount')}</button><button type="button" role="radio" aria-checked={by === 'count'} onClick={() => setBy('count')}>{tr('How often')}</button></div></div>
         <div className="rank-list">{list.map((p, i) => { const isOpen = open === p.key, own = prices.filter(c => c.key.startsWith(p.key + '|'));
@@ -251,6 +263,7 @@ function MostBought({ products, prices, color, currency }: { products: ProductSt
                 </button>
                 {isOpen && <ul className="rank-detail">{own.length ? own.flatMap(c => c.stores.map((s, si) => <li key={c.key + s.store}><span><i className="store-dot" style={{ background: color(s.store) }}/>{si === 0 && c.stores.length > 1 ? '🏆 ' : ''}{s.store} · {s.purchases}×</span><b>{money(s.unitCents, currency)}/{unitText(c.unit)}</b></li>)) : <li><span>{tr('No price data')}</span></li>}</ul>}
             </div>; })}</div>
+        {top.length > limit && <button type="button" className="secondary compare-more" onClick={() => setAll(v => !v)}>{all ? tr('Show fewer') : phrase('Show all {0} products', top.length)}</button>}
     </section>;
 }
 
