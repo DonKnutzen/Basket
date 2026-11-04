@@ -278,7 +278,7 @@ test('Sri Thai Kiel: browser OCR of tilted and blurred photos (lost count, lost 
  const d=parseReceipt(sriThai('68   x Nr.7 Gäng Panäng nit   23,50 23,50 A\nAS   Ente\n1x Radeberger Pilsner 0,5   59   5,9 B\n1x Singha 0,33 1   4,50   4,508','Trinkgeld   rit\nALLGEMEINE KARTENZAHLUNG   38,00\nust.¥   ust.   Netto   Brutto\nB 19%   1,66   8,74   10,40\n3   Total   3,20   90,70   33,90'));
  assert.equal(d.total,'38.00');assert.equal(difference(d),0);
  assert.deepEqual(d.lines.map(l=>[l.name,l.quantity,l.amount]),[['Nr.7 Gäng Panäng Nit Ente','1','23.50'],['Radeberger Pilsner','1','5.90'],['Singha','1','4.50'],['Trinkgeld','1','4.10']]);
- assert.ok(d.warnings.some(w=>/tip unreadable/i.test(w)));
+ assert.ok(d.warnings?.some(w=>/tip unreadable/i.test(w)));
  const blurred=parseReceipt(sriThai('1x Nr.7 Gäng Panäng mit   23,50 23,50 A\nEnte\n1x Radeberger Pilsner 0,5   5,9%   5,90 B\n1x Singha 0,33 1   450   4,58','Trinkgeld   4,10\nALLGEMEINE KARTENZAHLUNG   38,00\nTotal   3,20   30,70   33,90'));
  assert.deepEqual(blurred.lines.map(l=>[l.name,l.amount,l.packSize]),[['Nr.7 Gäng Panäng Mit Ente','23.50',''],['Radeberger Pilsner','5.90','0,5 l'],['Singha','4.50','0,33 l'],['Trinkgeld','4.10','']]);
  assert.equal(blurred.total,'38.00');
