@@ -51,6 +51,13 @@ test('skew is measured and removed',()=>{
  assert.ok(Math.abs(estimateSkew(grayImage(600,400,(x,y)=>textRow(x,y)?30:235)))<=0.3);
 });
 
+test('skew is measured on photo-sized images, where only every few pixels are sampled',()=>{
+ // 1400×1000 samples every 2nd pixel; single-pixel bins made 0° win on every photo (famila, ±3°).
+ for(const degrees of [3,-2.5]){const t=Math.tan(degrees*Math.PI/180);
+  const img=grayImage(1400,1000,(x,y)=>{const level=y-(x-700)*t;return x>80&&x<1320&&level>80&&level<920&&textRow(x,Math.round(level))?30:235});
+  const angle=estimateSkew(img);assert.ok(Math.abs(angle-degrees)<=0.3,String(angle))}
+});
+
 test('local binarization keeps text readable inside a shadow',()=>{
  // Paper brightness falls from 235 to 110 (shadow of the phone); text is 70 darker than its paper.
  const paper=(x:number)=>235-125*x/599;

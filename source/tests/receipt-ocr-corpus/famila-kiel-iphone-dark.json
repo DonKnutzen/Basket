@@ -1,0 +1,19 @@
+{
+  "source": "Foto abgedunkelt (70 %), Pipeline (Node, eng+deu); Logo als 'ASS', Kopf 'fami ja Mette nhof', Preise als '1,11 €8'",
+  "store": "famila",
+  "date": "",
+  "total": "23.68",
+  "tax": "0.00",
+  "items": [
+    {"label": "NIC NAC", "amount": "1.11"},
+    {"label": "MIONETTO", "amount": "9.99"},
+    {"label": "BULL", "amount": "1.49"},
+    {"label": "PFAND", "amount": "0.25"},
+    {"label": "RISOTTO", "amount": "3.99"},
+    {"label": "SKYR FR", "amount": "1.99"},
+    {"label": "SKYR", "amount": "1.99"},
+    {"label": "SANDWICH", "amount": "1.69"},
+    {"label": "CRO", "amount": "0.69"},
+    {"label": "KAISERBR", "amount": "0.49"}
+  ]
+}

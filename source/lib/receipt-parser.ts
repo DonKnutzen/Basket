@@ -45,7 +45,9 @@ export function cleanOcrLine(line:string){
   // "4. 00" (large fonts) and "BANANAS1.29" (missing gap), with optional tax flags after the price.
   .replace(/(\d[.,]) (\d{2})(?=(?: [A-Z*]{1,4}){0,2}$)/,'$1$2').replace(/([A-Za-z])(-?\d{1,4}[.,]\d{2})(?=(?: [A-Z*]{1,4}){0,2}$)/,'$1 $2')
   // OCR reads "lb" as "1b" after a weight or unit price: "0.1 1b", "21b Bag", "$20.00/1b".
-  .replace(/(\d ?|\/)1b\b/g,'$1lb');
+  .replace(/(\d ?|\/)1b\b/g,'$1lb')
+  // famila prints "1,99 € B"; OCR reads the euro sign as ¢ and the VAT flag B as 8: "3,99€8", "1,99 € 8", "1,11 €8B", "0,49¢8".
+  .replace(/(\d[.,]\d{2}) ?[€¢]{1,2} ?(?:[A-D8] ?[A-D8]?)?$/,'$1 €');
 }
 // A wrapped item name continues on the next line: "Sausage -" / "(Manual" above, "Weight) 2.00" below.
 const openParens=(s:string)=>(s.match(/\(/g)||[]).length-(s.match(/\)/g)||[]).length;
@@ -116,11 +118,15 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
   .replace(/^(\d{1,2}\s*x\s.*\s)(\d{2,4})\s+(\d+)[.,](\d)((?:\s*[A-D8])?)$/i,(all,head,unit,whole,tenth,flag)=>unit===whole+tenth?`${head}${whole},${tenth}0 ${whole},${tenth}0${flag}`:all));
  const header=raw.slice(0,8).join('\n');
  const named=[...new Set([...knownStores.filter(s=>s.trim().length>2&&!GREETING.test(s)&&!NOT_STORE.test(s)&&!PLACE.test(s.trim())),...STORES])].map(s=>({s,at:header.search(new RegExp('(?:^|[^a-z])'+s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?:$|[^a-z])','i'))})).filter(h=>h.at>=0).sort((a,b)=>a.at-b.at||b.s.length-a.s.length)[0];
+ // A garbled logo ("fdm ila") leaves the header nameless; the payment slip below repeats the chain on a line of its own ("Famila" / "Mettenhof").
+ // Blur and shadow split or misread the name in the header ("fdmila,", "fami ja Mettenhof"): one edit off a chain name of six or more letters still names it.
+ const headerWords=named?[]:raw.slice(0,8).flatMap(l=>{const w=l.toLowerCase().split(/[^a-zäöü]+/).filter(Boolean);return [...w,...w.slice(1).map((x,i)=>w[i]+x)]});
+ const footer=named?undefined:STORES.find(s=>s.length>=4&&raw.slice(8).some(l=>l.replace(/^\S{1,2}\s+|\s+\S{1,2}$/g,'').toLowerCase()===s.toLowerCase()))||STORES.find(s=>/^[a-zäöü]{6,}$/i.test(s)&&headerWords.some(w=>edits(w,s.toLowerCase())<=1));
  const pumped=/\b(pump|säule|saule|zapfs\w*|litres?|liters?|ltr|price\s*\/\s*l)\b/i.test(text);
  // Restaurant logos OCR as junk lines above the name ("JECTS Aa"): a line naming the venue wins.
  const venue=raw.slice(0,14).map(l=>l.replace(/^(?:\S{1,2}\s+)+/,'').replace(/(?:\s+\S{1,2})+$/,'')).find(l=>VENUE.test(l)&&!/[\d@$/:]/.test(l)&&l.length<50&&/^[A-ZÄÖÜ]/.test(l));
  // Short chain names ("HEM", "JET", "HIT") also turn up in that logo junk; a venue line beats them.
- let store=(venue&&named&&named.s.length<=4?'':named?.s)||(pumped?FUEL_BRAND_HINTS.find(([re])=>re.test(text))?.[1]:'')||venue||raw.slice(0,4).map(l=>l.replace(GREETING,'').trim()).find(l=>/[a-z]{3}/i.test(l)&&!/[\d@$]/.test(l)&&l.length<60&&!NOT_STORE.test(l)&&!PLACE.test(l)&&!(pumped&&FUEL_GRADE.test(l)))||'';
+ let store=(venue&&named&&named.s.length<=4?'':named?.s)||(pumped?FUEL_BRAND_HINTS.find(([re])=>re.test(text))?.[1]:'')||venue||footer||raw.slice(0,4).map(l=>l.replace(GREETING,'').trim()).find(l=>/[a-z]{3}/i.test(l)&&!/[\d@$]/.test(l)&&l.length<60&&!NOT_STORE.test(l)&&!PLACE.test(l)&&!(pumped&&FUEL_GRADE.test(l)))||'';
  // Logo specks read as an opening quote before a word: "Sri ‘Thai Restaurant".
  store=store.replace(/(^|\s)[‘“"'`]+(?=\S)/g,'$1');
  if(store==='Superstore'&&/\b(NS|NB|PE|NL|nova scotia|halifax|dartmouth|bedford|sackville|atlantic)\b|\(\s*902\s*\)/i.test(text))store='Atlantic Superstore';
@@ -155,6 +161,10 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  // A long name wraps its price onto the next line ("1 Hulled Sunflower Seeds, 910g - Organic" / "$12.50"); when OCR garbles that price line ("gs RB"), the item stays for the subtotal.
  const wrapped=!m&&!ended&&pending&&pendingIndex===index-1&&/^\d{1,2}\s+[a-z]/i.test(pending)&&lostPrice.has(line)&&!/[a-z]{3}/i.test(line)?[line,pending] as RegExpMatchArray:null;
  const lost=wrapped||!m&&!ended&&!/^-?[$€]?\d+[.,]\d{2}$/.test(raw[index+1]||'')&&lostPrice.has(line)&&(line.match(/^(.{0,40}[a-z]{3}.{0,40}?)\s+\$[^\s.,]{1,4}$/i)||line.match(/^(\d{1,2}\s+[a-z].{2,60})$/i));if(lost){m=[line,lost[1],'0.00'] as RegExpMatchArray;pending=''}
+ // OCR may lose the word "Summe" and keep its amount ("23,68 €" under the last item): an amount
+ // right after the items that equals their sum exactly is the total.
+ const bare=!m&&!ended&&total===undefined&&d.lines.length>1&&index-lastItemIndex<=2&&line.match(/^[$€]?(\d+[.,]\d{2})\s*(?:€|EUR)?$/i);
+ if(bare&&receiptCents(bare[1])===d.lines.reduce((s,l)=>s+toCents(l.amount),0)+tax){total=receiptCents(bare[1]);ended=true;pending='';d.warnings.push('Total read without its label: '+bare[1]+'. Check the receipt.');continue}
  if(!m){
   // Walmart prints the weight below the item: "1.090 kg @ 1 kg /1.30".
   const weight=line.match(/^(\d+[.,]\d+)\s*(kg|lb)\s*@/i),last=d.lines[d.lines.length-1];
@@ -208,7 +218,7 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  else if(pending&&/^\d+(?:[.,]\d+)?\s*(kg|g|lb|l)\b/i.test(label)){label=pending+' '+label;pending=''}
  else if(pending&&/^\d{5,14}$/.test(label)){label=pending;pending=''}
  else if(pending&&pendingIndex===index-1&&continues(pending,label)){label=pending+' '+label;pending=''}
- if(/^total\s+(savings|saved|discount|items?|number)|^(cash|change|debit|credit|visa|vis\b|mastercard|amex|tender|payment|approved|auth|terminal|trans\b|you saved|savings|points|rewards|coupon|discount|rabais|items?\b|articles?\b|tel\b|phone|www\.|thank|merci|receipt|invoice|cashier)/i.test(label)||!/[a-z]/i.test(label)||/^\d+\s*[@x*]\s*\$?\d/i.test(label))continue;
+ if(/^total\s+(savings|saved|discount|items?|number)|^(cash|change|r[üu]ckgeld|wechselgeld|gegeben|debit|credit|visa|vis\b|mastercard|amex|tender|payment|approved|auth|terminal|trans\b|you saved|savings|points|rewards|coupon|discount|rabais|items?\b|articles?\b|tel\b|phone|www\.|thank|merci|receipt|invoice|cashier)/i.test(label)||!/[a-z]/i.test(label)||/^\d+\s*[@x*]\s*\$?\d/i.test(label))continue;
  // Loyalty stamps and points print as zero-priced lines: "24632 PHY STAMP EARN Q 0.00".
  if(amount===0&&/\b(stamps?|pts|points|rewards?|earn)\b/i.test(label)){pending='';continue}
  // The pump number is no purchase, even when OCR turns "PUMP No. 03" into "PUMP N 0.03".
@@ -233,6 +243,9 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  name=name.replace(/(\d[.,]\d{1,3})\s?[1|](?=\s|$)/,'$1 l');
  // A bill's drink size whose "l" wrapped to the next line or was lost: "1x Radeberger Pilsner 0,5" / "l".
  if(qty&&takeout)name=name.replace(/(?<=\s)(0[.,]\d{1,2})$/,'$1 l');
+ // famila glues the pack to the name ("SANDWICH375G", "BUTTERCROISSANT80G"), and OCR reads its G as 6
+ // ("ARLA SKYR 4506", "KAISERBR.MOHN 706", "SANDWICH3756G"); grams end in 0 or 5.
+ if(d.country==='DE'&&label===label.toUpperCase())name=name.replace(/(?<![\d.,])(\d{1,3}[05])6(G?)$/,'$1G').replace(/(?<=[A-Z])([1-9]\d*(?:[.,]\d+)?(?:KG|G|ML|L))$/,' $1');
  // Umlauts count as letters: "Nr.7 Gäng" holds no 7 g pack.
  const pack=name.match(/\b(\d+(?:[.,]\d+)?)\s*(kg|g|lb|ml|l)(?![a-zäöüß])/i);const weighed=!!pack&&/[x×@]\s*\d|\/\s*(kg|lb)/i.test(label);
  if(pack){const head=name.slice(0,pack.index).trim(),tail=name.slice((pack.index||0)+pack[0].length);name=head?head+(!weighed?tail:''):tail.replace(/@.*$/,'');name=name.trim()}

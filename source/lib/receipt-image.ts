@@ -1,6 +1,6 @@
 // Receipt photo preprocessing for Tesseract, as pure functions on pixel arrays:
-// cut the paper out of the background, scale it to ~1400 px width, level a slight
-// tilt and binarize locally so shadows and folds do not swallow the print.
+// cut the paper out of the background, scale it to ~1400 px width and binarize
+// locally so shadows and folds do not swallow the print.
 export type Gray={data:Uint8Array;width:number;height:number};
 export type Bounds={x:number;y:number;width:number;height:number};
 
@@ -56,8 +56,10 @@ export function estimateSkew(img:Gray){
  const xs:number[]=[],ys:number[]=[];
  for(let y=0;y<height;y+=step)for(let x=0;x<width;x+=step)if(data[y*width+x]<=threshold){xs.push(x-width/2);ys.push(y)}
  if(!xs.length)return 0;
- const score=(degrees:number)=>{const t=Math.tan(degrees*Math.PI/180),offset=width,bins=new Float64Array(height+2*offset);
-  for(let i=0;i<xs.length;i++){const b=Math.round(ys[i]-xs[i]*t)+offset;if(b>=0&&b<bins.length)bins[b]++}
+ // Bins are one sampling step tall: one-pixel bins put every sampled row into every step-th bin at
+ // exactly 0°, so 0° always scored best on photos larger than 500×500 px.
+ const score=(degrees:number)=>{const t=Math.tan(degrees*Math.PI/180),offset=width,bins=new Float64Array(Math.ceil((height+2*offset)/step)+1);
+  for(let i=0;i<xs.length;i++){const b=Math.round((ys[i]-xs[i]*t+offset)/step);if(b>=0&&b<bins.length)bins[b]++}
   let s=0;for(const v of bins)s+=v*v;return s};
  let best=0,bestScore=score(0);
  for(let a=-6;a<=6;a+=.5){const s=score(a);if(s>bestScore){bestScore=s;best=a}}
@@ -83,14 +85,16 @@ export function cropScale(img:Gray,b:Bounds,scale:number):Gray{
  return {data:out,width,height};
 }
 
-// Pipeline: crop → scale → contrast → deskew. On a real Superstore photo Tesseract read
+// Pipeline: crop → scale → contrast. On a real Superstore photo Tesseract read
 // this grayscale image better than a binarized one, so binarize() is the second attempt.
+// No deskew (estimateSkew/rotate): Tesseract levels rows itself, and resampling the
+// photo cost more than it won (Kaufland lost the Red Bull row at −1.6°, famila photos tilted
+// ±2.5° dropped from 78–95 % to 66 % confidence and read no prices).
 export function prepareForOcr(rgba:ArrayLike<number>,width:number,height:number){
  const bounds=findReceiptBounds(rgba,width,height);
- let img=cropScale(toGray(rgba,width,height),bounds,ocrScale(bounds.width,bounds.height));
+ const img=cropScale(toGray(rgba,width,height),bounds,ocrScale(bounds.width,bounds.height));
  for(let i=0;i<img.data.length;i++)img.data[i]=Math.max(0,Math.min(255,Math.round((img.data[i]-128)*1.15+128)));
- const angle=estimateSkew(img);if(Math.abs(angle)>=.3)img=rotate(img,-angle);
- return {image:img,bounds,angle};
+ return {image:img,bounds};
 }
 // For shadows and folds: Sauvola with a window of about two text lines.
 export const binarize=(img:Gray)=>sauvola(img,Math.round(img.width/16)|1);
