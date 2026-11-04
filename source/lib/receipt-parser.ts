@@ -141,7 +141,7 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  const fuelReceipt=FUEL_STATIONS.includes(store)||FUEL_GRADE.test(text)&&pumped;
  d.kind=fuelReceipt?'fuel':takeout?'takeout':'groceries';
 
- let tax=0,total:number|undefined,subtotal:number|undefined;d.warnings=[...ocrNotes];d.unassignedAdjustments=[];let pending='';let pendingIndex=0;let ended=false;let awaitingTotal=false;
+ let tax=0,total:number|undefined,subtotal:number|undefined;d.warnings=[...ocrNotes];d.unassignedAdjustments=[];let pending='';let pendingIndex=0;let ended=false;let awaitingTotal=false,totalFromPayment=false;
  const amountText=(n:number)=>(n/100).toFixed(2);
  let index=-1;
  let paid:number|undefined;const misread=new Map<string,number[]>(),priced=new Set<string>();
@@ -182,7 +182,7 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  let label=cleanLabel(m[1]),amount=receiptCents(m[2]);if(!Number.isFinite(amount))continue;
  // OCR noise before a wrapped price ("NE   $12.50") is no item name: the price belongs to the name line above.
  if(pending&&pendingIndex===index-1&&/^[^\s\d]{1,3}$/.test(label)&&/^\d{1,2}\s+[a-zäöüé]{3}/i.test(pending)&&!awaitingTotal){label=pending;pending=''}
- if(awaitingTotal){awaitingTotal=false;if(total===undefined&&amount>0&&PAYMENT.test(label)){total=paid=amount;pending='';continue}}
+ if(awaitingTotal){awaitingTotal=false;if(total===undefined&&amount>0&&PAYMENT.test(label)){total=paid=amount;totalFromPayment=true;pending='';continue}}
  // The payment ends the items even when OCR lost the total above it ("ALLGEMEINE KARTENZAHLUNG 38,00").
  if(PAYMENT.test(label)){paid??=Math.abs(amount);ended=true;pending='';continue}
  if(/^(?:[a-z]\s*=\s*)?(hst|gst|pst|qst|tps|tvq|tax\b|mwst|ust|vat)/i.test(label)){// Included tax (fuel, German VAT) is already part of the line totals.
@@ -274,6 +274,8 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
   d.lines.push({id:newId(),sourceLines:[raw.indexOf(tipLine!)+1],label:tipLine!.replace(/\s*[\d.,\s]+$/,''),name:d.country==='DE'?'Trinkgeld':'Tip',quantity:'1',amount:amountText(paid-bill),category:d.kind==='takeout'?'Takeout':'Other',packSize:''});total=paid}
  // Read as a line already (above the payment), the tip still moves the total to the payment; so does a payment the lines add up to exactly.
  else if(paid!==undefined&&total!==paid&&d.lines.length&&linesSum+tax===paid)total=paid;
+ // "Summe" without its amount takes the payment line; a garbled one ("EC-Cash 2.58 ¢" for 23,68) yields to the items when they differ by at most two digits.
+ else if(totalFromPayment&&total!==undefined&&d.lines.length>2&&total!==linesSum+tax&&edits(String(total),String(linesSum+tax))<=2){d.warnings.push(`Total misread as ${amountText(total)}; the items add up to ${amountText(linesSum+tax)}. Check the receipt.`);total=linesSum+tax}
  // A garbled pump line ("Toki buer" for TOTAL FUEL) leaves a fuel receipt without fuel: the rest of the printed total is the fuel.
  const rest=total===undefined?0:total-tax-d.lines.reduce((s,l)=>s+toCents(l.amount),0);
  if(d.kind==='fuel'&&rest>0&&!d.lines.some(l=>l.category==='Fuel')){const grade=raw.find(l=>FUEL_GRADE.test(l)&&l.length<30)||'Fuel',litres=fuelLitres('',text);
