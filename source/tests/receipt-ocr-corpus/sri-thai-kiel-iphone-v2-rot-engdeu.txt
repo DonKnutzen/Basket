@@ -1,0 +1,34 @@
+; Xi N X
+0d DR,
+N   Sri Thai Restaurant
+3
+N
+:
+Sri-That Kiel
+;   Adalbertstraße 17
+:   24106 Kiel
+3   Deutschland
+3   Unsatzsteuer-ID: DE 277919244
+AS   Steuernummer: 20/124/25207
+N   +49 431 66940808
+| Ss   www.sri-thai.de/sri-thai-kie)
+=   Rechnung
+3   Rechn.-Nr.: R-9BE8-2026-12635
+) SF   Tisch   Datum   Zeit
+a   #2/3 (Außer Haus)   03.11.2026 20:56:20
+EUR
+2   Ix Nr.7 Ging Pandng mit   23,50 23,50 A
+Ente
+1x Radeberger Pilsner 0,5   5,90   5,90 B
+]
+1x Singha 0,33 1   4,5   4,58
+Trinkgeld   4.10
+ALLGEMEINE KARTENZAHLUNG   38,00
+- GASTRONOVI PAY
+Ust.X   Ust.   Netto   Brutto
+A 7%   1,54   21,96   23,50
+B 19%   1,66   8,74   10,40
+Total   3,20   30,70   33,90
+Transakt ionsnumser   88490
+Signaturzähler:   177827
+Rainn   NM 1% NE AN re

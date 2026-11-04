@@ -33,6 +33,8 @@ export function cleanOcrLine(line:string){
  // A quote glued to a word is OCR noise, not junk to drop the word for: "Total”   hy:   $114.15".
  const segments=line.trim().replace(/(?<=[A-Za-z]{3})[“”"]+(?=\s|$)/g,'').split(/\s{3,}/);
  while(segments.length>1&&junkSegment(segments[0])&&!(segments.length===2&&/^-?[$€]?\d+[.,]\d{2}$/.test(segments[1])))segments.shift();
+ // A wrapped name after a stray mark ("3   Ente", "C3   Ente") keeps the name, not the mark.
+ if(segments.length===2&&/^\S{1,2}$/.test(segments[0])&&/^\p{L}{3,}$/u.test(segments[1]))segments.shift();
  while(segments.length>1&&(junkSegment(segments[segments.length-1])||!/\d/.test(segments[segments.length-1])&&segments[segments.length-1].length<=5))segments.pop();
  const tokens=segments.join(' ').split(/\s+/).filter(t=>/[A-Za-z0-9$€@&%#*()+\-/]/.test(t));
  while(tokens.length>1&&junkEdge(tokens[0]))tokens.shift();
@@ -93,8 +95,9 @@ function expandAbbreviations(name:string){return name.split(' ').map(w=>ABBREVIA
 // Lines above the store name that are never the store itself: "WELCOME" over a Shell logo, "Thank you".
 const GREETING=/^(?:welcome|willkommen|bienvenue|thank\s*you|thanks|danke)(?:\s+(?:to|at|bei|in|for shopping at))?\b[\s!,.:-]*/i;
 // Payment lines name the tender: "Visa 63.19", "Kartenzahlung 24,63", "ALLGEMEINE KARTENZAHLUNG 38,00".
-const PAYMENT=/^(?:allgemeine\s+)?(?:visa|vis|mastercard|amex|debit|credit|interac|cash|tender|payment|kartenzahlung|ec[- ]?karte|girocard|kreditkarte|bar(?:zahlung)?|ec)\b/i;
+const PAYMENT=/^(?:allgemeine\s+)?(?:visa|vis|mastercard|amex|debit|credit|interac|cash|tender|payment|karten?zahlung\w*|ec[- ]?karte|girocard|kreditkarte|bar(?:zahlung)?|ec)\b/i;
 const TIP=/^\+?\s*(?:trinkgeld|tip|gratuity|pourboire)\b/i;
+const VENUE=/\b(?:restaurant|ristorante|pizzeria|trattoria|osteria|taverna|caf[eé]|bistro|brasserie|imbiss|gasthaus|gaststätte|gasthof|brauhaus|wirtshaus|grill|diner|pub|sushi|steakhouse|bäckerei|konditorei|eiscaf[eé]|kebab|döner)\b/i;
 const NOT_STORE=/^(?:receipt|kassenbon|beleg|customer copy|merchant copy|duplicate|copy|sale|transaction|order|tel|phone)\b/i;
 export function parseReceipt(text:string,products:Product[]=[],aliases:BasketData['aliases']=[],knownStores:string[]=[]):ReceiptDraft{
  // Large total fonts often OCR with a space after the decimal point: "TOTAL 21. 78".
@@ -104,11 +107,22 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  const printedAmounts=new Set([...text.matchAll(/\d+[.,]\d{2}(?![\d.,])/g)].map(a=>a[0].replace(',','.')));
  raw=raw.map(l=>l.replace(/(?<=[a-z]\s)(\d) (\d{1,3}[.,]\d{2})$/i,(all,digit,price)=>printedAmounts.has((digit+price).replace(',','.'))?digit+price:all)
   // Restaurant bills: "1x" read as "ix", and the tax flag glued onto a line total that repeats the unit price ("4,50   4,508" for "4,50 4,50 B").
-  .replace(/^[iIl|]x(?=\s)/,'1x').replace(/(\d+[.,]\d{2})(\s+)\1\d$/,'$1$2$1'));
+  .replace(/^\S{1,2}\s+(?=[iIl|1-9]x\s)/,'').replace(/^[iIl|]x(?=\s)/,'1x').replace(/(\d+[.,]\d{2})(\s+)\1\d$/,'$1$2$1')
+  // Even when OCR garbled the unit price before it ("1x Singha 0,33 1   45   4,508"): prices on a "1x" line have two decimals.
+  .replace(/^(\d{1,2}\s*x\s.*\s\d+[.,]\d{2})\d(?:\s+\S)?$/i,'$1')
+  // A lost count or a stray mark before it ("68   x Nr.7 ...   23,50 23,50 A"): equal unit price and line total mean one.
+  .replace(/^(?:\S{1,2}\s+)?(\d{1,3}\s*)?x\s(.*\s(\d+[.,]\d{2})\s+(\d+[.,]\d{2})(?:\s*[A-D8])?)$/i,(all,n,rest,unit,line)=>unit===line&&(!n||Number(n.trim())!==1)?'1x '+rest:all)
+  // A lost last cent digit in both columns ("59   5,9 B" for "5,90   5,90 B").
+  .replace(/^(\d{1,2}\s*x\s.*\s)(\d{2,4})\s+(\d+)[.,](\d)((?:\s*[A-D8])?)$/i,(all,head,unit,whole,tenth,flag)=>unit===whole+tenth?`${head}${whole},${tenth}0 ${whole},${tenth}0${flag}`:all));
  const header=raw.slice(0,8).join('\n');
  const named=[...new Set([...knownStores.filter(s=>s.trim().length>2&&!GREETING.test(s)&&!NOT_STORE.test(s)&&!PLACE.test(s.trim())),...STORES])].map(s=>({s,at:header.search(new RegExp('(?:^|[^a-z])'+s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?:$|[^a-z])','i'))})).filter(h=>h.at>=0).sort((a,b)=>a.at-b.at||b.s.length-a.s.length)[0];
  const pumped=/\b(pump|säule|saule|zapfs\w*|litres?|liters?|ltr|price\s*\/\s*l)\b/i.test(text);
- let store=named?.s||(pumped?FUEL_BRAND_HINTS.find(([re])=>re.test(text))?.[1]:'')||raw.slice(0,4).map(l=>l.replace(GREETING,'').trim()).find(l=>/[a-z]{3}/i.test(l)&&!/[\d@$]/.test(l)&&l.length<60&&!NOT_STORE.test(l)&&!PLACE.test(l)&&!(pumped&&FUEL_GRADE.test(l)))||'';
+ // Restaurant logos OCR as junk lines above the name ("JECTS Aa"): a line naming the venue wins.
+ const venue=raw.slice(0,14).map(l=>l.replace(/^(?:\S{1,2}\s+)+/,'').replace(/(?:\s+\S{1,2})+$/,'')).find(l=>VENUE.test(l)&&!/[\d@$/:]/.test(l)&&l.length<50&&/^[A-ZÄÖÜ]/.test(l));
+ // Short chain names ("HEM", "JET", "HIT") also turn up in that logo junk; a venue line beats them.
+ let store=(venue&&named&&named.s.length<=4?'':named?.s)||(pumped?FUEL_BRAND_HINTS.find(([re])=>re.test(text))?.[1]:'')||venue||raw.slice(0,4).map(l=>l.replace(GREETING,'').trim()).find(l=>/[a-z]{3}/i.test(l)&&!/[\d@$]/.test(l)&&l.length<60&&!NOT_STORE.test(l)&&!PLACE.test(l)&&!(pumped&&FUEL_GRADE.test(l)))||'';
+ // Logo specks read as an opening quote before a word: "Sri ‘Thai Restaurant".
+ store=store.replace(/(^|\s)[‘“"'`]+(?=\S)/g,'$1');
  if(store==='Superstore'&&/\b(NS|NB|PE|NL|nova scotia|halifax|dartmouth|bedford|sackville|atlantic)\b|\(\s*902\s*\)/i.test(text))store='Atlantic Superstore';
  const d:ReceiptDraft={id:newId(),store,date:'',total:'',tax:'0.00',currency:'',lines:[],rawText:text};
  // Place names and area codes are often garbled ("Darts NS", "(302)"); province codes ending a line,
@@ -124,10 +138,10 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  let tax=0,total:number|undefined,subtotal:number|undefined;d.warnings=[...ocrNotes];d.unassignedAdjustments=[];let pending='';let pendingIndex=0;let ended=false;let awaitingTotal=false;
  const amountText=(n:number)=>(n/100).toFixed(2);
  let index=-1;
- let paid:number|undefined;
+ let paid:number|undefined;const misread=new Map<string,number[]>(),priced=new Set<string>();
  for(const line of raw){index++;
  // The VAT table ("ust.% ust. Netto Brutto", "A 7%   1,54   21,96   23,50") follows the items even when OCR lost the "Summe" line.
- if(/^[A-D]\s*\d{1,2}(?:[.,]\s?\d{1,2})?\s*%/.test(line)||/\bnetto\b.*\bbrutto\b|\bbrutto\b.*\bnetto\b/i.test(line)){ended=true;pending='';continue}
+ if(/^[A-D8]\s*\d{1,2}(?:[.,]\s?\d{1,2})?\s*(?:%|[Xx×]\s+\d+[.,]\d{2}\s)/.test(line)||/\bnetto\b.*\bbrutto\b|\bbrutto\b.*\bnetto\b/i.test(line)){ended=true;pending='';continue}
  // "2 @ $5.99" / "2 Stk x 0,89" / Kaufland "2 * 1,49": a pack count printed above or below its item line.
  const countLine=line.match(/^(\d{1,3})\s*(?:stk|st|pcs|pc|ea)?\.?\s*[@x×*]\s*[$€]?\s*(\d+[.,]\d{2})\s*(?:€|eur)?(?:\s*\/\s*[a-z]+)?$/i);
  if(countLine&&!ended){const n=Number(countLine[1]),unit=receiptCents(countLine[2]),last=d.lines[d.lines.length-1];
@@ -150,7 +164,9 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
   // $63.19 to the payment line below ("Visa 63.19"); the "HST - Fuel" note after it is no item.
   if(total===undefined&&/^(?:total(?:\s+sale)?|summe|gesamt|grand total|amount due|zu zahlen)$/i.test(plain)){ended=true;awaitingTotal=true;pending=plain;pendingIndex=index;continue}
   // Restaurant bills wrap a long name under its priced first line: "1x Nr.7 Gäng Panäng mit   23,50 23,50 A" / "Ente".
-  if(!ended&&last&&lastItemIndex===index-1&&/^\d+\s*x\s/i.test(last.label)&&/^[a-zäöüß][a-zäöüß .,-]{1,30}$/i.test(plain)){last.label+=' '+plain;last.name+=' '+plain.toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase());last.sourceLines=[...(last.sourceLines||[]),index+1];lastItemIndex=index;continue}
+  // Tip, payment and total words never continue a dish ("Trinkgeld   rit" after "1x Singha").
+  const wrap=plain.match(/^(?:[^\s\p{L}]{1,2}\s+)?([a-zäöüß][a-zäöüß .,-]{1,30})$/iu)?.[1];if(wrap&&(TIP.test(wrap)||PAYMENT.test(wrap)||/^(?:summe|total|gesamt|zwischensumme|bar|r[üu]ckgeld|gegeben)\b/i.test(wrap)))pending='';else
+  if(!ended&&wrap&&last&&lastItemIndex===index-1&&(/^\d+\s*x\s/i.test(last.label)||priced.has(last.id))){last.label+=' '+wrap;last.name+=' '+wrap.toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase());last.sourceLines=[...(last.sourceLines||[]),index+1];lastItemIndex=index;continue}
   // Restaurant and market registers print the count or weight first and wrap long names: "1 Hulled Sunflower Seeds, 910g - Organic".
   if(!ended&&/^[a-zäöüé0-9(][a-zäöüé0-9 %&.,'’()@$/-]{2,90}$/i.test(plain)&&/[a-zäöüé]{3}/i.test(plain)&&!/^(www|tel|phone|thank|merci|danke|cashier|kasse|receipt|rewe|sobeys|walmart|no frills)/i.test(plain)){pending=pending&&pendingIndex===index-1&&continues(pending,plain)?pending+' '+plain:plain;pendingIndex=index}else pending='';continue}
  let label=cleanLabel(m[1]),amount=receiptCents(m[2]);if(!Number.isFinite(amount))continue;
@@ -167,6 +183,10 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  // "TOTAL FUEL 63.19" is the pump line on Canadian fuel receipts; "TOTAL SALE" follows.
  const fuelTotal=fuelReceipt&&/^total\s+(fuel|gas|kraftstoff)\b/i.test(key);
  const fuzzyTotal=!fuelTotal&&total===undefined&&key.split(' ').length<=3&&!/sav|item|disc|point|reward|number/i.test(key)&&(edits(lastWord,'TOTAL')<=1||d.country==='DE'&&key.split(' ').length===1&&edits(lastWord,'SUMME')<=2&&amount*100>=d.lines.reduce((s,l)=>s+Math.round(+l.amount*100),0)||subtotal!==undefined&&amount>=subtotal&&edits(lastWord,'TOTAL')<=2);
+ // VAT table "Total   3,20   30,70   233,90": USt plus Netto is the Brutto when OCR added a digit to it
+ // (not when it misread the Netto instead: "3,20   90,70   33,90").
+ const vatTotal=label.match(/^(?:total|summe|gesamt)\s+(\d+[.,]\d{2})\s+(\d+[.,]\d{2})$/i);
+ if(vatTotal&&ended){const sum=receiptCents(vatTotal[1])+receiptCents(vatTotal[2]);if(sum!==amount&&String(amount).length>String(sum).length&&(String(amount).endsWith(String(sum))||String(amount).startsWith(String(sum)))){d.warnings.push('VAT table total read as '+amountText(amount)+', using USt + Netto = '+amountText(sum)+'.');amount=sum}}
  if(fuzzyTotal||!fuelTotal&&/^(total|summe|amt$|gesamt|zu zahlen|balance due|amount due|grand total)\b(?!\s*(savings|saved|discount|items?|number))/i.test(key)){if(total===undefined||amount)total=amount;ended=true;pending='';continue}
  const regular=label.match(/^(?:regular price|normalpreis|prix regulier)\s+(.+)$/i);
  if(regular){const matches=d.lines.filter(l=>normalize(l.label)===normalize(regular[1])||normalize(l.name)===normalize(regular[1]));if(matches.length===1&&amount>=toCents(matches[0].amount)){matches[0].regularPrice=amountText(amount);matches[0].sourceLines=[...(matches[0].sourceLines||[]),index+1]}else d.warnings.push('Regular price could not be uniquely associated: '+line);pending='';continue}
@@ -196,21 +216,30 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  if(fuelReceipt&&(FUEL_GRADE.test(label)||/\b(fuel|pump|säule|saule|tank\w*|gas sale|kraftstoff)\b/i.test(label))){
   d.lines.push({id:newId(),sourceLines:[index+1],label,name:fuelGrade(label,false)||fuelGrade(text,false)||fuelGrade(label)||'Fuel',quantity:'1',amount:amountText(amount),category:'Fuel',packSize:'',measuredQuantity:fuelLitres(label,text),measuredUnit:fuelLitres(label,text)?'L':undefined});
   lastItemIndex=index;pending='';pendingQuantity=null;continue}
- let name=expandAbbreviations(label),quantity='1';const count=name.match(/\b(\d+)\s*[@x×*]\s*\$?\d+[.,]\d{2}/i);if(count){quantity=count[1];name=name.slice(0,count.index).trim()}const qty=name.match(/^(\d+)\s*x\s+(.+)/i);if(qty){quantity=qty[1];name=qty[2]}
+ let name=expandAbbreviations(label),quantity='1',columns=false;const count=name.match(/\b(\d+)\s*[@x×*]\s*\$?\d+[.,]\d{2}/i);if(count){quantity=count[1];name=name.slice(0,count.index).trim()}const qty=name.match(/^(\d+)\s*x\s+(.+)/i);if(qty){quantity=qty[1];name=qty[2]}
  // German bills print the unit price before the line total: "1x Singha 0,33 l   4,50   4,50 B".
- const unitPrice=name.match(/\s+(\d+[.,]\d{2})$/);if(unitPrice&&receiptCents(unitPrice[1])*Number(quantity)===amount)name=name.slice(0,unitPrice.index).trim();
+ // OCR may drop digits of that unit price ("45" for 4,50): its digits then still start the expected unit price.
+ const unitPrice=name.match(qty?/\s+(\d+[.,]\d{2}|[1-9][\d.,]{0,4}[%°]?)$/:/\s+(\d+[.,]\d{2})$/),unitCents=String(Math.round(amount/Number(quantity)));
+ // Unit price and line total one digit apart ("4,50   4,58"): one is misread; the payment decides below.
+ // A garbled unit price ("450   4,58", "45   4,58") proposes the one-digit corrections of the line total that start with its digits.
+ const exactUnit=!!unitPrice&&/[.,]\d{2}$/.test(unitPrice[1]),unitTotal=exactUnit?receiptCents(unitPrice![1])*Number(quantity):NaN,oneDigit=!!qty&&exactUnit&&String(unitTotal).length===String(amount).length&&[...String(unitTotal)].filter((c,i)=>c!==String(amount)[i]).length===1;
+ const unitDigits=unitPrice&&!exactUnit?unitPrice[1].replace(/\D/g,''):'',cents=String(amount),swaps=unitDigits.length>=2&&quantity==='1'?[...cents].flatMap((c,i)=>DIGIT_SWAPS.filter(([from])=>from===c).map(([,to])=>Number(cents.slice(0,i)+to+cents.slice(i+1)))).filter(n=>String(n).startsWith(unitDigits)):[];
+ const alternatives=oneDigit?[unitTotal]:swaps;
+ if(unitPrice&&(exactUnit?unitTotal===amount||oneDigit:unitDigits.length>=2&&(unitCents.startsWith(unitDigits)||swaps.length>0))){name=name.slice(0,unitPrice.index).trim();label=label.replace(new RegExp('\\s+'+unitPrice[1].replace(/[.]/g,'\\.')+'(?=\\s*$)'),'');columns=true}
  // Restaurant registers print the count first: "1 BAGEL BELT", "2 MED ORIGINAL".
  const served=takeout&&!qty&&name.match(/^(\d{1,2})\s+([a-z].*)$/i);if(served){quantity=served[1];name=served[2]}
  if(pendingQuantity&&quantity==='1'&&Math.abs(amount-pendingQuantity.n*pendingQuantity.unit)<=1)quantity=String(pendingQuantity.n);pendingQuantity=null;
  // OCR reads the litre "l" after a drink size as 1 or |: "Singha 0,33 1".
  name=name.replace(/(\d[.,]\d{1,3})\s?[1|](?=\s|$)/,'$1 l');
+ // A bill's drink size whose "l" wrapped to the next line or was lost: "1x Radeberger Pilsner 0,5" / "l".
+ if(qty&&takeout)name=name.replace(/(?<=\s)(0[.,]\d{1,2})$/,'$1 l');
  // Umlauts count as letters: "Nr.7 Gäng" holds no 7 g pack.
  const pack=name.match(/\b(\d+(?:[.,]\d+)?)\s*(kg|g|lb|ml|l)(?![a-zäöüß])/i);const weighed=!!pack&&/[x×@]\s*\d|\/\s*(kg|lb)/i.test(label);
  if(pack){const head=name.slice(0,pack.index).trim(),tail=name.slice((pack.index||0)+pack[0].length);name=head?head+(!weighed?tail:''):tail.replace(/@.*$/,'');name=name.trim()}
  const quality=/\b(bio|organic|org)\b/i.test(name)?'organic':undefined;
  const canonical=catalogExactProduct(name.replace(/\b(bio|organic|org)\b/ig,'').trim());if(canonical)name=canonical.en;
  const alias=aliases.find(a=>a.store===normalize(d.store)&&a.label===normalize(label));const p=products.find(p=>p.id===alias?.productId)||products.find(p=>normalize(p.name)===normalize(name)&&!p.packSize&&!p.brand&&!p.variant&&!p.quality);
- d.lines.push({id:newId(),sourceLines:pendingIndex===index-1?[pendingIndex+1,index+1]:[index+1],label,name:p?.name||name.toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase()),quantity,amount:(amount/100).toFixed(2),category:receiptCategory(name,p?.category),packSize:pack&&!weighed?pack[1]+' '+pack[2]:p?.packSize||'',brand:p?.brand,variant:p?.variant,quality:quality||p?.quality,measuredQuantity:pack&&weighed?pack[1].replace(',','.'):undefined,measuredUnit:pack&&weighed?pack[2].toLowerCase() as 'kg'|'g'|'lb':undefined,matched:!!p});lastItemIndex=index;if(lost)lostLines.push(d.lines[d.lines.length-1]);pending='';}
+ d.lines.push({id:newId(),sourceLines:pendingIndex===index-1?[pendingIndex+1,index+1]:[index+1],label,name:p?.name||name.toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase()),quantity,amount:(amount/100).toFixed(2),category:receiptCategory(name,p?.category),packSize:pack&&!weighed?pack[1]+' '+pack[2]:p?.packSize||'',brand:p?.brand,variant:p?.variant,quality:quality||p?.quality,measuredQuantity:pack&&weighed?pack[1].replace(',','.'):undefined,measuredUnit:pack&&weighed?pack[2].toLowerCase() as 'kg'|'g'|'lb':undefined,matched:!!p});lastItemIndex=index;if(lost)lostLines.push(d.lines[d.lines.length-1]);if(alternatives.length)misread.set(d.lines[d.lines.length-1].id,alternatives);if(columns)priced.add(d.lines[d.lines.length-1].id);pending='';}
  if(lostLines.length===1&&subtotal!==undefined){const gap=subtotal-d.lines.reduce((s,l)=>s+toCents(l.amount),0);if(gap>0&&gap<subtotal){lostLines[0].amount=amountText(gap);d.warnings.push('Price unreadable, derived from subtotal: '+lostLines[0].label)}}
  for(const l of lostLines)if(!toCents(l.amount)){l.amount='';d.warnings.push('Price unreadable, please enter it: '+l.label)}
  if(d.kind==='takeout'&&!TAKEOUT_PLACES.includes(store)&&(GROCERY_SHOP.test(store)||d.lines.length>=4&&d.lines.filter(l=>l.category!=='Other').length>=d.lines.length*0.6))d.kind='groceries';
@@ -218,11 +247,20 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  // Restaurants print the tip below the bill and the card payment covers both ("Summe 33,90", "Trinkgeld 4,10",
  // "Kartenzahlung 38,00"). The tip is money spent: it becomes a line and the payment the total, but only when
  // payment minus bill equals the printed tip, whose comma OCR may drop ("Trinkgeld 410").
- const tipLine=raw.find(l=>TIP.test(l)),tipDigits=tipLine?.match(/(\d+)[.,]?\s?(\d{2})\s*$/);
- if(tipDigits&&paid!==undefined&&total!==undefined&&!d.lines.some(l=>TIP.test(l.label))&&paid-total>0&&Number(tipDigits[1]+tipDigits[2])===paid-total){
-  d.lines.push({id:newId(),sourceLines:[raw.indexOf(tipLine!)+1],label:tipLine!.replace(/\s*[\d.,\s]+$/,''),name:d.country==='DE'?'Trinkgeld':'Tip',quantity:'1',amount:amountText(paid-total),category:d.kind==='takeout'?'Takeout':'Other',packSize:''});total=paid}
- // Read as a line already (above the payment), the tip still moves the total to the payment.
- else if(paid!==undefined&&total!==undefined&&paid>total&&d.lines.some(l=>TIP.test(l.label))&&d.lines.reduce((s,l)=>s+toCents(l.amount),0)+tax===paid)total=paid;
+ // A line whose unit price says otherwise takes it when that makes the lines meet the printed total or the payment.
+ // A garbled unit price ("4,5   4,58") still proposes the one-digit corrections that start with its digits.
+ for(const l of d.lines){const sum=d.lines.reduce((s,x)=>s+toCents(x.amount),0)+tax,fits=(misread.get(l.id)||[]).filter(n=>[total,paid].includes(sum-toCents(l.amount)+n)),alt=fits[0];
+  if(sum!==total&&sum!==paid&&fits.length===1){d.warnings.push(`OCR misread a line total, using the unit price: ${l.label} ${l.amount} → ${amountText(alt)}. Check the receipt.`);l.amount=amountText(alt)}}
+ // With "Summe" and the VAT table's "Total" both unreadable, the bill is what the lines add up to.
+ const tipLine=raw.find(l=>TIP.test(l)),tipDigits=tipLine?.match(/(\d+)[.,]?\s?(\d{2})(?:\s+\S)?\s*$/),hasTip=d.lines.some(l=>TIP.test(l.label)),linesSum=d.lines.reduce((s,l)=>s+toCents(l.amount),0);
+ const bill=total??(paid!==undefined&&!hasTip?linesSum+tax:undefined);
+ // An unreadable tip ("Trinkgeld   rit") is still payment minus bill when the lines make up that bill exactly.
+ const tipUnread=!!tipLine&&!tipDigits&&bill!==undefined&&linesSum+tax===bill&&paid!==undefined&&paid-bill<=bill/2;
+ if(tipLine&&paid!==undefined&&bill!==undefined&&!hasTip&&paid-bill>0&&(tipDigits?Number(tipDigits[1]+tipDigits[2])===paid-bill:tipUnread)){
+  if(tipUnread)d.warnings.push(`Tip unreadable, derived from payment − bill: ${amountText(paid-bill)}. Check the receipt.`);
+  d.lines.push({id:newId(),sourceLines:[raw.indexOf(tipLine!)+1],label:tipLine!.replace(/\s*[\d.,\s]+$/,''),name:d.country==='DE'?'Trinkgeld':'Tip',quantity:'1',amount:amountText(paid-bill),category:d.kind==='takeout'?'Takeout':'Other',packSize:''});total=paid}
+ // Read as a line already (above the payment), the tip still moves the total to the payment; so does a payment the lines add up to exactly.
+ else if(paid!==undefined&&total!==paid&&d.lines.length&&linesSum+tax===paid)total=paid;
  // A garbled pump line ("Toki buer" for TOTAL FUEL) leaves a fuel receipt without fuel: the rest of the printed total is the fuel.
  const rest=total===undefined?0:total-tax-d.lines.reduce((s,l)=>s+toCents(l.amount),0);
  if(d.kind==='fuel'&&rest>0&&!d.lines.some(l=>l.category==='Fuel')){const grade=raw.find(l=>FUEL_GRADE.test(l)&&l.length<30)||'Fuel',litres=fuelLitres('',text);

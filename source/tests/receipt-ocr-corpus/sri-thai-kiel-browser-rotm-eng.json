@@ -1,0 +1,25 @@
+{
+  "source": "Zweites iPhone-Foto, um -3° gedreht, Browser-Pipeline (Chromium-Canvas, eng); Trinkgeld unlesbar ('rit'), Radeberger als '59   5,9 B', Netto als 90,70",
+  "store": "Sri Thai Restaurant",
+  "date": "2026-11-03",
+  "total": "38.00",
+  "tax": "0.00",
+  "items": [
+    {
+      "label": "Nr.7",
+      "amount": "23.50"
+    },
+    {
+      "label": "Radeberger Pilsner",
+      "amount": "5.90"
+    },
+    {
+      "label": "Singha",
+      "amount": "4.50"
+    },
+    {
+      "label": "Trinkgeld",
+      "amount": "4.10"
+    }
+  ]
+}

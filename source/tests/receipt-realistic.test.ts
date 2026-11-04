@@ -238,3 +238,48 @@ test('Atlantic Superstore Bayers Lake: count lines carry the price, limits, ARCP
  const variant=parseReceipt(fixture.text.replace('24632 PHY','24632/PHY'));
  assert.equal(variant.lines.length,6);assert.equal(difference(variant),0);
 });
+
+// Sri Thai Kiel: a German restaurant bill read from two phone photos with three OCR languages.
+// Each variant reproduces a misreading Tesseract really made or one of its known letter swaps.
+const sriThai=(items:string,end:string)=>`Sri Thai Restaurant
+Sri-Thai Kiel
+Adalbertstraße 17
+24106 Kiel
+Rechnung
+Tisch   Datum   Zeit
+#2/3 (Außer Haus)   03.11.2026 20:56:20
+EUR
+${items}
+${end}`;
+const SRI_ITEMS=['1x Nr.7 Gäng Panäng mit   23,50 23,50 A\nEnte\n1x Radeberger Pilsner 0,5   5,90   5,90 B\n1\n1x Singha 0,33 1   4,50   4,50 B',
+ 'ix Nr.7 Ging Pandng mit   23,50 23,50 A\nEnte\n1x Radeberger Pilsner 0,5   5,90   5,90 B\n]\n1x Singha 0,33 1   45   4,508',
+ 'Ix Nr.7 Gäng Panäng mit   23,50 23,50 A\nEnte\n1x Radeberger Pilsner 0,5   5,90   5,90 B\n1x Singha 0,33 |   4,50   4,50 B',
+ '1x Nr.7 Gäng Panäng mit   23,50 23,50A\nEnte\n1x Radeberger Pilsner 0,5   5,90   5,90B\n1\n1x Singha 0,33 l   4,50   4,50B'];
+const SRI_END=['Trinkgeld   4,10\nALLGEMEINE KARTENZAHLUNG   38,00\n- GASTRONOVI PAY\nUSt.%   USt.   Netto   Brutto\nA 7%   1,54   21,96   23,50\nB 19%   1,66   8,74   10,40\nTotal   3,20   30,70   33,90',
+ 'Summe   33,90\nTrinkgeld   4,10\nALLGEMEINE KARTENZAHLUNG   38,00\n- GASTRONOVI PAY\nust.X   ust.   Netto   Brutto\nA 7%   1,54   21,96   23,50',
+ 'Sunme   33,90\nTrinkgeld   410\nALLGEMEINE KARTENZAHLUNG   38,00\nA 7X   1,54   21,96   23,50\nB 19X   1,66   8,74   10,40',
+ 'Trinkgeld   410\nALLGEMEINE KARTENZAHLUNG   38,00\nA 7%   1,54   21,96   23,50\nB 19%   1,66   8,74   10,40\nTotal   3,20   30,70   33,90',
+ 'Trinkgeld   4.10\nKartenzahlung   38,00\nA 7%   1,54   21,96   23,50\nB 19%   1,66   8,74   10,40'];
+test('Sri Thai Kiel: dishes, drinks with sizes and the tip add up to the card payment in every OCR variant',()=>{
+ for(const items of SRI_ITEMS)for(const end of SRI_END){
+  const d=parseReceipt(sriThai(items,end)),at=items.slice(0,12)+' / '+end.slice(0,12);
+  assert.equal(d.store,'Sri Thai Restaurant',at);assert.equal(d.date,'2026-11-03',at);assert.equal(d.kind,'takeout',at);
+  assert.equal(d.total,'38.00',at);assert.equal(difference(d),0,at);
+  assert.deepEqual(d.lines.map(l=>[l.quantity,l.amount]),[['1','23.50'],['1','5.90'],['1','4.50'],['1','4.10']],at);
+  assert.match(d.lines[0].name,/^Nr\.7 G\Sng Pan\Sng Mit Ente$/,at);assert.doesNotMatch(d.lines[0].label,/23,50/,at);
+  assert.equal(d.lines[1].name,'Radeberger Pilsner',at);assert.equal(d.lines[1].packSize,'0,5 l',at);
+  assert.equal(d.lines[2].name,'Singha',at);assert.equal(d.lines[2].packSize,'0,33 l',at);
+  assert.equal(d.lines[3].name,'Trinkgeld',at);
+  assert.ok(!d.lines.some(l=>/karten|%|total|summe/i.test(l.label)),at);
+ }
+});
+
+test('Sri Thai Kiel: browser OCR of tilted and blurred photos (lost count, lost cent, unreadable tip, misread Netto)',()=>{
+ const d=parseReceipt(sriThai('68   x Nr.7 Gäng Panäng nit   23,50 23,50 A\nAS   Ente\n1x Radeberger Pilsner 0,5   59   5,9 B\n1x Singha 0,33 1   4,50   4,508','Trinkgeld   rit\nALLGEMEINE KARTENZAHLUNG   38,00\nust.¥   ust.   Netto   Brutto\nB 19%   1,66   8,74   10,40\n3   Total   3,20   90,70   33,90'));
+ assert.equal(d.total,'38.00');assert.equal(difference(d),0);
+ assert.deepEqual(d.lines.map(l=>[l.name,l.quantity,l.amount]),[['Nr.7 Gäng Panäng Nit Ente','1','23.50'],['Radeberger Pilsner','1','5.90'],['Singha','1','4.50'],['Trinkgeld','1','4.10']]);
+ assert.ok(d.warnings.some(w=>/tip unreadable/i.test(w)));
+ const blurred=parseReceipt(sriThai('1x Nr.7 Gäng Panäng mit   23,50 23,50 A\nEnte\n1x Radeberger Pilsner 0,5   5,9%   5,90 B\n1x Singha 0,33 1   450   4,58','Trinkgeld   4,10\nALLGEMEINE KARTENZAHLUNG   38,00\nTotal   3,20   30,70   33,90'));
+ assert.deepEqual(blurred.lines.map(l=>[l.name,l.amount,l.packSize]),[['Nr.7 Gäng Panäng Mit Ente','23.50',''],['Radeberger Pilsner','5.90','0,5 l'],['Singha','4.50','0,33 l'],['Trinkgeld','4.10','']]);
+ assert.equal(blurred.total,'38.00');
+});
