@@ -1,0 +1,13 @@
+{
+  "source": "iPhone-Foto, Pipeline lib/receipt-ocr.ts (Node); Summe-Zeile fehlt im OCR, Trinkgeld 4,10 in Kartenzahlung 38,00 enthalten",
+  "store": "Sri Thai Restaurant",
+  "date": "2026-11-03",
+  "total": "38.00",
+  "tax": "0.00",
+  "items": [
+    {"label": "Nr.7", "amount": "23.50"},
+    {"label": "Radeberger Pilsner", "amount": "5.90"},
+    {"label": "Singha", "amount": "4.50"},
+    {"label": "Trinkgeld", "amount": "4.10"}
+  ]
+}
