@@ -283,3 +283,10 @@ test('Sri Thai Kiel: browser OCR of tilted and blurred photos (lost count, lost 
  assert.deepEqual(blurred.lines.map(l=>[l.name,l.amount,l.packSize]),[['Nr.7 Gäng Panäng Mit Ente','23.50',''],['Radeberger Pilsner','5.90','0,5 l'],['Singha','4.50','0,33 l'],['Trinkgeld','4.10','']]);
  assert.equal(blurred.total,'38.00');
 });
+
+test('a count line whose "@" was not read keeps the name above when count × price gives the amount',()=>{
+ // Real Superstore photo, one OCR pass: "2 @ $1.00 ea 2.00" read as "2   $1.00 ea   2.00".
+ const d=parseReceipt(`ATLANTIC SUPERSTORE\n06810090489 THREE CHSE DNR   MRJ\n2   $1.00 ea   2.00\n06148306079 ROOSTER SUSHI MRJ   4.00\nTOTAL   6.00`);
+ assert.ok(/THREE CHSE/.test(d.lines[0].label),d.lines[0].label);
+ assert.equal(d.lines.length,2);
+});

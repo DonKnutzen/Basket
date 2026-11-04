@@ -1,0 +1,4 @@
+{"id":"ca-superstore-bayers-lake","country":"CA","currency":"CAD","kind":"groceries","receiptType":"supermarket","capture":"iPhone, gedämpftes Innenlicht, Finger im Bild, Rückseite scheint durch",
+ "store":"Atlantic Superstore","date":"2026-10-31","total":"21.78","tax":"0.00",
+ "items":[{"label":"ROOSTER SUSHI","amount":"4.00","quantity":"2"},{"label":"THREE CHSE","amount":"2.00","quantity":"2"},{"label":"MARUKOME MISO","amount":"3.29"},{"label":"WHITE BATARD","amount":"1.50","discount":"1.00"},{"label":"ITAL BUNS","amount":"4.00"},{"label":"OKA MUSHROOMS","amount":"6.99"}],
+ "verified": "Abgeschrieben vom Foto (Claude, 2026-11-04); Artikelsumme + Steuer = gedruckter Endbetrag geprüft. Noch nicht vom Nutzer bestätigt."}

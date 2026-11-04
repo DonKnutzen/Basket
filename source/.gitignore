@@ -47,3 +47,6 @@ yarn-error.log*
 /public/ocr/
 __pycache__/
 *.pyc
+# Real receipt photos stay on this machine: they show card digits, addresses and shop staff names.
+/tests/receipt-photos/images/
+/tests/receipt-photos/results/

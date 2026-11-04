@@ -214,7 +214,9 @@ export function parseReceipt(text:string,products:Product[]=[],aliases:BasketDat
  if(ended){pending='';continue}
  if(amount<0)d.warnings.push('Negative purchase/return position: '+line);
  // A nameless count line takes the name above ("Red Bull Energy" / "2 * 1,49"); "1x Singha 0,33 l" names itself.
- if(pending&&/^\d+\s*[@x×*]\s*[$€]?\s*\d/i.test(label)){label=pending+' '+label;pending=''}
+ // OCR can drop the "@" ("2   $1.00 ea   2.00"); then count × unit price must give the amount.
+ const bareCount=label.match(/^(\d{1,3})\s+[$€]?\s*(\d+[.,]\d{2})\s*(?:ea)?$/i);
+ if(pending&&(/^\d+\s*[@x×*]\s*[$€]?\s*\d/i.test(label)||bareCount&&Number(bareCount[1])*receiptCents(bareCount[2])===amount)){label=pending+' '+label;pending=''}
  else if(pending&&/^\d+(?:[.,]\d+)?\s*(kg|g|lb|l)\b/i.test(label)){label=pending+' '+label;pending=''}
  else if(pending&&/^\d{5,14}$/.test(label)){label=pending;pending=''}
  else if(pending&&pendingIndex===index-1&&continues(pending,label)){label=pending+' '+label;pending=''}

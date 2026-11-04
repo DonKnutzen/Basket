@@ -31,6 +31,16 @@ test('the white receipt is cut out of a wooden table and a hand',()=>{
  assert.ok(Math.abs(b.x+b.width-200)<=8&&Math.abs(b.y+b.height-350)<=8,JSON.stringify(b));
 });
 
+test('a shadow over the price column stays inside the cut-out',()=>{
+ // Real photos with a hand's shadow over the right half lost every price: the shaded paper fell below
+ // the global threshold and was cropped away. Same table and paper as above, right half of the paper at 42 %.
+ const shade=(x:number,c:number[])=>x>=150&&x<200?c.map(v=>Math.round(v*.42)):c;
+ const rgba=rgbaImage(300,400,(x,y)=>x>=100&&x<200&&y>=50&&y<350?shade(x,textRow(x-100,y-50)&&x>110&&x<190?[40,40,40]:[238,236,232]) as [number,number,number]:[205,175,130]);
+ const b=findReceiptBounds(rgba,300,400);
+ assert.ok(Math.abs(b.x-100)<=8&&Math.abs(b.x+b.width-200)<=8,JSON.stringify(b));
+ assert.ok(Math.abs(b.y-50)<=8&&Math.abs(b.y+b.height-350)<=8,JSON.stringify(b));
+});
+
 test('without a clear paper area the whole photo is used',()=>{
  const rgba=rgbaImage(200,200,()=>[240,240,240]);
  assert.deepEqual(findReceiptBounds(rgba,200,200),{x:0,y:0,width:200,height:200});

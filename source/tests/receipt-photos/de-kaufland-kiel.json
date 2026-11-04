@@ -1,0 +1,4 @@
+{"id":"de-kaufland-kiel","country":"DE","currency":"EUR","kind":"groceries","receiptType":"supermarket","capture":"iPhone, Innenraum, gleichmäßig, Knicke",
+ "store":"Kaufland","date":"2026-11-02","total":"24.63","tax":"0.00",
+ "items":[{"label":"ToiPa","amount":"7.45"},{"label":"Chio Tortilla","amount":"1.00"},{"label":"Afri Cola","amount":"0.89"},{"label":"Pfandartikel","amount":"0.15"},{"label":"Barilla","amount":"1.00"},{"label":"Red Bull","amount":"2.98","quantity":"2"},{"label":"Pfandartikel","amount":"0.50","quantity":"2"},{"label":"Bresso","amount":"2.39"},{"label":"Erdnussb","amount":"3.59"},{"label":"Super-Sandwich","amount":"1.69"},{"label":"Demeter","amount":"2.99"}],
+ "verified": "Abgeschrieben vom Foto (Claude, 2026-11-04); Artikelsumme + Steuer = gedruckter Endbetrag geprüft. Noch nicht vom Nutzer bestätigt."}

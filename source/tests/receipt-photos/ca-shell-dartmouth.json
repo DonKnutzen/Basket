@@ -1,0 +1,4 @@
+{"id":"ca-shell-dartmouth","country":"CA","currency":"CAD","kind":"fuel","receiptType":"fuel","capture":"iPhone, ungleichmäßig beleuchtet, Matrixdruck, leicht unscharf",
+ "store":"Shell","date":"2026-10-31","total":"63.19","tax":"0.00","fuel":{"litres":"35.380","pricePerLitre":"1.786"},
+ "items":[{"label":"FUEL","amount":"63.19"}],
+ "verified": "Abgeschrieben vom Foto (Claude, 2026-11-04); Artikelsumme + Steuer = gedruckter Endbetrag geprüft. Noch nicht vom Nutzer bestätigt."}

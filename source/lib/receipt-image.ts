@@ -37,6 +37,12 @@ export function findReceiptBounds(rgba:ArrayLike<number>,width:number,height:num
   if(component.length>best.length)best=component;
  }
  if(best.length<values.length*.1||best.length>values.length*.9)return full;
+ // Shaded paper next to the lit part belongs to the receipt: grow into neighbours above half the threshold.
+ // Without this a shadow over the price column (hand, phone) cut every price off real photos.
+ const grown=[...best],inside=new Uint8Array(values.length);for(const c of best)inside[c]=1;
+ for(let i=0;i<grown.length;i++){const c=grown[i],cx=c%gw,cy=(c-cx)/gw;
+  for(const [nx,ny] of [[cx-1,cy],[cx+1,cy],[cx,cy-1],[cx,cy+1]])if(nx>=0&&ny>=0&&nx<gw&&ny<gh){const n=ny*gw+nx;if(!inside[n]&&values[n]>threshold/2){inside[n]=1;grown.push(n)}}}
+ if(grown.length<=values.length*.9)best=grown;
  let x0=gw,y0=gh,x1=0,y1=0;for(const c of best){const cx=c%gw,cy=(c-cx)/gw;x0=Math.min(x0,cx);y0=Math.min(y0,cy);x1=Math.max(x1,cx);y1=Math.max(y1,cy)}
  const x=Math.max(0,(x0-1)*cell),y=Math.max(0,(y0-1)*cell);
  return {x,y,width:Math.min(width,(x1+2)*cell)-x,height:Math.min(height,(y1+2)*cell)-y};

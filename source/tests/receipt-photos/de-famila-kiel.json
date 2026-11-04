@@ -1,0 +1,5 @@
+{"id":"de-famila-kiel","country":"DE","currency":"EUR","kind":"groceries","receiptType":"supermarket","capture":"iPhone, Tageslicht, zerknittert, leicht schräg",
+ "store":"famila","date":"","dateNote":"Datum liegt außerhalb des Fotos: korrekt ist, dass die App nachfragt",
+ "total":"23.68","tax":"0.00",
+ "items":[{"label":"NIC NAC","amount":"1.11"},{"label":"MIONETTO","amount":"9.99"},{"label":"RED BULL","amount":"1.49"},{"label":"PFAND","amount":"0.25"},{"label":"RISOTTO","amount":"3.99"},{"label":"SKYR FR","amount":"1.99"},{"label":"ARLA SKYR","amount":"1.99"},{"label":"SANDWICH","amount":"1.69"},{"label":"BUTTERCROISSANT","amount":"0.69"},{"label":"KAISERBR","amount":"0.49"}],
+ "verified": "Abgeschrieben vom Foto (Claude, 2026-11-04); Artikelsumme + Steuer = gedruckter Endbetrag geprüft. Noch nicht vom Nutzer bestätigt."}
