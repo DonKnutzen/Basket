@@ -930,5 +930,7 @@
   "Compared products": "Verglichene Produkte",
   "Amount": "Betrag",
   "How often": "Häufigkeit",
+  "Enter the store name.": "Gib den Namen des Geschäfts ein.",
+  "Enter a name and price for every item.": "Gib für jeden Artikel einen Namen und einen Preis ein.",
   "Show all {0} categories": "Alle {0} Kategorien anzeigen"
 }
