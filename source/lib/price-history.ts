@@ -1,12 +1,12 @@
 import {catalogExactProduct} from './product-catalog';
 import {normalize,toCents,type PriceLine,type DraftLine} from './types';
-export type PriceObservation={sourceLines?:number[];country?:string;branch?:string;brand?:string;variant?:string;quality?:string;measuredQuantity?:string;measuredUnit?:'kg'|'g'|'lb'|'L'|'mL'|'piece';regularCents?:number;discountCents?:number;saleStatus?:'unknown'|'normal'|'advertised'|'reduced'};
+export type PriceObservation={sourceLines?:number[];country?:string;branch?:string;brand?:string;variant?:string;quality?:string;measuredQuantity?:string;measuredUnit?:'kg'|'g'|'lb'|'oz'|'L'|'mL'|'piece';regularCents?:number;discountCents?:number;saleStatus?:'unknown'|'normal'|'advertised'|'reduced'};
 // Quantities are fixed-point integers with six decimal places; money stays in cents.
 function decimal(value:string){if(!/^\d+(?:[.,]\d{1,6})?$/.test(value))return null;const [a,b='']=value.replace(',','.').split('.');return BigInt(a)*BigInt(1000000)+BigInt(b.padEnd(6,'0'))}
-function quantity(value:string,unit:string){const n=decimal(value);if(n===null||n<=BigInt(0))return null;switch(unit.toLowerCase()){case 'kg':return {n,d:BigInt(1000000),unit:'kg'};case 'g':return {n,d:BigInt(1000000000),unit:'kg'};case 'lb':return {n:n*BigInt(45359237),d:BigInt(100000000000000),unit:'kg'};case 'l':return {n,d:BigInt(1000000),unit:'L'};case 'ml':return {n,d:BigInt(1000000000),unit:'L'};case 'piece':return {n,d:BigInt(1000000),unit:'piece'};default:return null}}
+function quantity(value:string,unit:string){const n=decimal(value);if(n===null||n<=BigInt(0))return null;switch(unit.toLowerCase()){case 'kg':return {n,d:BigInt(1000000),unit:'kg'};case 'g':return {n,d:BigInt(1000000000),unit:'kg'};case 'lb':return {n:n*BigInt(45359237),d:BigInt(100000000000000),unit:'kg'};case 'oz':return {n:n*BigInt(45359237),d:BigInt(1600000000000000),unit:'kg'};case 'l':return {n,d:BigInt(1000000),unit:'L'};case 'ml':return {n,d:BigInt(1000000000),unit:'L'};case 'piece':return {n,d:BigInt(1000000),unit:'piece'};default:return null}}
 export function comparisonBasis(line:Pick<PriceLine,'quantity'|'packSize'|'amountCents'> & PriceObservation){
  let q=line.measuredQuantity&&line.measuredUnit?quantity(line.measuredQuantity,line.measuredUnit):null;
- if(!q){const pack=line.packSize.trim().match(/^(\d+(?:[.,]\d{1,6})?)\s*(kg|g|lb|l|ml)$/i);const count=decimal(String(line.quantity));
+ if(!q){const pack=line.packSize.trim().match(/^(\d+(?:[.,]\d{1,6})?)\s*(kg|g|lb|oz|l|ml)$/i);const count=decimal(String(line.quantity));
   if(pack&&count){q=quantity(pack[1],pack[2]);if(q)q={...q,n:q.n*count,d:q.d*BigInt(1000000)}}
  }
  // Unknown pack sizes cannot be compared across different products as pieces.

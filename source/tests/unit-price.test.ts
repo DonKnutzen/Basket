@@ -11,6 +11,15 @@ test('a weight in lb, kg or g gives the same price per kg and lb',()=>{
  assert.equal(weightPrices(454,1,'lb')?.lb,454);assert.equal(weightPrices(454,1,'lb')?.kg,1001);
  assert.equal(weightPrices(500,NaN,'kg'),null);assert.equal(weightPrices(500,0,'g'),null);
 });
+test('ounces convert correctly: 16 oz are 1 lb, 1 oz is 28.35 g',()=>{
+ assert.deepEqual(weightPrices(1000,16,'oz'),{kg:2205,lb:1000});
+ assert.deepEqual(weightPrices(250,4,'oz'),weightPrices(250,0.25,'lb'));
+ assert.equal(weightPrices(1000,1,'oz')?.kg,35274);
+ assert.deepEqual(packWeight('16 oz'),{quantity:'16',unit:'oz'});
+ const oz=comparisonBasis({quantity:1,packSize:'',amountCents:1000,measuredQuantity:'16',measuredUnit:'oz'}),lb=comparisonBasis({quantity:1,packSize:'',amountCents:1000,measuredQuantity:'1',measuredUnit:'lb'});
+ assert.equal(oz?.unit,'kg');assert.equal(oz?.cents,lb?.cents);assert.equal(oz?.cents,2205);
+ assert.equal(comparisonBasis({quantity:2,packSize:'8 oz',amountCents:1000})?.cents,2205);
+});
 test('loose food and bulk nuts are weighable, packaged goods are not',()=>{
  for(const [c,n] of [['Fruit','Apples'],['Veggies','Carrots'],['Meat & fish','Chicken'],['Snacks & sweets','Cashews'],['Pantry','Walnüsse'],['Snacks & sweets','Erdnüsse geröstet'],['Pantry','Almonds'],['Other','Haselnuss gemahlen']])assert.equal(isWeighable(c,n),true,n);
  for(const [c,n] of [['Snacks & sweets','Chips'],['Pantry','Erdnussbutter'],['Pantry','Peanut butter'],['Drinks','Almond milk'],['Snacks & sweets','Nuss Nougat Creme'],['Snacks & sweets','Haselnuss Schokolade'],['Household','Nut cracker']])assert.equal(isWeighable(c,n),false,n);

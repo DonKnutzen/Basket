@@ -1,5 +1,5 @@
 import {comparisonBasis,productNameKey} from './price-history';
-import {CATEGORIES,RECEIPT_KINDS,localDate,normalize,type BasketData,type PriceLine,type Receipt,type ReceiptKind} from './types';
+import {RECEIPT_KINDS,localDate,normalize,type BasketData,type PriceLine,type Receipt,type ReceiptKind} from './types';
 
 // Household spending insights computed from confirmed receipts only.
 // Money stays in integer cents and currencies are never mixed.
@@ -124,7 +124,7 @@ export function priceChanges(lines:readonly PriceLine[]):PriceChange[]{
  return rows.sort((a,b)=>Math.abs(b.change)-Math.abs(a.change)||b.date.localeCompare(a.date));
 }
 
-export type KindStat={kind:ReceiptKind;cents:number;trips:number;share:number;stores:StoreStat[];categories:CategoryStat[]};
+export type KindStat={kind:ReceiptKind;cents:number;trips:number;share:number;stores:StoreStat[];categories:CategoryStat[];products:ProductStat[]};
 /** Categories that are not food: left out of the groceries breakdown. */
 const NON_FOOD=new Set(['Household','Medicine','Clothing','Fuel','Takeout']);
 const kindOf=(r:Receipt,lines:readonly PriceLine[]):ReceiptKind=>{
@@ -139,15 +139,15 @@ function storeStats(receipts:readonly Receipt[],lines:readonly PriceLine[]=[]):S
  return [...new Set(receipts.map(r=>r.store))].map(name=>{const own=receipts.filter(r=>r.store===name),ids=new Set(own.map(r=>r.id));const cents=sumBy(own,r=>r.totalCents);
   return {name,cents,trips:own.length,averageCents:Math.round(cents/own.length),share:total>0?cents/total:0,lastDate:own.reduce((d,r)=>r.date>d?r.date:d,''),products:topProducts(lines.filter(l=>ids.has(l.receiptId))).slice(0,3).map(p=>({name:p.name,cents:p.cents}))}}).sort((a,b)=>b.cents-a.cents);
 }
-function categoryStats(lines:readonly PriceLine[],names:readonly string[]):CategoryStat[]{
+function categoryStats(lines:readonly PriceLine[]):CategoryStat[]{
  const lineTotal=sumBy(lines,l=>l.amountCents);
- return names.map(name=>{const own=lines.filter(l=>l.category===name);const cents=sumBy(own,l=>l.amountCents);return {name,cents,share:lineTotal>0?cents/lineTotal:0,products:topProducts(own).slice(0,5).map(p=>({name:p.name,cents:p.cents}))}}).filter(c=>c.cents>0).sort((a,b)=>b.cents-a.cents);
+ return [...new Set(lines.map(l=>l.category))].map(name=>{const own=lines.filter(l=>l.category===name);const cents=sumBy(own,l=>l.amountCents);return {name,cents,share:lineTotal>0?cents/lineTotal:0,products:topProducts(own).slice(0,5).map(p=>({name:p.name,cents:p.cents}))}}).filter(c=>c.cents>0).sort((a,b)=>b.cents-a.cents);
 }
 function kindStats(receipts:readonly Receipt[],lines:readonly PriceLine[]):KindStat[]{
  const total=sumBy(receipts,r=>r.totalCents);
  return RECEIPT_KINDS.map(kind=>{const own=receipts.filter(r=>kindOf(r,lines)===kind),ids=new Set(own.map(r=>r.id));const cents=sumBy(own,r=>r.totalCents);
   const ownLines=lines.filter(l=>ids.has(l.receiptId)&&(kind!=='groceries'||!NON_FOOD.has(l.category)));
-  return {kind,cents,trips:own.length,share:total>0?cents/total:0,stores:storeStats(own,ownLines),categories:categoryStats(ownLines,CATEGORIES)}}).filter(k=>k.trips>0).sort((a,b)=>b.cents-a.cents);
+  return {kind,cents,trips:own.length,share:total>0?cents/total:0,stores:storeStats(own,ownLines),categories:categoryStats(ownLines),products:kind==='groceries'?topProducts(ownLines):[]}}).filter(k=>k.trips>0).sort((a,b)=>b.cents-a.cents);
 }
 export type SpendingStats={
  currency:string;range:DateRange;receipts:Receipt[];totalCents:number;taxCents:number;trips:number;averageTripCents:number;
@@ -173,8 +173,7 @@ export function spendingStats(data:Pick<BasketData,'receipts'|'lines'>,period:Pe
  // Weekly average over the elapsed part of the range (a current month counts only days so far).
  const first=range.from||receipts[receipts.length-1]?.date||today,last=range.to<today?range.to:today;
  const weeks=Math.max(1,(daysBetween(first,last<first?first:last)+1)/7);
- const lineTotal=sumBy(lines,l=>l.amountCents);
- const categories=CATEGORIES.map(name=>{const own=lines.filter(l=>l.category===name);const cents=sumBy(own,l=>l.amountCents);return {name,cents,share:lineTotal>0?cents/lineTotal:0,products:topProducts(own).slice(0,5).map(p=>({name:p.name,cents:p.cents}))}}).filter(c=>c.cents>0).sort((a,b)=>b.cents-a.cents);
+ const categories=categoryStats(lines);
  const stores=storeStats(receipts,lines);
  // Store price comparisons use every purchase in this currency: one month rarely has the same product at two stores.
  const currencyIds=new Set(data.receipts.filter(r=>r.currency===currency&&(r.date<=range.to)).map(r=>r.id));

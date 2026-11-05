@@ -92,3 +92,11 @@ test('spending splits by receipt type with stores per type and only food categor
  assert.deepEqual(s.kinds.find(k=>k.kind==='takeout')!.stores.map(x=>[x.name,x.cents,x.trips]),[['Pizza Delight',4000,2]]);
  assert.deepEqual(s.kinds.find(k=>k.kind==='groceries')!.categories.map(c=>c.name),['Dairy & eggs','Produce']);
 });
+test('groceries count every food category and list all items',()=>{
+ const rs=[receipt('g1','Sobeys','2026-10-03',5000)];
+ const ls=[['Carrots',1200,'Veggies'],['Apples',800,'Fruit'],['Penne',500,'Pasta, rice & grains'],['Olive oil',900,'Oils, spices & sauces'],['Soup',300,'Processed Food'],['Milk',600,'Dairy & eggs'],['Soap',700,'Household']].map(([n,c,k])=>line('g1','Sobeys','2026-10-03',n as string,c as number,k as string));
+ const g=spendingStats({...data,receipts:rs,lines:ls},'month','2026-10','CAD','2026-10-31').kinds.find(k=>k.kind==='groceries')!;
+ assert.deepEqual(g.categories.map(c=>c.name),['Veggies','Oils, spices & sauces','Fruit','Dairy & eggs','Pasta, rice & grains','Processed Food']);
+ assert.equal(g.categories.reduce((n,c)=>n+c.cents,0),4300);
+ assert.deepEqual(g.products.map(p=>p.name),['Carrots','Olive oil','Apples','Milk','Penne','Soup']);
+});

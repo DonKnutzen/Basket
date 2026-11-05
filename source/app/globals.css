@@ -791,3 +791,5 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
 .weight-input em{color:#87957b;padding:0 10px}
 /* Phone width: the store comparison and most-bought cards stay as compact as the cards above them */
 @media(max-width:650px){.rank-card .card-head{flex-wrap:wrap;row-gap:10px}.rank-card .card-head>div:first-child{flex:1 1 100%;min-width:0}.compare-tools{margin-top:14px}.chart-card .period-chips.small{gap:6px}.chart-card .period-chips.small button{padding:5px 9px}.compare-head b{min-width:0;overflow-wrap:anywhere}.rank-list{margin-top:16px;gap:4px}.rank-row>button{gap:6px;padding:8px 6px}}
+
+.slice-chips.compact{gap:6px}.slice-chips.compact .slice-chip{width:36px;height:36px;min-height:36px;padding:0;font-size:17px;line-height:1;text-decoration:none}.slice-chips.compact .slice-chip[aria-pressed=false]{filter:grayscale(1)}.slice-more{display:block;margin:10px auto 0}.kind-items{display:block;width:100%;margin-top:14px}.slice-item-icon{flex:none;width:26px;font-size:18px;text-align:center}

@@ -362,7 +362,7 @@ catch (e: any) {
 catch (e: any) {
     setError(e.message);
 } }}>{tr("Connect my previous shopping data ")}<ArrowRight size={15}/></button></div>}</div>}<p className="install-note"><House size={16}/>{tr("iPhone: Safari \u2192 Share \u2192 Add to Home Screen.")}</p></Modal>; }
-/** Weight of a weighed line in lb, kg or g; the price per kg and lb follow from the line total. */
+/** Weight of a weighed line in oz, lb, kg or g; the price per kg and lb follow from the line total. */
 function WeightEditor({ line, currency, save, close }: {
     line: BasketData['lines'][number];
     currency: string;
@@ -379,7 +379,7 @@ function WeightEditor({ line, currency, save, close }: {
             <label><span>{tr('Weight')}</span><span className="weight-input"><input inputMode="decimal" autoFocus value={weight} maxLength={10} placeholder="0" aria-label={phrase('Weight in {0}', unit)} onChange={e => setWeight(e.target.value)}/><em>{unit}</em></span></label>
             <div className="unit-toggle" role="radiogroup" aria-label={tr('Weight unit')}>{WEIGHT_UNITS.map(u => <button type="button" role="radio" key={u} aria-checked={unit === u} onClick={() => setUnit(u)}>{u}</button>)}</div>
         </div>
-        <p className="weight-result">{prices ? <>{phrase('{0} for {1}', money(line.amountCents, currency), weightText(amount) + ' ' + unit)} · <b>{money(unit === 'lb' ? prices.lb : prices.kg, currency)}/{unit === 'lb' ? 'lb' : 'kg'}</b> · {unit === 'lb' ? money(prices.kg, currency) + '/kg' : money(prices.lb, currency) + '/lb'}</> : tr('Enter the weight — Basket calculates the price per kg and lb.')}</p>
+        <p className="weight-result">{prices ? <>{phrase('{0} for {1}', money(line.amountCents, currency), weightText(amount) + ' ' + unit)} · <b>{money(unit === 'lb' || unit === 'oz' ? prices.lb : prices.kg, currency)}/{unit === 'lb' || unit === 'oz' ? 'lb' : 'kg'}</b> · {unit === 'lb' || unit === 'oz' ? money(prices.kg, currency) + '/kg' : money(prices.lb, currency) + '/lb'}</> : tr('Enter the weight — Basket calculates the price per kg and lb.')}</p>
         <div className="weight-actions">{stored && <button type="button" className="text-link" onClick={() => save('', '')}>{tr('Remove weight')}</button>}<button type="button" className="secondary" onClick={close}>{tr('Cancel')}</button><button type="button" className="primary" disabled={!prices} onClick={() => save(weightText(amount), unit)}><Check size={15}/>{tr('Save')}</button></div>
     </div>;
 }
@@ -390,7 +390,7 @@ function weightLabel(l: BasketData['lines'][number], currency: string) {
     const prices = weightPrices(l.amountCents, q, unit);
     if (!prices) return '';
     const size = new Intl.NumberFormat(locale(), { maximumFractionDigits: 3 }).format(q) + ' ' + unit;
-    return size + ' · ' + (unit === 'lb' ? money(prices.lb, currency) + '/lb (' + money(prices.kg, currency) + '/kg)' : money(prices.kg, currency) + '/kg');
+    return size + ' · ' + (unit === 'lb' || unit === 'oz' ? money(prices.lb, currency) + '/lb (' + money(prices.kg, currency) + '/kg)' : money(prices.kg, currency) + '/kg');
 }
 function ReceiptDetail({ data, r, close, setKind, remove, recategorize, rename, reprice, reweigh }: {
     data: BasketData;
