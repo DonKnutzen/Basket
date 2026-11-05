@@ -39,7 +39,7 @@ test('monthly totals, trips, categories and stores never mix currencies',()=>{
  assert.equal(s.totalCents,6500);assert.equal(s.trips,3);assert.equal(s.averageTripCents,2167);assert.equal(s.taxCents,100);
  assert.equal(s.previousTotalCents,1000);
  assert.deepEqual(s.categories.map(c=>[c.name,c.cents]),[['Meat & fish',3200],['Dairy & eggs',1960],['Snacks & sweets',1240]]);
- assert.deepEqual(s.categories[1].products,[{name:'Milk',cents:1960}]);
+ assert.deepEqual(s.categories[1].products,[{name:'Milk',cents:1960,purchases:3}]);
  assert.deepEqual(s.stores.map(x=>[x.name,x.cents,x.trips]),[['Sobeys',3000,1],['Atlantic Superstore',3500,2]].sort((a,b)=>(b[1] as number)-(a[1] as number)));
  assert.equal(s.products[0].name,'Chicken thighs');assert.equal(s.products[0].cents,3200);
  assert.equal(spendingStats(data,'month','2026-10','EUR','2026-10-31').totalCents,900);
