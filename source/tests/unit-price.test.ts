@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {parseAmount,weightText,pricePerUnit,weightForPrice,convertUnitPrice,WEIGHED_CATEGORIES,isWeighable,weightPrices,packWeight} from '../lib/unit-price';
-import {comparisonBasis} from '../lib/price-history';
+import {comparisonBasis,priceBook} from '../lib/price-history';
 import {spendingStats} from '../lib/spending-stats';
 import type {PriceLine,Receipt} from '../lib/types';
 
@@ -50,4 +50,10 @@ test('kilo prices list weighed products even when bought at one store only',()=>
  assert.deepEqual(s.unitPrices.map(c=>[c.name,c.unit,c.stores.map(x=>[x.store,x.unitCents])]),[['Bananen','kg',[['Aldi',110],['REWE',200]]],['Kiwi','kg',[['REWE',600]]]]);
  assert.deepEqual(s.comparisons.map(c=>c.name),['Bananen']);
  assert.equal(s.unitPrices[0].category,'Fruit');
+});
+test('the price book compares one article across stores by its latest price per kg',()=>{
+ const line=(id:string,store:string,date:string,amountCents:number,packSize:string)=>({id,receiptId:id,productId:id,label:'APPLES',quantity:1,amountCents,category:'Fruit',packSize,store,date,currency:'CAD',productName:'Apples'}) as PriceLine;
+ const [apples]=priceBook([line('a','No Frills','2026-10-01',300,'1kg'),line('b','NOFRILLS','2026-11-01',500,'2 lb'),line('c','Giant Tiger','2026-10-20',400,'1kg')]);
+ assert.equal(apples!.unit,'kg');
+ assert.deepEqual(apples!.stores.map(s=>[s.store,s.cents]),[['Giant Tiger',400],['NOFRILLS',551]]);
 });

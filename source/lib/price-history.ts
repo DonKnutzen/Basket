@@ -33,3 +33,21 @@ export function history(lines:PriceLine[]){return [...lines].filter(l=>l.quantit
 export function comparableLines(lines:PriceLine[],reference:PriceLine){const basis=comparisonBasis(reference);return history(lines).filter(l=>l.currency===reference.currency&&(l.country||'')===(reference.country||'')&&productNameKey(l.productName)===productNameKey(reference.productName)&&normalize(l.brand||'')===normalize(reference.brand||'')&&normalize(l.variant||'')===normalize(reference.variant||'')&&normalize(l.quality||'')===normalize(reference.quality||'')&&comparisonBasis(l)?.unit===basis?.unit&&(basis?.unit!=='recorded unit'||l.productId===reference.productId))}
 export function cheapest(lines:PriceLine[]){return history(lines).reduce<PriceLine|undefined>((best,line)=>{const a=comparisonBasis(line),b=best&&comparisonBasis(best);return a&&(!b||BigInt(line.amountCents)*a.d*b.n<BigInt(best!.amountCents)*b.d*a.n)?line:best},undefined)}
 export function weightedAverage(lines:PriceLine[]){if(!lines.length)return null;const reference=lines[0],group=comparableLines(lines,reference);let n=BigInt(0),d=BigInt(1),total=BigInt(0);for(const line of group){const q=comparisonBasis(line);if(!q)continue;n=n*q.d+q.n*d;d*=q.d;const gcd=(a:bigint,b:bigint):bigint=>b?gcd(b,a%b):a;const g=gcd(n,d);n/=g;d/=g;total+=BigInt(line.amountCents)}return n?{cents:Number((total*d+n/BigInt(2))/n),unit:comparisonBasis(reference)!.unit}:null}
+export type PriceBookStore={key:string;store:string;date:string;cents:number};
+export type PriceBookEntry={key:string;name:string;category:string;unit:string;currency:string;line:PriceLine;stores:PriceBookStore[]};
+export function storeKey(store:string){return normalize(store).replace(/[\s'’.\-]/g,'')}
+// One entry per comparable article, with its latest price per store, cheapest first.
+export function priceBook(lines:PriceLine[]){
+ const entries=new Map<string,PriceBookEntry>();
+ for(const line of history(lines)){
+  const basis=comparisonBasis(line);if(!basis||!line.amountCents)continue;
+  const key=JSON.stringify([line.currency,line.country||'',productNameKey(line.productName),normalize(line.brand||''),normalize(line.variant||''),normalize(line.quality||''),basis.unit,basis.unit==='recorded unit'?line.productId:'']);
+  const entry=entries.get(key)||{key,name:line.productName,category:line.category,unit:basis.unit,currency:line.currency,line,stores:[]};
+  entries.set(key,entry);
+  const store=storeKey(line.store);
+  if(!entry.stores.some(s=>s.key===store))entry.stores.push({key:store,store:line.store,date:line.date,cents:basis.cents});
+ }
+ const book=[...entries.values()];
+ for(const entry of book)entry.stores.sort((a,b)=>a.cents-b.cents);
+ return book;
+}

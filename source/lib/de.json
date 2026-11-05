@@ -932,5 +932,13 @@
   "How often": "Häufigkeit",
   "Enter the store name.": "Gib den Namen des Geschäfts ein.",
   "Enter a name and price for every item.": "Gib für jeden Artikel einen Namen und einen Preis ein.",
-  "Show all {0} categories": "Alle {0} Kategorien anzeigen"
+  "Show all {0} categories": "Alle {0} Kategorien anzeigen",
+  "Cheapest": "Am günstigsten",
+  "Same price": "Gleicher Preis",
+  "Any store": "Alle Shops",
+  "vs": "gegen",
+  "{0} cheaper on {1}": "{0} günstiger: {1}",
+  "{0} items": "{0} Artikel",
+  "{0} compared": "{0} im Vergleich",
+  "No matching prices.": "Keine passenden Preise."
 }
