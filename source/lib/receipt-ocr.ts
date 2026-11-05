@@ -5,6 +5,7 @@ import {wordsToRows,blockWords} from './receipt-layout';
 import {parseReceipt} from './receipt-parser';
 import {receiptDate,type DateEvidence} from './receipt-date';
 import {toCents,normalize} from './types';
+import {constrainReceiptToPriceColumn} from './receipt-price-column';
 import {mergeReceiptReads,receiptReadQuality,type ReceiptRead} from './receipt-merge';
 
 type Recognized={data:{text:string;confidence:number;blocks?:Parameters<typeof blockWords>[0]}};
@@ -93,6 +94,7 @@ export async function readReceiptPhoto<I>(worker:OcrWorker,prepared:Gray,toImage
 
 // The purchase date from all passes, when the chosen text alone has none.
 export function dateFromPasses(draft:ReturnType<typeof parseReceipt>,result:OcrResult){
+ draft=constrainReceiptToPriceColumn(draft,result.rows);
  draft={...draft,warnings:[...new Set([...(draft.warnings||[]),...(result.warnings||[])])]};
  const uncertain=new Set(result.uncertainItems?.map(l=>normalize(l.label)+'|'+l.amount));
  draft.lines=draft.lines.map(l=>uncertain.has(normalize(l.label)+'|'+l.amount)?{...l,nameReviewRequired:true,warnings:[...(l.warnings||[]),'OCR readings disagree on this name. Check the receipt.']}:l);

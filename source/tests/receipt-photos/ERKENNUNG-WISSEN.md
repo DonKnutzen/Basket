@@ -2,6 +2,28 @@
 
 ## Korrekturen nach dem REWE-Audit vom 05.11.2026
 
+### Ergänzung nach dem iPhone-Screenshot: zu viele Positionen
+
+- Eine Namensbox ist kein zuverlässiger Zeilenanker: verzerrte oder zusammengefasste
+  Namen konnten denselben rechts gedruckten Betrag mehrfach übernehmen. Dazu kamen
+  linke Mengen-/Einzelpreise als falsche Buchungen (`5 Stk ... 0,15`, `5 Sk ... 0,25`).
+- `receipt-price-column.ts` erkennt eine wiederholt belegte rechte Betragsspalte
+  aus Wort-/Symbolkoordinaten, einschließlich leichter Perspektive. Die Fusion
+  verankert Buchungen jetzt an diesen Preispositionen. Gleicher Preis an zwei
+  verschiedenen Bildpositionen bleibt zwei Buchungen; mehrere OCR-Lesungen derselben
+  Preisposition werden nur einmal übernommen. Abstimmungen zählen pro Durchlauf.
+- Linke Stück-/Pfandwerte bleiben Zusatzinformation. Mengen werden weiterhin nur
+  bei passender Position und Anzahl × Einzelpreis an eine echte Buchung gehängt.
+  Getrennte OCR-Tokens wie `-0,` und `50` brauchen benachbarte Glyphboxen und behalten
+  das Vorzeichen. Der Summenabgleich ersetzt diese räumliche Prüfung nicht.
+- Bei Text ohne Koordinaten oder ohne belastbare rechte Spalte bleibt der bisherige
+  Parser verfügbar. Umgebrochene Einzelpreise und explizites Trinkgeld haben eigene
+  Layout-Ausnahmen. Deshalb ist dies keine pauschale Regel für sämtliche Bonarten.
+- Regressionen in `receipt-price-column.test.ts` prüfen die zusätzlichen linken
+  Werte, die doppelte 1,19, echte wiederholte Produkte, Pfandrückgaben und die
+  Ausnahmen. Neuer lokaler OCR-Lauf des Originalfotos: 19 Buchungen, alle Beträge
+  korrekt, Summe 21,99 EUR. Der neue iPhone-Lauf muss noch im echten Browser erfolgen.
+
 - Neue lokale Regressionen: `tests/receipt-regressions.test.ts`, Eingaben unter
   `tests/receipt-inputs/`. Das beschädigte OCR kann fehlendes RB ENERGY nicht
   rekonstruieren; mehrere Fotodurchläufe lesen es dagegen tatsächlich.
