@@ -3,8 +3,8 @@ import {locale} from './i18n';
 import {householdIcon} from './household-icons';
 import {drinkIcon} from './drink-icons';
 export const CATEGORIES=['Produce','Dairy & eggs','Vegetarian/Vegan alternatives','Meat & fish','Snacks & sweets','Drinks','Bakery','Pantry','Frozen','Household','Takeout','Fuel','Medicine','Clothing','Other'];
-// The thirteen quick categories in the compact receipt review, each with its emoji.
-export const COMPACT_CATEGORIES=['Fruit','Veggies','Dairy & eggs','Vegetarian/Vegan alternatives','Meat & fish','Snacks & sweets','Drinks','Bakery','Pasta, rice & grains','Pantry','Oils, spices & sauces','Frozen','Household'];
+// The fifteen quick categories in the compact receipt review, each with its emoji.
+export const COMPACT_CATEGORIES=['Fruit','Veggies','Dairy & eggs','Vegetarian/Vegan alternatives','Meat & fish','Snacks & sweets','Drinks','Bakery','Pasta, rice & grains','Pantry','Oils, spices & sauces','Frozen','Household','Clothing','Other'];
 export const CATEGORY_EMOJI:Record<string,string>={'Fruit':'🍎','Veggies':'🥦','Meat & fish':'🥩','Dairy & eggs':'🥛','Vegetarian/Vegan alternatives':'🌱','Bakery':'🍞','Pasta, rice & grains':'🍝','Pantry':'🥫','Oils, spices & sauces':'🧂','Frozen':'❄️','Snacks & sweets':'🍫','Drinks':'🥤','Household':'🧽','Processed Food':'🍱','Takeout':'🥡','Fuel':'⛽','Medicine':'💊','Clothing':'👕','Other':'🏷️'};
 // Receipts split produce into fruit and veggies, and track processed food on its own.
 export const RECEIPT_CATEGORIES=CATEGORIES.flatMap(c=>c==='Produce'?['Fruit','Veggies','Processed Food']:c==='Pantry'?['Pasta, rice & grains',c,'Oils, spices & sauces']:[c]);
