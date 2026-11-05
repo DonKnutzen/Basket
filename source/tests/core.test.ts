@@ -393,9 +393,10 @@ test('international purchase dates never fall back to scan day',()=>{
  for(const text of ['02.11.26 14:35','Bon 1234 02.11.26 12:10:45','02.11.2614:35 Uhr','Datum 02.11.26 Zeit 23:59:01','15:10:45 Uhr 02.11.26'])assert.equal(receiptDate(text,'DE','REWE').date,'2026-11-02',text);
  assert.equal(parseReceipt('SOBEYS\nMILK 5.49\nTOTAL 5.49').date,'');
  for(const text of ['31.02.2026','2026-13-28'])assert.equal(receiptDate(text).status,'invalid');
- // OCR may garble month and year after "Datum:" (Kaufland iPhone scan); a day from the past week is taken as this scan's date.
+ // OCR may suggest a recent date from its day, but it must not count as fully recognized.
  const scan=new Date('2026-11-02T12:00:00');
  assert.equal(receiptDate('Datum: 02.   a ein Ju 00:38 Bon:40219','DE','Kaufland',scan).date,'2026-11-02');
+ assert.equal(receiptDate('Datum: 02.   a ein Ju 00:38 Bon:40219','DE','Kaufland',scan).status,'inferred');
  assert.equal(receiptDate('Datum: 30. ii 10:12','DE','Kaufland',scan).date,'2026-10-30');
  assert.equal(receiptDate('Datum: 15. ii 10:12','DE','Kaufland',scan).status,'missing');
  // OCR spaces out dotted dates; English receipts print year first (2026/10/31, 2026-10-31).
@@ -411,6 +412,13 @@ test('ambiguous Canadian dates and conflicting dates require confirmation',()=>{
  assert.equal(receiptDate('MM/DD/YYYY\n04/05/2026','CA').date,'2026-04-05');
  assert.equal(receiptDate('2026-10-01\n2026-10-02').status,'ambiguous');
  assert.equal(receiptDate('2026-10-01\nBest before 2026-10-02').date,'2026-10-01');
+});
+test('saving requires confirmation of an uncertain OCR name and an inferred date',async()=>{
+ await get();
+ const d={...draft(),lines:draft().lines.map(l=>({...l,name:'2881.00 Ea',nameReviewRequired:true,nameReviewed:false}))};
+ assert.equal((await post('saveReceipt',{draft:d})).status,400);
+ assert.equal((await post('saveReceipt',{draft:{...d,lines:d.lines.map(l=>({...l,nameReviewed:true})),dateEvidence:{date:d.date,status:'inferred',candidates:[d.date]}}})).status,400);
+ assert.equal((await post('saveReceipt',{draft:{...d,lines:d.lines.map(l=>({...l,nameReviewed:true}))}})).status,200);
 });
 test('basic receipt extraction preserves pack sizes and canonical products without inventing attributes',()=>{
  const d=parseReceipt('REWE\n28.10.2026\nBIO TOMATEN 500 g 2,49 €\nTOTAL 2,49 €');

@@ -1,4 +1,4 @@
-export type DateEvidence={date:string;status:'recognized'|'ambiguous'|'missing'|'invalid'|'confirmed';candidates:string[];source?:string};
+export type DateEvidence={date:string;status:'recognized'|'inferred'|'ambiguous'|'missing'|'invalid'|'confirmed';candidates:string[];source?:string};
 export function validPurchaseDate(value:string){
  if(!/^20\d{2}-\d{2}-\d{2}$/.test(value))return false;
  const date=new Date(value+'T12:00:00Z');
@@ -50,11 +50,11 @@ export function receiptDate(text:string,country='',store='',scan=new Date()):Dat
  }
  if(!found.length){
   // OCR can garble month and year after "Datum:" while the day survives ("Datum: 02.   a ein Ju").
-  // Only a printed day from the past week is trusted, read against the scan date.
+  // A recent day can suggest a date, but the missing month/year must be confirmed.
   const day=normalized.match(/\bdatum:?\s*(\d{1,2})\.(?!\s*\d)/);
   if(day)for(let back=0;back<7;back++){
    const d=new Date(scan.getFullYear(),scan.getMonth(),scan.getDate()-back);
-   if(d.getDate()===Number(day[1])){const date=iso(String(d.getFullYear()),String(d.getMonth()+1),String(d.getDate()));return {date,status:'recognized',candidates:[date],source:day[0]};}
+   if(d.getDate()===Number(day[1])){const date=iso(String(d.getFullYear()),String(d.getMonth()+1),String(d.getDate()));return {date,status:'inferred',candidates:[date],source:day[0]};}
   }
   return {date:'',status:'missing',candidates:[]};
  }

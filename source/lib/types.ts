@@ -20,7 +20,7 @@ const GRAINS=/\b(nudeln?|pasta|spaghetti\w*|penne|fusilli|farfalle|tagliatelle|l
 /** The category a scan chose for a name, if older servers saved that category as Other. */
 export function recoveredCategory(name:string){const c=receiptCategory(name);return c!=='Other'&&!CATEGORIES.includes(c)?c:''}
 export function receiptCategory(name:string,category?:string){
- const n=normalize(name.replace(/ß/gi,'ss'));if(!category&&FROZEN.test(n))return 'Frozen';if(PROCESSED.test(n))return 'Processed Food';
+ const n=normalize(name.replace(/ß/gi,'ss'));if(!category){if(/\b(bresso|fruehlingsquark|fruehlq)\b/.test(n))return 'Dairy & eggs';if(/^cc zero(?: \d+(?: \d+)?fl)?$/.test(n))return 'Drinks';if(/\bpolpa\b/.test(n))return 'Pantry'}if(!category&&FROZEN.test(n))return 'Frozen';if(PROCESSED.test(n))return 'Processed Food';
  if(category==='Produce'||category==='Other')category=undefined;
  if(category&&category!=='Pantry')return category;
  if(NUTS_SEEDS.test(n)&&!NUT_PRODUCTS.test(n))return 'Fruit';
@@ -51,7 +51,7 @@ export type ReceiptKind=typeof RECEIPT_KINDS[number];
 export const RECEIPT_KIND_LABELS:Record<ReceiptKind,string>={groceries:'Groceries',takeout:'Takeout',fuel:'Gas',other:'Other'};
 export type Receipt={kind?:ReceiptKind;country?:string;branch?:string;dateEvidence?:import('./receipt-date').DateEvidence;shopping?:ReceiptShopping;id:string;store:string;date:string;totalCents:number;taxCents:number;currency:string;imageKey?:string;createdBy:string};
 export type BasketData={iconPreferences?:import('./food-icons').IconPreference[];user:{id:string;name:string;email?:string;provider?:'email'|'chatgpt'};canImportChatGPT?:boolean;household:{id:string;name:string;ownerId:string};homes:{id:string;name:string}[];members:{userId:string;displayName:string}[];lists:{id:string;name:string}[];items:Item[];budgets:Budget[];products:Product[];receipts:Receipt[];lines:PriceLine[];aliases:{store:string;label:string;productId:string}[]};
-export type DraftLine=Omit<import('./price-history').PriceObservation,'regularCents'|'discountCents'> & {sourceLines?:number[];warnings?:string[];unitPrice?:string;regularPrice?:string;discount?:string;id:string;label:string;name:string;quantity:string;amount:string;category:string;packSize:string;matched?:boolean;purchaseType?:'planned'|'extra'|'unknown'};
+export type DraftLine=Omit<import('./price-history').PriceObservation,'regularCents'|'discountCents'> & {sourceLines?:number[];warnings?:string[];nameReviewRequired?:boolean;nameReviewed?:boolean;unitPrice?:string;regularPrice?:string;discount?:string;id:string;label:string;name:string;quantity:string;amount:string;category:string;packSize:string;matched?:boolean;purchaseType?:'planned'|'extra'|'unknown'};
 export type ReceiptDraft={kind?:ReceiptKind;adjustmentsReviewed?:boolean;ocrConfidence?:number;warnings?:string[];unassignedAdjustments?:{label:string;amount:string;sourceLine:number}[];country?:string;branch?:string;dateEvidence?:import('./receipt-date').DateEvidence;listId?:string;id:string;store:string;date:string;total:string;tax:string;currency:string;lines:DraftLine[];rawText:string;image?:Blob;preview?:string};
 
 export type Budget={id:string;month:string;currency:string;category:string;amountCents:number;updatedBy:string;updatedAt:number};

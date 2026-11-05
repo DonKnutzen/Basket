@@ -35,5 +35,7 @@ test('famila receipt photographed in bad light keeps all ten items',()=>{
  const d=parseReceipt(RAW);
  assert.equal(d.store,'famila');
  assert.deepEqual(d.lines.map(l=>l.amount),['1.11','9.99','1.49','0.25','3.99','1.99','1.99','1.69','0.69','0.49']);
- assert.equal(d.total,'23.68');
+ // Keep the payment independent: missing items and a misread payment are not distinguishable.
+ assert.equal(d.total,'2.58');
+ assert.ok(d.warnings?.some(w=>w.includes('23.68')));
 });

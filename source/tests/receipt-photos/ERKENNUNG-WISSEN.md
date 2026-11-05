@@ -1,5 +1,36 @@
 # Bon-Erkennung: bisherige Arbeit, Erkenntnisse und Fallen
 
+## Korrekturen nach dem REWE-Audit vom 05.11.2026
+
+- Neue lokale Regressionen: `tests/receipt-regressions.test.ts`, Eingaben unter
+  `tests/receipt-inputs/`. Das beschädigte OCR kann fehlendes RB ENERGY nicht
+  rekonstruieren; mehrere Fotodurchläufe lesen es dagegen tatsächlich.
+- `receipt-merge.ts` vereinigt bereits gelesene Buchungen anhand ihrer Bildposition,
+  erhält wiederholte Produkte und stimmt Preise ab. Unsichere Namen/Preise bleiben
+  sichtbar; die Summendifferenz wird nicht durch einen Ausgleichsartikel geschlossen.
+- `SUPPE` darf keine Summenzeile sein. Weiter entfernte Summenlesungen wie `Sune`
+  benötigen eine passende unabhängige Zahlungszeile. Centwerte werden nicht erneut
+  mit 100 multipliziert. Gedruckte Zahlungen werden nicht an die Artikelsumme angepasst.
+- Rückgabemengen werden mit dem Betrag ohne Vorzeichen abgeglichen. Mengen aus
+  anderen Durchläufen benötigen außerdem passende Position und Anzahl × Stückpreis.
+- Ein Tagesfragment ist `inferred`, kein vollständig erkanntes Datum. Ein
+  widersprüchliches oder zeitlich unplausibles OCR-Datum braucht Bestätigung.
+- Die Datumsnachlese prüft nach jedem Ausschnitt. Ist das Feld lokalisiert, werden
+  nur seine Ausschnitte gelesen; sonst bleiben überlappende Streifen der Rückfall.
+  Standardbudget für Datum: 12 s; ein laufender OCR-Aufruf kann darüber hinausgehen.
+- Die Prüfansicht markiert strukturell unklare Namen und widersprüchliche Lesungen.
+  Das ist keine behauptete statistische Kalibrierung eines Konfidenz-Grenzwerts.
+  Unklare Namen müssen korrigiert oder bestätigt werden; dies prüft auch der Server.
+- Kontrolllauf des neuen REWE-Fotos in Node: vorher 7 Buchungen, 14,80 EUR Differenz,
+  26 OCR-Aufrufe; danach 19 Buchungen, alle 19 Beträge korrekt, Differenz 0, 10 Aufrufe.
+  Datumsnachlese 8,8 → 1,7 s. Mehrere Namen und das Datum benötigen weiterhin Review.
+  Das belegt keine iPhone-Laufzeit und keine Zuverlässigkeitsquote für neue Belege.
+- Bisheriger Textkorpus unverändert bei 25/25 Endbeträgen und 23/25 Artikeln;
+  MIN_* unverändert. Die sieben alten Referenzfotos fehlen weiterhin lokal.
+
+Die folgenden älteren Notizen beschreiben zum Teil frühere Implementierungsstände;
+für die neuen Verhaltensweisen gilt die Ergänzung oben.
+
 Stand 2026-11-05. Für alle, die die Erkennung prüfen oder verbessern. Ergänzt `BERICHT.md` (Messwerte vom 2026-11-04)
 und `README.md` (Benchmark). Vieles hier stammt aus Commit-Texten und Notizen und wurde nicht einzeln neu gemessen:
 vor einer Entscheidung immer selbst nachmessen.
