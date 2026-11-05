@@ -86,7 +86,7 @@ function SliceChart({ slices, currency, onOpen }: { slices: Slice[]; currency: s
     </>;
 }
 
-function KindBreakdown({ kinds, currency }: { kinds: KindStat[]; currency: string }) {
+function KindBreakdown({ kinds, currency, label }: { kinds: KindStat[]; currency: string; label: string }) {
     const [open, setOpen] = useState<ReceiptKind | ''>('groceries'), [items, setItems] = useState<string | null>(null);
     const k = kinds.find(x => x.kind === open);
     if (!k) return <section className="chart-card kind-card">
@@ -96,7 +96,7 @@ function KindBreakdown({ kinds, currency }: { kinds: KindStat[]; currency: strin
     if (items !== null && k.products.length) { const cat = k.categories.find(c => c.name === items), rows = cat ? cat.products.map(p => ({ ...p, category: cat.name })) : k.products; return <section className="chart-card kind-card">
         <button type="button" className="kind-back" onClick={() => setItems(null)}><ChevronLeft size={18}/>{tr(KIND_LOOK[k.kind][2])}</button>
         <h2>{cat ? catIcon(cat.name) + ' ' + tr(cat.name) : tr('All items')}</h2>
-        <p>{cat ? money(cat.cents, currency) : tr('Food only')} · {rows.length}</p>
+        <p>{label} · {cat ? money(cat.cents, currency) : tr('Food only')} · {rows.length}</p>
         <div className="slice-list">{rows.map(p => <div key={p.name} className="slice-row"><span className="slice-item-icon">{catIcon(p.category)}</span><span className="slice-name"><b>{p.name}</b><small>{cat ? '' : tr(p.category) + ' · '}{p.purchases}×</small></span><span className="slice-amount"><b>{money(p.cents, currency)}</b></span></div>)}</div>
     </section>; }
     const byCategory = k.kind === 'groceries' && k.categories.length > 0;
@@ -106,7 +106,7 @@ function KindBreakdown({ kinds, currency }: { kinds: KindStat[]; currency: strin
     return <section className="chart-card kind-card">
         <button type="button" className="kind-back" onClick={() => { setOpen(''); setItems(null); }}><ChevronLeft size={18}/>{tr('By category')}</button>
         <h2>{KIND_LOOK[k.kind][1]} {tr(KIND_LOOK[k.kind][2])}</h2>
-        <p>{byCategory ? tr('Food only') : tr('By store')}</p>
+        <p>{label} · {byCategory ? tr('Food only') : tr('By store')}</p>
         <SliceChart key={k.kind} currency={currency} slices={slices} onOpen={byCategory ? setItems : undefined}/>
         {k.products.length > 0 && <button type="button" className="secondary kind-items" onClick={() => setItems('')}>{tr('All items')} ({k.products.length})</button>}
     </section>;
@@ -325,6 +325,7 @@ export function SpendingView({ data, scan, busy, act }: {
     const currency = chosenCurrency || currencies[0] || 'CAD';
     const month = chosenMonth || defaultSpendingMonth(data.receipts, currency);
     const s = spendingStats(data, period, month, currency);
+    const outside = data.receipts.filter(r => r.currency === currency).length - s.trips;
     const color = storePalette([...s.stores.map(x => x.name), ...s.unitPrices.flatMap(c => c.stores.map(x => x.store))]);
     return <>
         <Intro eyebrow="SMALL SHOPS. A CLEARER PICTURE." title={tr('Where it all goes')} action={<div className="period">
@@ -334,7 +335,8 @@ export function SpendingView({ data, scan, busy, act }: {
         <div className="period-chips" role="group" aria-label={tr('Period')}>{PERIODS.map(p => <button type="button" key={p.id} aria-pressed={period === p.id} className={period === p.id ? 'active' : ''} onClick={() => setPeriod(p.id)}>{tr(p.label)}</button>)}</div>
         <CategoryRepair data={data} busy={busy} act={act}/>
         {s.trips ? <div className="spend-anim" key={period + month + currency}>
-            <KindBreakdown kinds={s.kinds} currency={currency}/>
+            <KindBreakdown kinds={s.kinds} currency={currency} label={period === 'month' ? monthName(month) : tr(PERIODS.find(p => p.id === period)!.label)}/>
+            {period !== 'all' && outside > 0 && <button type="button" className="text-link slice-more" onClick={() => setPeriod('all')}>{phrase('Receipts outside this period: {0}', outside)}</button>}
             {period === 'month' && <BudgetPanel data={data} month={month} currency={currency} busy={busy} act={act}/>}
             <Timeline buckets={s.timeline.buckets} unit={s.timeline.unit} currency={currency}/>
             <div className="spending-layout">
