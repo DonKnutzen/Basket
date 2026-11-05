@@ -319,7 +319,7 @@ export function SpendingView({ data, scan, busy, act }: {
 }) {
     const months = monthOptions(data);
     const currencies = receiptCurrencies(data.receipts);
-    const [period, setPeriod] = useState<PeriodKey>('month');
+    const [period, setPeriod] = useState<PeriodKey>('all');
     const [chosenMonth, setMonth] = useState('');
     const [chosenCurrency, setCurrency] = useState('');
     const currency = chosenCurrency || currencies[0] || 'CAD';
