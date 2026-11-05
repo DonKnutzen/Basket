@@ -104,3 +104,9 @@ test('only categories an old scan could lose are recovered',()=>{
  assert.equal(recoveredCategory('Honeycrisp apples'),'Fruit');assert.equal(recoveredCategory('Carrots'),'Veggies');assert.equal(recoveredCategory('Spaghetti'),'Pasta, rice & grains');
  for(const n of ['Soap','Tomato soup','Gift card'])assert.equal(recoveredCategory(n),'');
 });
+test('a grocery category lists every item with its spend and purchases',()=>{
+ const ls=['A','B','C','D','E','F','G'].map((n,i)=>line('g2','Sobeys','2026-10-03',n,100+i,'Fruit'));ls.push(line('g2','Sobeys','2026-10-03','A',100,'Fruit'));
+ const g=spendingStats({receipts:[receipt('g2','Sobeys','2026-10-03',5000)],lines:ls},'month','2026-10','CAD','2026-10-31').kinds[0];
+ const fruit=g.categories.find(c=>c.name==='Fruit')!;
+ assert.equal(fruit.products.length,7);assert.equal(fruit.products[0].name,'A');assert.equal(fruit.products[0].cents,200);assert.equal(fruit.products[0].purchases,2);
+});

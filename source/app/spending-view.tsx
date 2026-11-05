@@ -87,28 +87,28 @@ function SliceChart({ slices, currency, onOpen }: { slices: Slice[]; currency: s
 }
 
 function KindBreakdown({ kinds, currency }: { kinds: KindStat[]; currency: string }) {
-    const [open, setOpen] = useState<ReceiptKind | ''>('groceries'), [items, setItems] = useState(false);
+    const [open, setOpen] = useState<ReceiptKind | ''>('groceries'), [items, setItems] = useState<string | null>(null);
     const k = kinds.find(x => x.kind === open);
     if (!k) return <section className="chart-card kind-card">
         <h2>{tr('By category')}</h2>
         <SliceChart currency={currency} onOpen={key => setOpen(key as ReceiptKind)} slices={kinds.map(x => ({ key: x.kind, label: tr(KIND_LOOK[x.kind][2]), icon: KIND_LOOK[x.kind][1], color: KIND_LOOK[x.kind][0], cents: x.cents, sub: x.trips + ' ' + tr('trips') }))}/>
     </section>;
-    if (items && k.products.length) return <section className="chart-card kind-card">
-        <button type="button" className="kind-back" onClick={() => setItems(false)}><ChevronLeft size={18}/>{tr(KIND_LOOK[k.kind][2])}</button>
-        <h2>{tr('All items')}</h2>
-        <p>{tr('Food only')} · {k.products.length}</p>
-        <div className="slice-list">{k.products.map(p => <div key={p.key} className="slice-row"><span className="slice-item-icon">{catIcon(p.category)}</span><span className="slice-name"><b>{p.name}</b><small>{tr(p.category)} · {p.purchases}×</small></span><span className="slice-amount"><b>{money(p.cents, currency)}</b></span></div>)}</div>
-    </section>;
+    if (items !== null && k.products.length) { const cat = k.categories.find(c => c.name === items), rows = cat ? cat.products.map(p => ({ ...p, category: cat.name })) : k.products; return <section className="chart-card kind-card">
+        <button type="button" className="kind-back" onClick={() => setItems(null)}><ChevronLeft size={18}/>{tr(KIND_LOOK[k.kind][2])}</button>
+        <h2>{cat ? catIcon(cat.name) + ' ' + tr(cat.name) : tr('All items')}</h2>
+        <p>{cat ? money(cat.cents, currency) : tr('Food only')} · {rows.length}</p>
+        <div className="slice-list">{rows.map(p => <div key={p.name} className="slice-row"><span className="slice-item-icon">{catIcon(p.category)}</span><span className="slice-name"><b>{p.name}</b><small>{cat ? '' : tr(p.category) + ' · '}{p.purchases}×</small></span><span className="slice-amount"><b>{money(p.cents, currency)}</b></span></div>)}</div>
+    </section>; }
     const byCategory = k.kind === 'groceries' && k.categories.length > 0;
     const slices: Slice[] = byCategory
         ? k.categories.map((x, i) => ({ key: x.name, label: tr(x.name), icon: catIcon(x.name), color: catColor(x.name, i), cents: x.cents, sub: x.products.slice(0, 3).map(p => p.name).join(', ') }))
         : k.stores.map((x, i) => ({ key: x.name, label: x.name, icon: '📍', color: FALLBACK_COLORS[i % FALLBACK_COLORS.length], cents: x.cents, sub: x.trips + ' ' + tr('trips') }));
     return <section className="chart-card kind-card">
-        <button type="button" className="kind-back" onClick={() => { setOpen(''); setItems(false); }}><ChevronLeft size={18}/>{tr('By category')}</button>
+        <button type="button" className="kind-back" onClick={() => { setOpen(''); setItems(null); }}><ChevronLeft size={18}/>{tr('By category')}</button>
         <h2>{KIND_LOOK[k.kind][1]} {tr(KIND_LOOK[k.kind][2])}</h2>
         <p>{byCategory ? tr('Food only') : tr('By store')}</p>
-        <SliceChart key={k.kind} currency={currency} slices={slices}/>
-        {k.products.length > 0 && <button type="button" className="secondary kind-items" onClick={() => setItems(true)}>{tr('All items')} ({k.products.length})</button>}
+        <SliceChart key={k.kind} currency={currency} slices={slices} onOpen={byCategory ? setItems : undefined}/>
+        {k.products.length > 0 && <button type="button" className="secondary kind-items" onClick={() => setItems('')}>{tr('All items')} ({k.products.length})</button>}
     </section>;
 }
 
@@ -301,7 +301,7 @@ const REPAIR_DISMISSED = 'basket-category-repair-dismissed';
 /** Offers once to move food that an older scan saved under Other back into its category. */
 function CategoryRepair({ data, busy, act }: { data: BasketData; busy: boolean; act: (a: string, b?: unknown, m?: string) => Promise<unknown> }) {
     const [dismissed, setDismissed] = useState(() => { try { return localStorage.getItem(REPAIR_DISMISSED) === '1'; } catch { return false; } });
-    const lost = data.lines.filter(l => l.category === 'Other' && (recoveredCategory(l.productName) || recoveredCategory(l.label)));
+    const lost = data.lines.filter(l => (l.category === 'Other' || l.category === 'Produce') && (recoveredCategory(l.productName) || recoveredCategory(l.label)));
     if (dismissed || !lost.length) return null;
     const dismiss = () => { setDismissed(true); try { localStorage.setItem(REPAIR_DISMISSED, '1'); } catch { /* the choice lasts for this visit */ } };
     return <section className="chart-card category-repair">

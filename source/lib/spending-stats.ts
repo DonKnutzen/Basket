@@ -57,7 +57,7 @@ export function timeline(receipts:readonly Receipt[],range:DateRange,today=local
  return {unit,buckets};
 }
 
-export type CategoryStat={name:string;cents:number;share:number;products:{name:string;cents:number}[]};
+export type CategoryStat={name:string;cents:number;share:number;products:{name:string;cents:number;purchases:number}[]};
 export type StoreStat={name:string;cents:number;trips:number;averageCents:number;share:number;lastDate:string;products:{name:string;cents:number}[]};
 export type ProductStat={key:string;name:string;category:string;cents:number;quantity:number;purchases:number;stores:string[]};
 export type StorePrice={store:string;unitCents:number;purchases:number;lastDate:string};
@@ -141,7 +141,7 @@ function storeStats(receipts:readonly Receipt[],lines:readonly PriceLine[]=[]):S
 }
 function categoryStats(lines:readonly PriceLine[]):CategoryStat[]{
  const lineTotal=sumBy(lines,l=>l.amountCents);
- return [...new Set(lines.map(l=>l.category))].map(name=>{const own=lines.filter(l=>l.category===name);const cents=sumBy(own,l=>l.amountCents);return {name,cents,share:lineTotal>0?cents/lineTotal:0,products:topProducts(own).slice(0,5).map(p=>({name:p.name,cents:p.cents}))}}).filter(c=>c.cents>0).sort((a,b)=>b.cents-a.cents);
+ return [...new Set(lines.map(l=>l.category))].map(name=>{const own=lines.filter(l=>l.category===name);const cents=sumBy(own,l=>l.amountCents);return {name,cents,share:lineTotal>0?cents/lineTotal:0,products:topProducts(own).map(p=>({name:p.name,cents:p.cents,purchases:p.purchases}))}}).filter(c=>c.cents>0).sort((a,b)=>b.cents-a.cents);
 }
 function kindStats(receipts:readonly Receipt[],lines:readonly PriceLine[]):KindStat[]{
  const total=sumBy(receipts,r=>r.totalCents);
