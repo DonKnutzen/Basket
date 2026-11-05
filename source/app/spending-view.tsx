@@ -60,13 +60,15 @@ function Count({ value, format }: { value: number; format: (n: number) => string
 const KIND_LOOK: Record<ReceiptKind, [string, string, string]> = { groceries: ['#4f9d4a', '🛒', 'Groceries'], takeout: ['#e06d4f', '🥡', 'Takeout'], fuel: ['#5d6b75', '⛽', 'Fuel'], other: ['#8a7cc0', '🧾', 'Other'] };
 type Slice = { key: string; label: string; icon: string; color: string; cents: number; sub: string };
 
-const SLICE_LIMIT = 6;
+const SLICE_LIMIT = 6, CHIPS_PER_ROW = 7;
 /** Ring + toggle chips + list; switched-off slices drop out of the ring, total and shares. */
 function SliceChart({ slices, currency, onOpen }: { slices: Slice[]; currency: string; onOpen?: (key: string) => void }) {
     const [hidden, setHidden] = useState<Set<string>>(new Set()), [all, setAll] = useState(false);
     const shown = slices.filter(x => !hidden.has(x.key)), total = shown.reduce((n, x) => n + x.cents, 0);
     // With many slices the chips shrink to their icon and the list to the biggest ones; the names stay in the list.
     const compact = slices.length > SLICE_LIMIT, listed = all ? shown : shown.slice(0, SLICE_LIMIT);
+    // Even rows: 8 icons are 4 + 4, never 7 + 1.
+    const chipRows = Math.ceil(slices.length / CHIPS_PER_ROW), chipColumns = Math.ceil(slices.length / chipRows);
     const r = 52, c = 2 * Math.PI * r;
     let offset = 0;
     const toggle = (key: string) => setHidden(h => { const n = new Set(h); if (n.has(key)) n.delete(key); else n.add(key); return n; });
@@ -77,7 +79,7 @@ function SliceChart({ slices, currency, onOpen }: { slices: Slice[]; currency: s
             </svg>
             <div className="donut-center"><small>{tr('Total')}</small><b><Count value={total} format={n => money(n, currency)}/></b></div>
         </div>
-        <div className={'slice-chips' + (compact ? ' compact' : '')} role="group">{slices.map(x => <button type="button" key={x.key} className="slice-chip" aria-pressed={!hidden.has(x.key)} aria-label={x.label} title={x.label} style={{ '--accent': x.color } as React.CSSProperties} onClick={() => toggle(x.key)}>{compact ? x.icon : x.icon + ' ' + x.label}</button>)}</div>
+        <div className={'slice-chips' + (compact ? ' compact' : '')} style={compact ? { '--columns': chipColumns } as React.CSSProperties : undefined} role="group">{slices.map(x => <button type="button" key={x.key} className="slice-chip" aria-pressed={!hidden.has(x.key)} aria-label={x.label} title={x.label} style={{ '--accent': x.color } as React.CSSProperties} onClick={() => toggle(x.key)}>{compact ? x.icon : x.icon + ' ' + x.label}</button>)}</div>
         <div className="slice-list">{listed.map(x => { const body = <><span className="slice-dot" style={{ background: x.color }}/><span className="slice-name"><b>{x.label}</b><small>{x.sub}</small></span><span className="slice-amount"><b>{money(x.cents, currency)}</b><small>{share(total ? x.cents / total : 0)}</small></span>{onOpen && <ChevronRight size={16}/>}</>;
             return onOpen ? <button type="button" key={x.key} className="slice-row" onClick={() => onOpen(x.key)}>{body}</button> : <div key={x.key} className="slice-row">{body}</div>; })}</div>
         {listed.length < shown.length && <button type="button" className="text-link slice-more" onClick={() => setAll(true)}>{phrase('Show all {0} categories', shown.length)}</button>}
@@ -85,7 +87,7 @@ function SliceChart({ slices, currency, onOpen }: { slices: Slice[]; currency: s
 }
 
 function KindBreakdown({ kinds, currency }: { kinds: KindStat[]; currency: string }) {
-    const [open, setOpen] = useState<ReceiptKind | ''>(''), [items, setItems] = useState(false);
+    const [open, setOpen] = useState<ReceiptKind | ''>('groceries'), [items, setItems] = useState(false);
     const k = kinds.find(x => x.kind === open);
     if (!k) return <section className="chart-card kind-card">
         <h2>{tr('By category')}</h2>
