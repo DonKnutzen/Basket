@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ScanLine, ShieldCheck, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, ChevronDown, Search } from 'lucide-react';
 import { tr, phrase, locale } from '../lib/i18n';
 import { money, normalize, type BasketData, type Receipt } from '../lib/types';
-import { WEIGHED_CATEGORIES, convertUnitPrice, type WeightUnit } from '../lib/unit-price';
+import { isWeighable, convertUnitPrice, type WeightUnit } from '../lib/unit-price';
 import { monthOptions } from '../lib/budgets';
 import { defaultSpendingMonth, receiptCurrencies, spendingStats, type PeriodKey, type TimeBucket, type WeekdayStat, type KindStat, type StoreStat, type StoreIndex, type PriceComparison, type ProductStat, type PriceChange } from '../lib/spending-stats';
 import type { ReceiptKind } from '../lib/types';
@@ -225,7 +225,7 @@ function CheaperStore({ comparisons, index, color, currency }: { comparisons: Pr
 /** Price per kg (or lb) for loose fruit, veggies, meat and fish, cheapest store first. */
 function KiloPrices({ prices, color, currency }: { prices: PriceComparison[]; color: (s: string) => string; currency: string }) {
     const [unit, setUnit] = useState<WeightUnit>(currency === 'CAD' ? 'lb' : 'kg'), [group, setGroup] = useState('');
-    const rows = prices.filter(c => c.unit === 'kg' && WEIGHED_CATEGORIES.has(c.category));
+    const rows = prices.filter(c => c.unit === 'kg' && isWeighable(c.category, c.name));
     const groups = [...new Set(rows.map(c => c.category === 'Produce' ? 'Veggies' : c.category))];
     const shown = rows.filter(c => !group || c.category === group || (group === 'Veggies' && c.category === 'Produce'));
     const per = (cents: number) => money(convertUnitPrice(cents, 'kg', unit), currency) + '/' + unit;
@@ -242,7 +242,7 @@ function KiloPrices({ prices, color, currency }: { prices: PriceComparison[]; co
                     <small><i className="store-dot" style={{ background: color(best.store) }}/>{best.store} · {day(best.lastDate)}</small>
                     {c.stores.slice(1).map(p => <small key={p.store} className="kilo-other"><i className="store-dot" style={{ background: color(p.store) }}/>{p.store} {per(p.unitCents)} <em className="pricier">+{share((p.unitCents - best.unitCents) / (best.unitCents || 1))}</em></small>)}
                 </div>; })}</div>
-        </> : <p className="muted-note">{tr('Open a receipt and add the weight or the price per kg to fruit, veggies or meat. Basket then remembers what a kilo costs where.')}</p>}
+        </> : <p className="muted-note">{tr('Open a receipt and add the weight to fruit, veggies, meat or nuts. Basket then remembers what a kilo costs where.')}</p>}
     </section>;
 }
 

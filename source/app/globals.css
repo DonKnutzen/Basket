@@ -519,6 +519,7 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
 .timeline-bar.active>span>i,.timeline-bar:hover>span>i{background:var(--green)}
 .timeline-bar>small{height:16px;font-size:calc(10px * var(--text-scale));color:#87957b;white-space:nowrap;overflow:visible;text-align:center}
 .spending-layout+.spending-layout{margin-top:24px}
+.spending-layout>*{min-width:0}
 .rank-list{display:flex;flex-direction:column;gap:6px;margin-top:22px}
 .rank-row>button,.rank-row.static{display:flex;flex-direction:column;gap:7px;width:100%;text-align:left;padding:9px 8px;border-radius:8px}
 .rank-row>button:hover{background:#f4f7ee}
@@ -661,12 +662,17 @@ button.offer-hit .offer-copy-label{grid-column:1/-1}
 .weight-chip.set{border-style:solid;border-color:#9fc48c;background:#e8f3df;color:#1f5a35;font-weight:550}
 .weight-chip svg{flex:none;color:var(--muted)}
 .weight-editor{flex:1 0 100%;display:grid;gap:10px;padding:12px;border-radius:10px;background:#f4f8ee;border:1px solid #dbe7cd}
-.weight-fields{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:end;gap:8px}
+.weight-fields{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px}
 .weight-fields label{display:grid;gap:4px;min-width:0;font-size:calc(12px * var(--text-scale));color:#6f8160}
 .weight-input{display:flex;align-items:center;border:1px solid #cfdcc0;border-radius:8px;background:white;overflow:hidden}
 .weight-input input{flex:1;min-width:0;border:0;padding:9px 10px;font:inherit;font-size:16px;background:transparent;color:var(--ink)}
 .weight-input em{font-style:normal;padding:0 10px;color:#87957b;font-size:calc(13px * var(--text-scale))}
-.weight-or{padding-bottom:10px;color:#87957b;font-size:calc(12px * var(--text-scale))}
+.review-pack.review-weight{grid-column:1/3;display:grid;gap:4px;min-width:0}
+.review-pack.review-weight.with-qty{grid-column:1}
+.review-weight-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.review-weight-row input{flex:1 1 72px;width:72px;min-width:0;font-size:16px}
+.review-weight-row .unit-toggle button{min-width:34px;padding:5px 8px}
+.review-weight small{color:#4d6150;font-size:calc(12px * var(--text-scale))}
 .weight-result{font-size:calc(12px * var(--text-scale));color:#4d6150;line-height:1.5}
 .weight-result b{color:#1f5a35}
 .weight-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px}

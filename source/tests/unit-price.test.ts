@@ -1,10 +1,24 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {parseAmount,weightText,pricePerUnit,weightForPrice,convertUnitPrice,WEIGHED_CATEGORIES} from '../lib/unit-price';
+import {parseAmount,weightText,pricePerUnit,weightForPrice,convertUnitPrice,WEIGHED_CATEGORIES,isWeighable,weightPrices,packWeight} from '../lib/unit-price';
 import {comparisonBasis} from '../lib/price-history';
 import {spendingStats} from '../lib/spending-stats';
 import type {PriceLine,Receipt} from '../lib/types';
 
+test('a weight in lb, kg or g gives the same price per kg and lb',()=>{
+ assert.deepEqual(weightPrices(500,0.5,'kg'),{kg:1000,lb:454});
+ assert.deepEqual(weightPrices(500,500,'g'),{kg:1000,lb:454});
+ assert.equal(weightPrices(454,1,'lb')?.lb,454);assert.equal(weightPrices(454,1,'lb')?.kg,1001);
+ assert.equal(weightPrices(500,NaN,'kg'),null);assert.equal(weightPrices(500,0,'g'),null);
+});
+test('loose food and bulk nuts are weighable, packaged goods are not',()=>{
+ for(const [c,n] of [['Fruit','Apples'],['Veggies','Carrots'],['Meat & fish','Chicken'],['Snacks & sweets','Cashews'],['Pantry','Walnüsse'],['Snacks & sweets','Erdnüsse geröstet'],['Pantry','Almonds'],['Other','Haselnuss gemahlen']])assert.equal(isWeighable(c,n),true,n);
+ for(const [c,n] of [['Snacks & sweets','Chips'],['Pantry','Erdnussbutter'],['Pantry','Peanut butter'],['Drinks','Almond milk'],['Snacks & sweets','Nuss Nougat Creme'],['Snacks & sweets','Haselnuss Schokolade'],['Household','Nut cracker']])assert.equal(isWeighable(c,n),false,n);
+});
+test('a weight typed as pack size is read back, anything else is left alone',()=>{
+ assert.deepEqual(packWeight('500 g'),{quantity:'500',unit:'g'});assert.deepEqual(packWeight('1,5kg'),{quantity:'1.5',unit:'kg'});
+ assert.equal(packWeight('2 L'),null);assert.equal(packWeight('6 x 100 g'),null);assert.equal(packWeight(''),null);
+});
 test('weight gives the price per kg, and the price per kg gives the weight',()=>{
  assert.equal(parseAmount('0,856'),0.856);assert.ok(Number.isNaN(parseAmount('abc')));assert.ok(Number.isNaN(parseAmount('0')));
  assert.equal(pricePerUnit(299,0.856),349);
