@@ -932,6 +932,10 @@
   "How often": "Häufigkeit",
   "Enter the store name.": "Gib den Namen des Geschäfts ein.",
   "Enter a name and price for every item.": "Gib für jeden Artikel einen Namen und einen Preis ein.",
+  "{0} items can go back into their category": "{0} Artikel können zurück in ihre Kategorie",
+  "Not now": "Jetzt nicht",
+  "Sort items": "Einordnen",
+  "Categories updated": "Kategorien aktualisiert",
   "Show all {0} categories": "Alle {0} Kategorien anzeigen",
   "Cheapest": "Am günstigsten",
   "Same price": "Gleicher Preis",

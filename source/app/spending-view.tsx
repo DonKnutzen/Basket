@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ScanLine, ShieldCheck, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, ChevronDown, Search } from 'lucide-react';
 import { tr, phrase, locale } from '../lib/i18n';
-import { money, normalize, type BasketData, type Receipt } from '../lib/types';
+import { money, normalize, recoveredCategory, type BasketData, type Receipt } from '../lib/types';
 import { isWeighable, convertUnitPrice, type WeightUnit } from '../lib/unit-price';
 import { monthOptions } from '../lib/budgets';
 import { defaultSpendingMonth, receiptCurrencies, spendingStats, type PeriodKey, type TimeBucket, type WeekdayStat, type KindStat, type StoreStat, type StoreIndex, type PriceComparison, type ProductStat, type PriceChange } from '../lib/spending-stats';
@@ -297,6 +297,20 @@ function PriceMoves({ changes, color, currency }: { changes: PriceChange[]; colo
     </section>;
 }
 
+const REPAIR_DISMISSED = 'basket-category-repair-dismissed';
+/** Offers once to move food that an older scan saved under Other back into its category. */
+function CategoryRepair({ data, busy, act }: { data: BasketData; busy: boolean; act: (a: string, b?: unknown, m?: string) => Promise<unknown> }) {
+    const [dismissed, setDismissed] = useState(() => { try { return localStorage.getItem(REPAIR_DISMISSED) === '1'; } catch { return false; } });
+    const lost = data.lines.filter(l => l.category === 'Other' && (recoveredCategory(l.productName) || recoveredCategory(l.label)));
+    if (dismissed || !lost.length) return null;
+    const dismiss = () => { setDismissed(true); try { localStorage.setItem(REPAIR_DISMISSED, '1'); } catch { /* the choice lasts for this visit */ } };
+    return <section className="chart-card category-repair">
+        <h2>{phrase('{0} items can go back into their category', lost.length)}</h2>
+        <p>{[...new Set(lost.map(l => l.productName))].slice(0, 3).join(', ')}{lost.length > 3 ? ' …' : ''}</p>
+        <div className="category-repair-actions"><button type="button" className="secondary" onClick={dismiss}>{tr('Not now')}</button><button type="button" className="primary" disabled={busy} onClick={() => act('repairReceiptCategories', {}, 'Categories updated')}>{tr('Sort items')}</button></div>
+    </section>;
+}
+
 export function SpendingView({ data, scan, busy, act }: {
     data: BasketData;
     scan: () => void;
@@ -318,6 +332,7 @@ export function SpendingView({ data, scan, busy, act }: {
             <select value={currency} onChange={e => setCurrency(e.target.value)} aria-label={tr('Spending currency')}>{(currencies.length ? currencies : ['CAD', 'EUR']).map(c => <option key={c} value={c}>{tr(c)}</option>)}</select>
         </div>}>{null}</Intro>
         <div className="period-chips" role="group" aria-label={tr('Period')}>{PERIODS.map(p => <button type="button" key={p.id} aria-pressed={period === p.id} className={period === p.id ? 'active' : ''} onClick={() => setPeriod(p.id)}>{tr(p.label)}</button>)}</div>
+        <CategoryRepair data={data} busy={busy} act={act}/>
         {s.trips ? <div className="spend-anim" key={period + month + currency}>
             <KindBreakdown kinds={s.kinds} currency={currency}/>
             {period === 'month' && <BudgetPanel data={data} month={month} currency={currency} busy={busy} act={act}/>}

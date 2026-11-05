@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {defaultSpendingMonth,periodRange,previousRange,receiptCurrencies,spendingStats,timeline} from '../lib/spending-stats';
-import type {PriceLine,Receipt} from '../lib/types';
+import {recoveredCategory,type PriceLine,type Receipt} from '../lib/types';
 
 const receipt=(id:string,store:string,date:string,totalCents:number,currency='CAD',taxCents=0):Receipt=>({id,store,date,totalCents,taxCents,currency,createdBy:'u'});
 const line=(receiptId:string,store:string,date:string,productName:string,amountCents:number,category:string,extra:Partial<PriceLine>={}):PriceLine=>({id:receiptId+productName,receiptId,productId:productName,label:productName.toUpperCase(),quantity:1,amountCents,category,packSize:'',store,date,currency:'CAD',productName,...extra});
@@ -99,4 +99,8 @@ test('groceries count every food category and list all items',()=>{
  assert.deepEqual(g.categories.map(c=>c.name),['Veggies','Oils, spices & sauces','Fruit','Dairy & eggs','Pasta, rice & grains','Processed Food']);
  assert.equal(g.categories.reduce((n,c)=>n+c.cents,0),4300);
  assert.deepEqual(g.products.map(p=>p.name),['Carrots','Olive oil','Apples','Milk','Penne','Soup']);
+});
+test('only categories an old scan could lose are recovered',()=>{
+ assert.equal(recoveredCategory('Honeycrisp apples'),'Fruit');assert.equal(recoveredCategory('Carrots'),'Veggies');assert.equal(recoveredCategory('Spaghetti'),'Pasta, rice & grains');
+ for(const n of ['Soap','Tomato soup','Gift card'])assert.equal(recoveredCategory(n),'');
 });
